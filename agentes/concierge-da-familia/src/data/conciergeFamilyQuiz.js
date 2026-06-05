@@ -1,40 +1,46 @@
 export const conciergeQuizQuestions = [
   {
-    id: "child_age",
-    question: "Qual a idade da criança?",
+    id: "travel_goal",
+    question: "O que esta viagem precisa resolver?",
     type: "single",
-    options: ["0 a 12 meses", "1 a 2 anos", "3 a 5 anos", "6+ anos"]
+    options: ["Primeira viagem sem susto", "Descansar com estrutura", "Praia e piscina", "Natureza e ar livre", "Parque ou muita atividade"]
   },
   {
-    id: "travel_period",
-    question: "Quando vocês querem viajar?",
+    id: "family_pace",
+    question: "Qual ritmo combina com a sua família?",
     type: "single",
-    options: ["Férias de julho", "Feriado prolongado", "Verão/Janeiro", "Ainda não sei"]
+    options: ["Rotina bem previsível", "Flexível, mas com pausas", "Criança com bastante energia", "Pais querem conforto também"]
   },
   {
-    id: "trip_type",
-    question: "Que tipo de viagem combina mais agora?",
+    id: "displacement_limit",
+    question: "Qual deslocamento vocês toleram bem?",
     type: "single",
-    options: ["Resort perto de SP", "Praia com resort", "Hotel fazenda", "Ainda não sei"]
+    options: ["Até 2h de carro", "Até 4h de carro", "Voo direto e traslado até 1h", "Aceito mais logística se valer muito"]
   },
   {
-    id: "max_flight",
-    question: "Como vocês preferem se deslocar?",
+    id: "stay_style",
+    question: "Que tipo de hospedagem faz mais sentido?",
     type: "single",
-    options: ["Prefiro evitar avião", "Voo direto curto", "Aceito voo se valer muito", "Ainda não sei"]
+    options: ["Resort completo", "Hotel fazenda", "Praia com resort", "Cidade com passeios", "Apart-hotel com cozinha"]
   },
   {
-    id: "must_have",
-    question: "O que é indispensável?",
+    id: "comfort_needs",
+    question: "O que precisa existir para você ficar tranquilo?",
     type: "multi",
     max: 3,
-    options: ["Copa baby", "Copa baby 24h", "All inclusive", "Piscina infantil", "Hotel que funcione mesmo com chuva", "Não precisar alugar carro"]
+    options: ["Copa baby", "Copa baby 24h", "All inclusive", "Kids club", "Piscina aquecida", "Plano B para chuva", "Kitchenette/cozinha", "Não alugar carro"]
   },
   {
-    id: "main_concerns",
-    question: "O que mais preocupa vocês?",
+    id: "decision_profile",
+    question: "Como vocês preferem decidir?",
+    type: "single",
+    options: ["Menos risco, mais certeza", "Melhor custo-benefício", "Melhor estrutura, mesmo mais caro", "Evitar lotação e filas"]
+  },
+  {
+    id: "avoid_risks",
+    question: "O que vocês querem evitar de qualquer jeito?",
     type: "multi",
     max: 3,
-    options: ["Sono/rotina", "Alimentação", "Traslado", "Estrada", "Saúde", "Gastar caro e errar"]
+    options: ["Chegar tarde", "Traslado longo", "Estrada cansativa", "Fila e lotação", "Sem comida fácil", "Sem plano B para chuva", "Hotel só bonito na foto"]
   }
 ];

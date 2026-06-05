@@ -28,8 +28,8 @@ export const conciergeHotels = [
       "Fonte oficial cita Copa do Bebê, berços, banheiras infantis e papinhas.",
       "Boa escolha para primeira viagem curta de carro saindo da capital."
     ],
-    image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de resort"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   },
   {
     id: "bourbon-atibaia",
@@ -60,8 +60,8 @@ export const conciergeHotels = [
       "Fonte oficial cita piscina com ondas, piscinas adulto e infantil e Acqua Kids.",
       "Boa alternativa para fim de semana ou feriado curto saindo de São Paulo."
     ],
-    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de lazer em resort"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   },
   {
     id: "club-med-lake-paradise",
@@ -92,8 +92,8 @@ export const conciergeHotels = [
       "Fonte oficial apresenta proposta all-inclusive e atividades para toda a família.",
       "Atenção: Mini Club indicado oficialmente para 4 a 17 anos."
     ],
-    image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de lago e natureza"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   },
   {
     id: "mavsa-resort",
@@ -124,8 +124,8 @@ export const conciergeHotels = [
       "Boa alternativa para famílias que querem resolver alimentação dentro do resort.",
       "Tempo de carro maior pede saída fora do pico e pausas planejadas."
     ],
-    image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de hotel resort"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   },
   {
     id: "tivoli-praia-do-forte",
@@ -156,8 +156,8 @@ export const conciergeHotels = [
       "Fonte oficial cita gastronomia infantil personalizada.",
       "Traslado a partir de Salvador precisa ser bem planejado."
     ],
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de praia"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   },
   {
     id: "salinas-maragogi",
@@ -188,8 +188,8 @@ export const conciergeHotels = [
       "Destino tende a exigir traslado longo depois do voo.",
       "Indicado quando a família prioriza praia e estrutura de resort."
     ],
-    image: "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de praia clara"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   },
   {
     id: "summerville-porto-galinhas",
@@ -220,8 +220,8 @@ export const conciergeHotels = [
       "Menu oficial tem seção de crianças.",
       "Traslado costuma ser mais curto que destinos como Maragogi."
     ],
-    image: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de resort de praia"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   },
   {
     id: "enotel-porto-galinhas",
@@ -252,7 +252,7 @@ export const conciergeHotels = [
       "Bom para quem quer ficar dentro de um complexo com ampla estrutura.",
       "Precisa de checagem mais fina para rotina de bebê."
     ],
-    image: "https://images.unsplash.com/photo-1563911302283-d2bc129e7570?auto=format&fit=crop&w=1200&q=80",
-    imageNote: "Foto inspiracional de resort"
+    image: null,
+    imageNote: "Imagem substituida pelo banco de destinos verificados"
   }
 ];

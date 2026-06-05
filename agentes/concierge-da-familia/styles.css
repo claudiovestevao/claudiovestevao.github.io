@@ -40,7 +40,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -116,6 +117,100 @@ a {
 .minimal-hero h1 {
   max-width: 760px;
   font-size: clamp(42px, 7vw, 72px);
+}
+
+.diagnostic-home {
+  min-height: calc(100vh - 62px);
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(420px, .78fr);
+  align-items: start;
+  gap: clamp(20px, 4vw, 42px);
+  padding-top: clamp(18px, 4vh, 36px);
+  padding-bottom: 18px;
+}
+
+.diagnostic-home .hero-copy {
+  align-self: center;
+  gap: 12px;
+  padding-bottom: 18px;
+}
+
+.diagnostic-home h1 {
+  max-width: 640px;
+  font-size: clamp(36px, 5vw, 62px);
+  line-height: .98;
+}
+
+.diagnostic-home .hero-copy > p {
+  max-width: 650px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.diagnostic-panel {
+  width: 100%;
+}
+
+.intake-card,
+.compact-quiz {
+  max-width: none;
+}
+
+.intake-card h3,
+.compact-quiz h3 {
+  font-size: 20px;
+}
+
+.intake-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
+}
+
+.intake-card label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.intake-card input,
+.intake-card select {
+  width: 100%;
+  min-height: 39px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 9px 11px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+}
+
+.intake-card input:focus,
+.intake-card select:focus {
+  border-color: var(--action);
+  box-shadow: 0 0 0 4px rgba(0, 108, 228, .14);
+}
+
+.intake-card .button {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.compact-quiz .chips {
+  gap: 8px;
+}
+
+.compact-quiz .chip {
+  min-height: 38px;
+  padding: 9px 11px;
+  font-size: 13px;
+}
+
+.done-card p {
+  font-size: 15px;
+  line-height: 1.45;
 }
 
 .hero-copy {
@@ -1108,7 +1203,8 @@ summary {
   font-weight: 900;
 }
 
-.lead-form input {
+.lead-form input,
+.lead-form select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -1118,7 +1214,8 @@ summary {
   outline: none;
 }
 
-.lead-form input:focus {
+.lead-form input:focus,
+.lead-form select:focus {
   border-color: var(--action);
   box-shadow: 0 0 0 4px rgba(0, 108, 228, .16);
 }
@@ -1132,6 +1229,56 @@ summary {
 }
 
 @media (max-width: 759px) {
+  .diagnostic-home {
+    min-height: calc(100vh - 62px);
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding-top: 14px;
+    padding-bottom: 12px;
+  }
+
+  .diagnostic-home h1 {
+    font-size: clamp(29px, 9vw, 38px);
+    line-height: 1.02;
+  }
+
+  .diagnostic-home .hero-copy {
+    gap: 8px;
+    padding-bottom: 0;
+  }
+
+  .diagnostic-home .hero-copy > p,
+  .diagnostic-home .family-cues {
+    display: none;
+  }
+
+  .diagnostic-panel .quiz-card {
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .intake-card h3,
+  .compact-quiz h3 {
+    font-size: 18px;
+  }
+
+  .intake-card label {
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .intake-card input,
+  .intake-card select {
+    min-height: 36px;
+    padding: 7px 9px;
+    font-size: 13px;
+  }
+
+  .intake-card .button {
+    min-height: 42px;
+    margin-top: 10px;
+  }
+
   .map-canvas {
     min-height: 240px;
   }
