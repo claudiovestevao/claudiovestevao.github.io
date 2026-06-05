@@ -4,62 +4,62 @@ export const conciergeCalendar = [
     label: "Janeiro",
     title: "Janeiro saindo de SP",
     bestPaths: ["resorts no interior de SP", "praias com voo direto", "litoral norte com muito cuidado de transito"],
-    attention: ["precos altos", "calor", "aeroportos cheios", "reservar refeicoes e transfers com antecedencia"]
+    attention: ["pre?os altos", "calor", "aeroportos cheios", "reservar refei??es e transfers com anteced?ncia"]
   },
   {
     id: "carnaval",
     label: "Carnaval",
-    title: "Carnaval com crianca pequena",
+    title: "Carnaval com crian?a pequena",
     bestPaths: ["hotel fazenda", "resort no interior", "praia com estrutura e pouco deslocamento"],
-    attention: ["lotacao", "barulho", "estradas congestionadas", "evitar roteiro com muitos deslocamentos"]
+    attention: ["lota??o", "barulho", "estradas congestionadas", "evitar roteiro com muitos deslocamentos"]
   },
   {
     id: "semana-santa",
     label: "Semana Santa",
-    title: "Semana Santa saindo de Sao Paulo",
-    bestPaths: ["interior de SP", "Campos do Jordao com reserva", "voo curto no Brasil"],
-    attention: ["saida de feriado", "restaurantes cheios", "clima instavel"]
+    title: "Semana Santa saindo de S?o Paulo",
+    bestPaths: ["interior de SP", "Campos do Jord?o com reserva", "voo curto no Brasil"],
+    attention: ["sa?da de feriado", "restaurantes cheios", "clima inst?vel"]
   },
   {
     id: "julho",
-    label: "Ferias de julho",
-    title: "Ferias de julho com bebe saindo de SP",
-    bestPaths: ["resorts no interior de SP", "hotel fazenda com estrutura", "Gramado com roteiro leve", "Nordeste com voo direto", "Campos do Jordao com cuidado de lotacao"],
-    attention: ["precos mais altos", "aeroportos mais cheios", "frio em destinos de serra", "necessidade de reservar restaurantes", "evitar roteiros urbanos corridos", "atencao a voos chegando tarde"]
+    label: "F?rias de julho",
+    title: "F?rias de julho com beb? saindo de SP",
+    bestPaths: ["resorts no interior de SP", "hotel fazenda com estrutura", "Gramado com roteiro leve", "Nordeste com voo direto", "Campos do Jord?o com cuidado de lota??o"],
+    attention: ["pre?os mais altos", "aeroportos mais cheios", "frio em destinos de serra", "necessidade de reservar restaurantes", "evitar roteiros urbanos corridos", "at?n??o a voos chegando tarde"]
   },
   {
-    id: "semana-crianca",
-    label: "Semana da crianca",
-    title: "Semana da crianca em familia",
-    bestPaths: ["parques para criancas maiores", "resorts com recreacao", "fim de semana no interior"],
-    attention: ["atracoes cheias", "filas", "cansaco", "nem todo parque funciona para bebe pequeno"]
+    id: "semana-crian?a",
+    label: "Semana da crian?a",
+    title: "Semana da crian?a em fam?lia",
+    bestPaths: ["parques para crian?as maiores", "resorts com recrea??o", "fim de semana no interior"],
+    attention: ["atra??es cheias", "filas", "cansa?o", "nem todo parque funciona para beb? pequeno"]
   },
   {
     id: "natal",
     label: "Natal",
     title: "Natal saindo de SP",
-    bestPaths: ["resort com ceia", "hotel fazenda", "serra com programacao leve"],
-    attention: ["precos altos", "exigencia de pacote minimo", "rotina alterada", "reservas disputadas"]
+    bestPaths: ["resort com ceia", "hotel fazenda", "serra com programa??o leve"],
+    attention: ["pre?os altos", "exig?ncia de pacote m?nimo", "rotina alterada", "reservas disputadas"]
   },
   {
     id: "reveillon",
-    label: "Reveillon",
-    title: "Reveillon com bebe",
+    label: "R?veillon",
+    title: "R?veillon com beb?",
     bestPaths: ["resort com estrutura indoor", "hotel fazenda", "praia calma com quarto silencioso"],
-    attention: ["barulho de fogos", "precos altos", "deslocamento lotado", "sono da crianca"]
+    attention: ["barulho de fogos", "pre?os altos", "deslocamento lotado", "sono da crian?a"]
   },
   {
     id: "feriado",
     label: "Feriado prolongado",
     title: "Feriado prolongado",
-    bestPaths: ["destinos ate 2h30 de carro", "voo direto com horario bom", "hotel que sustenta dia de chuva"],
-    attention: ["estradas cheias", "voos caros", "check-in tarde", "volta para Sao Paulo"]
+    bestPaths: ["destinos at? 2h30 de carro", "voo direto com hor?rio bom", "hotel que sustenta dia de chuva"],
+    attention: ["estradas cheias", "voos caros", "check-in tarde", "volta para S?o Paulo"]
   },
   {
     id: "fim-semana",
     label: "Fim de semana",
     title: "Fim de semana saindo da capital",
-    bestPaths: ["Atibaia", "Sao Roque", "resort no interior", "hotel fazenda curto"],
-    attention: ["sair fora do pico", "nao exagerar no roteiro", "levar itens de rotina do bebe"]
+    bestPaths: ["Atibaia", "S?o Roque", "resort no interior", "hotel fazenda curto"],
+    attention: ["sair fora do pico", "n?o exagerar no roteiro", "levar itens de rotina do beb?"]
   }
 ];

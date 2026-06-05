@@ -38,10 +38,10 @@ function render() {
 
 function AgentCardConciergeFamilia() {
   return {
-    name: "Concierge da Familia",
-    description: "Encontre destinos, resorts e roteiros que realmente funcionam para familias da capital de Sao Paulo com bebes e criancas pequenas.",
-    tags: ["Viagens com bebes", "Familias de Sao Paulo", "Resorts com copa baby", "Roteiros em familia", "Curadoria premium", "IA para planejamento"],
-    cta: "Planejar viagem da familia"
+    name: "Concierge da Família",
+    description: "Encontre destinos, resorts e roteiros que realmente funcionam para famílias da capital de São Paulo com bebês e crianças pequenas.",
+    tags: ["Viagens com bebês", "Famílias de São Paulo", "Resorts com copa baby", "Roteiros em família", "Curadoria premium", "IA para planejamento"],
+    cta: "Planejar viagem da família"
   };
 }
 
@@ -49,25 +49,25 @@ function ConciergeHeroSection() {
   return `
     <section class="hero section" id="topo">
       <div class="hero-copy">
-        <span class="badge">MVP exclusivo para familias da capital de Sao Paulo</span>
-        <h1>Planeje a viagem da sua familia saindo de Sao Paulo, com a seguranca de quem entende bebes.</h1>
-        <p>O Concierge da Familia encontra destinos, hoteis e roteiros avaliados por copa baby, voo curto, traslado facil, viagem de carro viavel, alimentacao, rotina, seguranca e plano B.</p>
-        <strong class="hero-line">Bonito no Instagram nao basta. Precisa funcionar com bebe, saindo de Sao Paulo.</strong>
+        <span class="badge">MVP exclusivo para famílias da capital de São Paulo</span>
+        <h1>Planeje a viagem da sua família saindo de São Paulo, com a segurança de quem entende bebês.</h1>
+        <p>O Concierge da Família encontra destinos, hotéis e roteiros avaliados por copa baby, voo curto, traslado fácil, viagem de carro viável, alimentação, rotina, segurança e plano B.</p>
+        <strong class="hero-line">Bonito no Instagram não basta. Precisa funcionar com bebê, saindo de São Paulo.</strong>
         <div class="hero-actions">
-          <a class="button primary" href="#diagnostico">Comecar diagnostico</a>
+          <a class="button primary" href="#diagnostico">Começar diagnóstico</a>
           <a class="button secondary" href="#destinos">Ver destinos saindo de SP</a>
         </div>
       </div>
-      <div class="sp-map" aria-label="Mapa ilustrativo com Sao Paulo como origem">
-        <div class="map-world">Futuro: outras regioes</div>
+      <div class="sp-map" aria-label="Mapa ilustrativo com São Paulo como origem">
+        <div class="map-world">Futuro: outras regiões</div>
         <div class="sp-dot">SP</div>
         <span class="route r1"></span>
         <span class="route r2"></span>
         <span class="route r3"></span>
         <span class="floating-card c1">Voo direto</span>
-        <span class="floating-card c2">Traslado ate 1h</span>
+        <span class="floating-card c2">Traslado até 1h</span>
         <span class="floating-card c3">Copa baby confirmada</span>
-        <span class="floating-card c4">Carro ate 3h</span>
+        <span class="floating-card c4">Carro até 3h</span>
       </div>
     </section>
   `;
@@ -75,18 +75,18 @@ function ConciergeHeroSection() {
 
 function SaoPauloMvpFocusSection() {
   const cards = [
-    ["Aeroportos certos", "Congonhas, Guarulhos e Viracopos avaliados conforme destino e perfil da familia."],
-    ["Viagens de carro realistas", "Foco em destinos viaveis saindo da capital, com tempo de estrada adequado para bebe."],
-    ["Calendario paulistano", "Ferias escolares, feriados prolongados, verao, julho e Reveillon."],
-    ["Curadoria mais precisa", "Menos opcoes genericas, mais recomendacoes que funcionam na pratica."]
+    ["Aeroportos certos", "Congonhas, Guarulhos e Viracopos avaliados conforme destino e perfil da família."],
+    ["Viagens de carro realistas", "Foco em destinos viáveis saindo da capital, com tempo de estrada adequado para bebê."],
+    ["Calendário paulistano", "Férias escolares, feriados prolongados, verão, julho e Réveillon."],
+    ["Curadoria mais precisa", "Menos opções genéricas, mais recomendações que funcionam na prática."]
   ];
   return `
     <section class="section band" id="mvp-sp">
       <div class="section-title">
-        <span class="badge subtle">Comecamos por Sao Paulo</span>
-        <h2>Comecamos por Sao Paulo para recomendar melhor.</h2>
-        <p>Viagem com bebe depende muito do ponto de partida. Para uma familia que mora na capital de Sao Paulo, faz diferenca saber se o melhor caminho e sair por Congonhas, Guarulhos, Viracopos ou ir de carro.</p>
-        <p>Tambem importa o tempo real ate o aeroporto, o horario do voo, o traslado no destino e se a viagem respeita a rotina da crianca. Depois, a curadoria podera ser expandida para outras cidades, regioes e paises.</p>
+        <span class="badge subtle">Começamos por São Paulo</span>
+        <h2>Começamos por São Paulo para recomendar melhor.</h2>
+        <p>Viagem com bebê depende muito do ponto de partida. Para uma família que mora na capital de São Paulo, faz diferença saber se o melhor caminho é sair por Congonhas, Guarulhos, Viracopos ou ir de carro.</p>
+        <p>Também importa o tempo real até o aeroporto, o horário do voo, o traslado no destino e se a viagem respeita a rotina da criança. Depois, a curadoria poderá ser expandida para outras cidades, regiões e países.</p>
       </div>
       <div class="grid four">
         ${cards.map(([title, text]) => InfoCard(title, text)).join("")}
@@ -99,17 +99,17 @@ function ConciergeDifferentiationSection() {
   return `
     <section class="section split" id="diferenca">
       <div class="section-title">
-        <h2>Nao e um buscador de viagem. E um concierge para familias paulistanas.</h2>
-        <p>Buscadores comuns mostram preco, fotos e avaliacoes genericas. O Concierge da Familia avalia os detalhes que realmente importam para quem viaja com bebe saindo de Sao Paulo.</p>
+        <h2>Não é um buscador de viagem. É um concierge para famílias paulistanas.</h2>
+        <p>Buscadores comuns mostram preço, fotos e avaliações genéricas. O Concierge da Família avalia os detalhes que realmente importam para quem viaja com bebê saindo de São Paulo.</p>
       </div>
       <div class="compare">
         <div>
           <h3>Buscadores comuns mostram</h3>
-          ${BulletList(["preco", "fotos", "estrelas", "nota geral", "localizacao", "disponibilidade"])}
+          ${BulletList(["preço", "fotos", "estrelas", "nota geral", "localização", "disponibilidade"])}
         </div>
         <div class="highlight">
-          <h3>Concierge da Familia avalia</h3>
-          ${BulletList(["qual aeroporto faz mais sentido?", "o voo e direto?", "o horario e bom para crianca?", "o traslado no destino e curto?", "da para ir de carro sem estourar a rotina?", "tem copa baby?", "funciona com carrinho?", "ha farmacia ou hospital por perto?", "funciona em dia de chuva?", "e bom para bebe ou so para crianca maior?"])}
+          <h3>Concierge da Família avalia</h3>
+          ${BulletList(["qual aeroporto faz mais sentido?", "o voo é direto?", "o horário é bom para criança?", "o traslado no destino é curto?", "dá para ir de carro sem estourar a rotina?", "tem copa baby?", "funciona com carrinho?", "há farmácia ou hospital por perto?", "funciona em dia de chuva?", "é bom para bebê ou só para criança maior?"])}
         </div>
       </div>
     </section>
@@ -122,9 +122,9 @@ function ConciergeDiagnosisQuiz() {
   return `
     <section class="section quiz-section" id="diagnostico">
       <div class="section-title">
-        <span class="badge subtle">Diagnostico inteligente</span>
-        <h2>Descubra a viagem ideal para sua familia saindo de Sao Paulo</h2>
-        <p>Uma boa viagem com bebe comeca antes da reserva. Responda uma conversa curta e veja um resultado simulado.</p>
+        <span class="badge subtle">Diagnóstico inteligente</span>
+        <h2>Descubra a viagem ideal para sua família saindo de São Paulo</h2>
+        <p>Uma boa viagem com bebê começa antes da reserva. Responda uma conversa curta e veja uma recomendação inicial.</p>
       </div>
       <div class="quiz-card">
         <div class="quiz-top">
@@ -135,7 +135,7 @@ function ConciergeDiagnosisQuiz() {
         <div class="chips ${question.type === "multi" ? "multi" : ""}">
           ${question.options.map(option => QuizOption(question, option)).join("")}
         </div>
-        ${question.type === "multi" ? `<p class="micro">Escolha ate ${question.max} itens.</p>` : ""}
+        ${question.type === "multi" ? `<p class="micro">Escolha até ${question.max} itens.</p>` : ""}
         <div class="quiz-actions">
           <button class="button secondary" data-action="quiz-back" ${state.quizIndex === 0 ? "disabled" : ""}>Voltar</button>
           ${question.type === "multi" ? `<button class="button primary" data-action="quiz-next">${state.quizIndex === conciergeQuizQuestions.length - 1 ? "Ver resultado" : "Continuar"}</button>` : ""}
@@ -155,8 +155,8 @@ function ConciergeDiagnosisResult(result) {
   return `
     <section class="section result-section" id="resultado">
       <div class="section-title">
-        <span class="badge">Resultado simulado</span>
-        <h2>Seu perfil de viagem saindo de Sao Paulo</h2>
+        <span class="badge">Resultado inicial</span>
+        <h2>Seu perfil de viagem saindo de São Paulo</h2>
         <p>${escapeHtml(result.profile)}</p>
       </div>
       <div class="grid three">
@@ -178,7 +178,7 @@ function ConciergeDiagnosisResult(result) {
           `).join("")}
         </div>
       </div>
-      <a class="button primary wide" href="${leadWhatsAppUrl("Quero receber opcoes curadas para minha familia saindo de Sao Paulo.")}" target="_blank" rel="noopener">Receber opcoes curadas no WhatsApp</a>
+      <a class="button primary wide" href="${leadWhatsAppUrl("Quero receber opções curadas para minha família saindo de São Paulo.")}" target="_blank" rel="noopener">Receber opções curadas no WhatsApp</a>
     </section>
   `;
 }
@@ -186,26 +186,26 @@ function ConciergeDiagnosisResult(result) {
 function BabyConciergeScore() {
   const criteria = [
     ["Copa baby e estrutura infantil", 25],
-    ["Voo direto, curto ou estrada viavel", 15],
+    ["Voo direto, curto ou estrada viável", 15],
     ["Traslado simples no destino", 15],
-    ["Alimentacao e rotina", 15],
-    ["Seguranca e saude por perto", 10],
+    ["Alimentação e rotina", 15],
+    ["Segurança e saúde por perto", 10],
     ["Hotel que sustenta dia de chuva", 10],
     ["Conforto dos pais", 10]
   ];
-  const labels = ["Excelente para bebe", "Bom para toddler", "Melhor acima de 4 anos", "Evitar com bebe pequeno", "So vale com carro", "Otimo para primeira viagem", "Bom saindo de Congonhas", "Bom saindo de Guarulhos", "Melhor ir de carro", "Traslado longo: atencao"];
+  const labels = ["Excelente para bebê", "Bom para toddler", "Melhor acima de 4 anos", "Evitar com bebê pequeno", "Só vale com carro", "Ótimo para primeira viagem", "Bom saindo de Congonhas", "Bom saindo de Guarulhos", "Melhor ir de carro", "Traslado longo: atenção"];
   return `
     <section class="section score-section" id="score">
       <div class="section-title">
-        <span class="badge subtle">Metodo proprietario</span>
-        <h2>Score Bebe Concierge</h2>
-        <p>Uma avaliacao pensada para saber se aquela viagem realmente funciona para familias que saem de Sao Paulo com bebe.</p>
+        <span class="badge subtle">Método proprietário</span>
+        <h2>Score Bebê Concierge</h2>
+        <p>Uma avaliação pensada para saber se aquela viagem realmente funciona para famílias que saem de São Paulo com bebê.</p>
       </div>
       <div class="score-layout">
         <div class="score-meter">
           <strong>8,7</strong>
           <span>/10</span>
-          <p>Exemplo: primeira viagem com bebe saindo da capital.</p>
+          <p>Exemplo: primeira viagem com bebê saindo da capital.</p>
         </div>
         <div class="criteria">
           ${criteria.map(([label, weight]) => `
@@ -227,8 +227,8 @@ function CuratedDestinationsSection() {
     <section class="section" id="destinos">
       <div class="section-title">
         <span class="badge subtle">Curadoria MVP</span>
-        <h2>Destinos que funcionam saindo de Sao Paulo</h2>
-        <p>Dados mockados para demonstrar a visao do produto. A curadoria real combinara dados publicos, informacoes oficiais, validacao direta e revisao editorial.</p>
+        <h2>Destinos que funcionam saindo de São Paulo</h2>
+        <p>Uma primeira base editorial para famílias paulistanas. A curadoria cruza logística, rotina de bebê, tipo de hospedagem, clima, deslocamento e dados públicos para reduzir escolhas ruins antes da reserva.</p>
       </div>
       <div class="destination-grid">
         ${conciergeDestinations.map(CuratedDestinationCard).join("")}
@@ -240,6 +240,7 @@ function CuratedDestinationsSection() {
 function CuratedDestinationCard(destination) {
   return `
     <article class="travel-card">
+      ${TravelImage(destination.image || destinationImage(destination.id), destination.name, destination.imageNote || "Foto inspiracional do tipo de destino")}
       <div class="card-head">
         <span class="score">${destination.score.toFixed(1)}/10</span>
         <span class="badge subtle">${escapeHtml(destination.bestDepartureMode)}</span>
@@ -248,17 +249,17 @@ function CuratedDestinationCard(destination) {
       <p>${escapeHtml(destination.region)}</p>
       <dl>
         <div><dt>Melhor idade</dt><dd>${escapeHtml(destination.idealAge)}</dd></div>
-        <div><dt>Melhor epoca</dt><dd>${escapeHtml(destination.bestSeason)}</dd></div>
-        <div><dt>Saida de SP</dt><dd>${escapeHtml(destination.recommendedAirport || destination.driveTimeFromSaoPaulo || "avaliar caso a caso")}</dd></div>
-        <div><dt>Voo/traslado</dt><dd>${escapeHtml([destination.flightFromSP, destination.transferTime].filter(Boolean).join(" · ") || "sem aviao")}</dd></div>
+        <div><dt>Melhor época</dt><dd>${escapeHtml(destination.bestSeason)}</dd></div>
+        <div><dt>Saída de SP</dt><dd>${escapeHtml(destination.recommendedAirport || destination.driveTimeFromSaoPaulo || "avaliar caso a caso")}</dd></div>
+        <div><dt>Voo/traslado</dt><dd>${escapeHtml([destination.flightFromSP, destination.transferTime].filter(Boolean).join(" · ") || "sem avião")}</dd></div>
       </dl>
       <div class="tags">${destination.tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       <strong class="verdict">${escapeHtml(destination.verdict)}</strong>
       <details>
-        <summary>Ver analise concierge</summary>
+        <summary>Ver análise concierge</summary>
         <b>Pontos fortes</b>
         ${BulletList(destination.strengths)}
-        <b>Pontos de atencao</b>
+        <b>Pontos de atenção</b>
         ${BulletList(destination.attentionPoints)}
       </details>
     </article>
@@ -268,22 +269,22 @@ function CuratedDestinationCard(destination) {
 function CuratedHotelsSection() {
   const filters = [
     ["all", "Todos"],
-    ["drive2", "Carro ate 2h"],
-    ["drive3", "Carro ate 3h"],
+    ["drive2", "Carro até 2h"],
+    ["drive3", "Carro até 3h"],
     ["direct", "Voo direto"],
     ["copa", "Copa baby"],
     ["copa24", "Copa baby 24h"],
     ["allinclusive", "All inclusive"],
     ["rain", "Funciona com chuva"],
-    ["noCar", "Nao precisa alugar carro"]
+    ["noCar", "Não precisa alugar carro"]
   ];
   const filtered = conciergeHotels.filter(matchesHotelFilter);
   return `
     <section class="section band" id="hoteis">
       <div class="section-title">
-        <span class="badge subtle">Sem parcerias reais declaradas</span>
-        <h2>Resorts e hoteis pensados para bebes, partindo de Sao Paulo</h2>
-        <p>Cards placeholder para testar a experiencia. Nenhuma comodidade deve ser tratada como validada sem confirmacao.</p>
+        <span class="badge subtle">Hotéis reais, fontes públicas</span>
+        <h2>Resorts e hotéis pensados para bebês, partindo de São Paulo</h2>
+        <p>Curadoria inicial com hotéis reais e links oficiais. As fotos são inspiracionais, e comodidades sensíveis devem ser confirmadas antes da reserva.</p>
       </div>
       <div class="filters">${filters.map(([id, label]) => `<button class="filter ${state.hotelFilter === id ? "active" : ""}" data-action="hotel-filter" data-filter="${id}">${label}</button>`).join("")}</div>
       <div class="hotel-grid">
@@ -296,16 +297,17 @@ function CuratedHotelsSection() {
 function CuratedHotelCard(hotel) {
   return `
     <article class="travel-card hotel-card">
+      ${TravelImage(hotel.image, hotel.name, hotel.imageNote)}
       <div class="card-head">
         <span class="score">${hotel.score.toFixed(1)}/10</span>
-        <span class="badge subtle">${hotel.confidenceLevel === "mock" ? "dados mockados" : "validado"}</span>
+        <span class="badge subtle">${escapeHtml(hotel.confidenceLevel || "fonte pública")}</span>
       </div>
       <h3>${escapeHtml(hotel.name)}</h3>
       <p>${escapeHtml(hotel.destination)}</p>
       <dl>
         <div><dt>Indicado para</dt><dd>${escapeHtml(hotel.idealAge)}</dd></div>
-        <div><dt>Saida</dt><dd>${escapeHtml(hotel.departureMode === "carro" ? "carro da capital de Sao Paulo" : hotel.recommendedAirport || "avaliar voo")}</dd></div>
-        <div><dt>Tempo estimado</dt><dd>${escapeHtml(hotel.driveTimeFromSaoPaulo ? `ate ${Math.round(hotel.driveTimeFromSaoPaulo / 60)}h${hotel.driveTimeFromSaoPaulo % 60 ? "30" : ""}` : `${hotel.transferMinutes || "?"} min de traslado`)}</dd></div>
+        <div><dt>Saída</dt><dd>${escapeHtml(hotel.departureMode === "carro" ? "carro da capital de São Paulo" : hotel.recommendedAirport || "avaliar voo")}</dd></div>
+        <div><dt>Tempo estimado</dt><dd>${escapeHtml(formatHotelTime(hotel))}</dd></div>
         <div><dt>Copa baby</dt><dd>${hotel.copaBaby ? "sim" : "a confirmar"}${hotel.copaBaby24h ? " · 24h" : ""}</dd></div>
       </dl>
       <div class="tags">
@@ -318,10 +320,50 @@ function CuratedHotelCard(hotel) {
       <details>
         <summary>Ver por que recomendamos</summary>
         <p><b>Ponto forte:</b> ${escapeHtml(hotel.mainStrength)}</p>
-        <p><b>Ponto de atencao:</b> ${escapeHtml(hotel.attentionPoint)}</p>
+        <p><b>Ponto de atenção:</b> ${escapeHtml(hotel.attentionPoint)}</p>
+        ${hotel.sourceHighlights?.length ? `<b>Base pública consultada</b>${BulletList(hotel.sourceHighlights)}` : ""}
+        ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener">Ver fonte oficial</a>` : ""}
       </details>
     </article>
   `;
+}
+
+function TravelImage(src, alt, note = "Foto inspiracional") {
+  if (!src) return "";
+  return `
+    <figure class="travel-image">
+      <img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" loading="lazy">
+      <figcaption>${escapeHtml(note)}</figcaption>
+    </figure>
+  `;
+}
+
+function formatHotelTime(hotel) {
+  if (hotel.driveTimeFromSaoPaulo) {
+    const hours = Math.floor(hotel.driveTimeFromSaoPaulo / 60);
+    const minutes = hotel.driveTimeFromSaoPaulo % 60;
+    return `até ${hours}h${minutes ? String(minutes).padStart(2, "0") : ""}`;
+  }
+  return `${hotel.transferMinutes || "?"} min de traslado`;
+}
+
+function destinationImage(id) {
+  const images = {
+    "resort-interior-sp": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80",
+    "hotel-fazenda-sp": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+    "campos-do-jordao": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+    "sao-roque": "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=80",
+    atibaia: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80",
+    brotas: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80",
+    "litoral-norte-sp": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+    "praia-do-forte": "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=80",
+    "porto-de-galinhas": "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80",
+    maragogi: "https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1200&q=80",
+    gramado: "https://images.unsplash.com/photo-1527482797697-8795b05a13fe?auto=format&fit=crop&w=1200&q=80",
+    orlando: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80",
+    default: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80"
+  };
+  return images[id] || images.default;
 }
 
 function TravelCalendarSection() {
@@ -329,9 +371,9 @@ function TravelCalendarSection() {
   return `
     <section class="section" id="calendario">
       <div class="section-title">
-        <span class="badge subtle">Calendario paulistano</span>
-        <h2>Para quando voces querem viajar saindo de Sao Paulo?</h2>
-        <p>Feriado, ferias e alta temporada mudam completamente a logistica de uma familia com bebe.</p>
+        <span class="badge subtle">Calendário paulistano</span>
+        <h2>Para quando vocês querem viajar saindo de São Paulo?</h2>
+        <p>Feriado, férias e alta temporada mudam completamente a logística de uma família com bebê.</p>
       </div>
       <div class="calendar-tabs">${conciergeCalendar.map(item => `<button class="filter ${state.selectedCalendar === item.id ? "active" : ""}" data-action="calendar" data-calendar="${item.id}">${escapeHtml(item.label)}</button>`).join("")}</div>
       <div class="calendar-result">
@@ -342,7 +384,7 @@ function TravelCalendarSection() {
             ${BulletList(selected.bestPaths)}
           </div>
           <div>
-            <h4>Pontos de atencao</h4>
+            <h4>Pontos de atenção</h4>
             ${BulletList(selected.attention)}
           </div>
         </div>
@@ -353,12 +395,12 @@ function TravelCalendarSection() {
 }
 
 function AvoidPerrengueSection() {
-  const items = ["voos que chegam tarde demais", "conexoes desnecessarias", "sair por aeroporto ruim para o perfil da familia", "hoteis bonitos, mas longe de tudo", "resorts com traslado muito longo", "viagens de carro longas demais para bebe", "praias lindas, mas ruins para bebe", "passeios incompatíveis com soneca", "restaurantes com fila e pouca estrutura", "destinos sem plano B para chuva", "hoteis family-friendly so no marketing"];
+  const items = ["voos que chegam tarde demais", "conexões desnecessárias", "sair por aeroporto ruim para o perfil da família", "hotéis bonitos, mas longe de tudo", "resorts com traslado muito longo", "viagens de carro longas demais para bebê", "praias lindas, mas ruins para bebê", "passeios incompatíveis com soneca", "restaurantes com fila e pouca estrutura", "destinos sem plano B para chuva", "hotéis family-friendly só no marketing"];
   return `
     <section class="section band">
       <div class="section-title">
-        <h2>A gente tambem te diz o que evitar saindo de Sao Paulo</h2>
-        <p>A melhor curadoria nao e so dizer para onde ir. E ajudar sua familia a evitar escolhas que parecem boas na foto, mas viram perrengue na pratica.</p>
+        <h2>A gente também te diz o que evitar saindo de São Paulo</h2>
+        <p>A melhor curadoria não é só dizer para onde ir. É ajudar sua família a evitar escolhas que parecem boas na foto, mas viram perrengue na prática.</p>
       </div>
       <div class="avoid-grid">${items.map(item => `<span>${escapeHtml(item)}</span>`).join("")}</div>
     </section>
@@ -371,16 +413,16 @@ function ConciergeDatabaseSection() {
       <div class="section-title">
         <span class="badge subtle">Base de dados e curadoria</span>
         <h2>Nossa curadoria olha para detalhes que os buscadores ignoram</h2>
-        <p>A base do Concierge da Familia sera construida combinando dados publicos, informacoes oficiais dos hoteis, validacao direta com fornecedores, avaliacoes de familias e revisao editorial.</p>
+        <p>A base do Concierge da Família será construída combinando dados públicos, informações oficiais dos hotéis, validação direta com fornecedores, avaliações de famílias e revisão editorial.</p>
       </div>
       <div class="database-examples">
         <div>
           <h3>Copa baby 24h</h3>
-          ${BulletList(["declarada pelo hotel", "confirmada com foto", "validada por familias", "ultima atualizacao", "nivel de confianca"])}
+          ${BulletList(["declarada pelo hotel", "confirmada com foto", "validada por famílias", "última atualização", "nível de confiança"])}
         </div>
         <div>
-          <h3>Saida de Sao Paulo</h3>
-          ${BulletList(["aeroporto recomendado", "tempo de voo", "tempo ate aeroporto", "traslado no destino", "necessidade de carro", "risco de horario ruim"])}
+          <h3>Saída de São Paulo</h3>
+          ${BulletList(["aeroporto recomendado", "tempo de voo", "tempo até aeroporto", "traslado no destino", "necessidade de carro", "risco de horário ruim"])}
         </div>
       </div>
     </section>
@@ -390,9 +432,9 @@ function ConciergeDatabaseSection() {
 function CommercialTransparencySection() {
   return `
     <section class="section transparency">
-      <span class="badge">Gratuito para familias</span>
-      <h2>Gratuito para familias. Transparente nas recomendacoes.</h2>
-      <p>O Concierge da Familia e gratuito para familias. No futuro, poderemos receber comissao ou apoio comercial de parceiros quando uma reserva for feita, mas as recomendacoes devem seguir criterios claros de curadoria: estrutura, logistica, seguranca, rotina e adequacao a idade da crianca.</p>
+      <span class="badge">Gratuito para famílias</span>
+      <h2>Gratuito para famílias. Transparente nas recomendações.</h2>
+      <p>O Concierge da Família é gratuito para famílias. No futuro, poderemos receber comissão ou apoio comercial de parceiros quando uma reserva for feita, mas as recomendações devem seguir critérios claros de curadoria: estrutura, logística, segurança, rotina e adequação à idade da criança.</p>
       <p><strong>Parceiros podem aparecer em destaque, mas nunca substituem o veredito concierge.</strong></p>
     </section>
   `;
@@ -403,18 +445,18 @@ function ConciergeLeadCaptureForm() {
     <section class="section lead-section" id="lead">
       <div class="lead-box">
         <div>
-          <span class="badge subtle">Proximo passo</span>
-          <h2>Quer receber opcoes curadas para sua familia saindo de Sao Paulo?</h2>
-          <p>Sem spam. A ideia e te ajudar a escolher uma viagem que funcione para sua familia.</p>
+          <span class="badge subtle">Próximo passo</span>
+          <h2>Quer receber opções curadas para sua família saindo de São Paulo?</h2>
+          <p>Sem spam. A ideia é te ajudar a escolher uma viagem que funcione para sua família.</p>
         </div>
         <form id="leadForm" class="lead-form">
           <label>Nome<input name="name" required placeholder="Seu nome"></label>
           <label>WhatsApp<input name="phone" required inputmode="tel" placeholder="11999999999"></label>
-          <label>Regiao de Sao Paulo<input name="region" placeholder="Ex: Zona Sul"></label>
-          <label>Idade da crianca<input name="age" placeholder="Ex: 1 ano e 8 meses"></label>
-          <label>Mes provavel da viagem<input name="month" placeholder="Ex: julho"></label>
+          <label>Região de São Paulo<input name="region" placeholder="Ex: Zona Sul"></label>
+          <label>Idade da criança<input name="age" placeholder="Ex: 1 ano e 8 meses"></label>
+          <label>Mês provável da viagem<input name="month" placeholder="Ex: julho"></label>
           <label>Tipo de viagem desejada<input name="trip" placeholder="Ex: resort com copa baby"></label>
-          <button class="button primary" type="submit">Receber opcoes curadas no WhatsApp</button>
+          <button class="button primary" type="submit">Receber opções curadas no WhatsApp</button>
         </form>
       </div>
     </section>
@@ -453,12 +495,12 @@ document.addEventListener("submit", event => {
   event.preventDefault();
   const form = new FormData(event.target);
   const text = [
-    "Oi! Quero receber opcoes curadas do Concierge da Familia.",
+    "Oi! Quero receber opções curadas do Concierge da Família.",
     `Nome: ${form.get("name") || ""}`,
     `WhatsApp: ${form.get("phone") || ""}`,
-    `Regiao de SP: ${form.get("region") || ""}`,
-    `Idade da crianca: ${form.get("age") || ""}`,
-    `Mes provavel: ${form.get("month") || ""}`,
+    `Região de SP: ${form.get("region") || ""}`,
+    `Idade da criança: ${form.get("age") || ""}`,
+    `Mês provável: ${form.get("month") || ""}`,
     `Tipo de viagem: ${form.get("trip") || ""}`
   ].join("\n");
   window.open(leadWhatsAppUrl(text), "_blank", "noopener");
@@ -496,34 +538,34 @@ function backQuiz() {
 function buildDiagnosisResult(answers) {
   const concerns = arrayAnswer(answers.main_concerns);
   const must = arrayAnswer(answers.must_have);
-  const avoidPlane = answers.max_flight === "Prefiro evitar aviao" || answers.airport_preference === "Prefiro evitar aviao";
+  const avoidPlane = answers.max_flight === "Prefiro evitar avião" || answers.airport_preference === "Prefiro evitar avião";
   const babySmall = ["0 a 6 meses", "6 a 12 meses"].includes(answers.child_age);
   const south = answers.sao_paulo_region === "Zona Sul";
-  const july = answers.travel_period === "Ferias de julho";
-  const profile = `Familia de ${answers.sao_paulo_region || "Sao Paulo"}, com ${answers.child_age || "crianca pequena"}, busca ${answers.trip_type || "uma viagem em familia"} e precisa equilibrar logistica, rotina e estrutura saindo da capital.`;
+  const july = answers.travel_period === "Férias de julho";
+  const profile = `Família de ${answers.sao_paulo_region || "São Paulo"}, com ${answers.child_age || "criança pequena"}, busca ${answers.trip_type || "uma viagem em família"} e precisa equilibrar logística, rotina e estrutura saindo da capital.`;
   const prioritize = [
-    south ? "Congonhas pode ser conveniente dependendo do destino e horario, mas Guarulhos pode oferecer mais voos diretos." : "comparar Congonhas, Guarulhos e Viracopos conforme horario, destino e deslocamento de casa",
-    avoidPlane ? "resort no interior de SP, hotel fazenda, Atibaia, Sao Roque ou litoral norte com alerta de transito" : "destino com voo direto, horario bom e traslado simples",
-    babySmall ? "copa baby, hotel com restaurante, pouca necessidade de deslocamento e traslado ate 1h" : "roteiro leve com pausas e atividades adequadas por idade",
-    concerns.includes("Sono/rotina") ? "hotel que sustente tarde de descanso e quarto silencioso" : "hotel com estrutura real para familia",
+    south ? "Congonhas pode ser conveniente dependendo do destino e horário, mas Guarulhos pode oferecer mais voos diretos." : "comparar Congonhas, Guarulhos e Viracopos conforme horário, destino e deslocamento de casa",
+    avoidPlane ? "resort no interior de SP, hotel fazenda, Atibaia, São Roque ou litoral norte com alerta de trânsito" : "destino com voo direto, horário bom e traslado simples",
+    babySmall ? "copa baby, hotel com restaurante, pouca necessidade de deslocamento e traslado até 1h" : "roteiro leve com pausas e atividades adequadas por idade",
+    concerns.includes("Sono/rotina") ? "hotel que sustente tarde de descanso e quarto silencioso" : "hotel com estrutura real para família",
     july ? "resort no interior, hotel fazenda, Gramado com roteiro leve ou Nordeste com voo direto" : "plano B para chuva e conforto dos pais"
   ];
   const avoid = [
-    "destinos com conexao desnecessaria",
+    "destinos com conexão desnecessária",
     "voos chegando tarde da noite",
-    "hoteis longe do aeroporto ou sem restaurante facil",
-    concerns.includes("Estrada") ? "saida em horario de pico e estrada acima de 2h30 sem parada planejada" : "resorts com traslado acima de 2h",
+    "hotéis longe do aeroporto ou sem restaurante fácil",
+    concerns.includes("Estrada") ? "saída em horário de pico e estrada acima de 2h30 sem parada planejada" : "resorts com traslado acima de 2h",
     "roteiros com muitos passeios no mesmo dia"
   ];
-  if (must.includes("Copa baby 24h")) prioritize.push("confirmar copa baby 24h com evidencia antes da reserva");
+  if (must.includes("Copa baby 24h")) prioritize.push("confirmar copa baby 24h com evidência antes da reserva");
   return {
     profile,
     prioritize: unique(prioritize).slice(0, 6),
     avoid: unique(avoid).slice(0, 5),
     paths: [
-      { title: "Resort no interior de SP", text: "melhor se quiser evitar aviao e reduzir logistica." },
+      { title: "Resort no interior de SP", text: "melhor se quiser evitar avião e reduzir logística." },
       { title: "Nordeste com voo direto", text: "melhor se quiser praia e estrutura de resort." },
-      { title: "Serra/cidade charmosa com roteiro leve", text: "melhor se quiser clima diferente, mas exige cuidado com deslocamentos e lotacao." }
+      { title: "Serra/cidade charmosa com roteiro leve", text: "melhor se quiser clima diferente, mas exige cuidado com deslocamentos e lotação." }
     ]
   };
 }
