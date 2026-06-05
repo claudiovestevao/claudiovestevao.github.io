@@ -24,6 +24,18 @@ export const conciergeQuizQuestions = [
     options: ["Resort completo", "Hotel fazenda", "Praia com resort", "Cidade com passeios", "Apart-hotel com cozinha"]
   },
   {
+    id: "budget_season_strategy",
+    question: "Como orçamento e época pesam na decisão?",
+    type: "single",
+    options: [
+      "Alta temporada, quero segurança mesmo pagando mais",
+      "Feriado curto, preciso logística simples",
+      "Baixa temporada, prefiro custo-benefício",
+      "Verão/praia, aceito pagar mais pelo clima",
+      "Data flexível, quero a melhor oportunidade"
+    ]
+  },
+  {
     id: "comfort_needs",
     question: "O que precisa existir para você ficar tranquilo?",
     type: "multi",

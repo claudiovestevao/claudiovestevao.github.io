@@ -1,9 +1,9 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=family-diagnostic-images-v2-20260605";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=family-diagnostic-images-v2-20260605";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=family-diagnostic-images-v2-20260605";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=family-diagnostic-images-v2-20260605";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=family-diagnostic-images-v2-20260605";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=family-diagnostic-images-v2-20260605";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=destination-first-v3-20260605";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=destination-first-v3-20260605";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=destination-first-v3-20260605";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=destination-first-v3-20260605";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=destination-first-v3-20260605";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=destination-first-v3-20260605";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -12,6 +12,8 @@ const state = {
   quizIndex: 0,
   answers: {},
   result: null,
+  selectedDestinationKey: null,
+  showMoreDestinations: false,
   selectedCalendar: "julho",
   hotelFilter: "all",
   hotelFilters: {
@@ -34,11 +36,24 @@ document.addEventListener("click", handleClick);
 document.addEventListener("input", handleInput);
 render();
 
+function defaultHotelFilters() {
+  return {
+    destination: "all",
+    mode: "all",
+    price: "all",
+    image: "all",
+    amenities: [],
+    search: "",
+    sort: "score"
+  };
+}
+
 function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
-    ${state.result ? RankedHotelsSection() : ""}
+    ${state.result ? DestinationRecommendationsSection() : ""}
+    ${state.result && state.selectedDestinationKey ? RankedHotelsSection() : ""}
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
 }
@@ -58,7 +73,7 @@ function ConciergeHeroSection() {
       <div class="hero-copy">
         <span class="badge">Diagnóstico em até 2 minutos</span>
         <h1>Encontre o destino certo para sua família.</h1>
-        <p>Primeiro entendemos quem viaja, quando vocês querem ir e quanta logística a família tolera. Depois o ranking mostra destinos e hotéis reais, com filtros e links de disponibilidade.</p>
+        <p>Primeiro entendemos quem viaja, quando vocês querem ir, o orçamento e quanta logística a família tolera. Depois mostramos 3 destinos para decidir com calma.</p>
         <div class="family-cues" aria-label="Critérios de curadoria familiar">
           <span>WhatsApp e email</span>
           <span>Quem vai viajar</span>
@@ -144,10 +159,10 @@ function ConciergeDiagnosisDonePanel() {
         <span>Diagnóstico concluído</span>
         <div class="progress"><i style="width:100%"></i></div>
       </div>
-      <h3>Ranking pronto para a sua família.</h3>
-      <p>Use os filtros abaixo para comparar destino, logística, estrutura infantil, faixa de preço e imagens verificadas.</p>
+      <h3>Suas 3 melhores cidades estão prontas.</h3>
+      <p>Comece pelo destino. Depois de escolher uma cidade, mostramos os hotéis que fazem mais sentido para a família.</p>
       <div class="quiz-actions">
-        <a class="button primary" href="#ranking">Ver hotéis</a>
+        <a class="button primary" href="#recomendacoes">Ver destinos</a>
         <button class="button secondary" type="button" data-action="restart-diagnosis">Refazer</button>
       </div>
     </div>
@@ -247,17 +262,78 @@ function ConciergeDiagnosisResult(result) {
   `;
 }
 
+function DestinationRecommendationsSection() {
+  const recommendations = buildDestinationRecommendations();
+  const visibleRecommendations = state.showMoreDestinations ? recommendations : recommendations.slice(0, 3);
+  return `
+    <section class="section destination-recommendations" id="recomendacoes">
+      <div class="section-title">
+        <span class="badge subtle">Decisão de mãe: primeiro o destino</span>
+        <h2>Eu começaria por estas 3 cidades.</h2>
+        <p>Antes de entrar em hotel, escolha o lugar que mais combina com rotina, orçamento e época da viagem. Depois você compara os resorts daquele destino.</p>
+      </div>
+      <div class="recommendation-grid">
+        ${visibleRecommendations.map((recommendation, index) => DestinationRecommendationCard(recommendation, index)).join("")}
+      </div>
+      <div class="recommendation-actions">
+        ${!state.showMoreDestinations && recommendations.length > 3 ? `<button class="button secondary" data-action="show-more-destinations">Ver mais destinos avaliados</button>` : ""}
+        ${state.showMoreDestinations ? `<button class="button secondary" data-action="show-top-destinations">Voltar para as 3 melhores</button>` : ""}
+      </div>
+    </section>
+  `;
+}
+
+function DestinationRecommendationCard(recommendation, index) {
+  const active = state.selectedDestinationKey === recommendation.key;
+  return `
+    <article class="recommendation-card ${active ? "active" : ""}">
+      <div class="recommendation-rank">
+        <span>${index + 1}</span>
+        <strong>${recommendation.score.toFixed(1)}</strong>
+      </div>
+      ${DestinationImage(recommendation.imageKey, recommendation.name)}
+      <div class="recommendation-copy">
+        <span class="eyebrow">${escapeHtml(recommendation.familyFit)}</span>
+        <h3>${escapeHtml(recommendation.name)}</h3>
+        <p>${escapeHtml(recommendation.reason)}</p>
+        <div class="decision-lens">
+          <div>
+            <b>Orçamento</b>
+            <span>${escapeHtml(recommendation.budgetNote)}</span>
+          </div>
+          <div>
+            <b>Sazonalidade</b>
+            <span>${escapeHtml(recommendation.seasonNote)}</span>
+          </div>
+          <div>
+            <b>Meu cuidado</b>
+            <span>${escapeHtml(recommendation.momCheck)}</span>
+          </div>
+        </div>
+        <div class="tags compact-tags">
+          ${recommendation.tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}
+        </div>
+        <button class="button primary" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
+          ${active ? "Hotéis deste destino abaixo" : `Ver hotéis em ${escapeHtml(recommendation.shortName)}`}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
 function RankedHotelsSection() {
   const ranked = getFilteredRankedHotels();
   const destinationGroups = buildDestinationGroups(ranked);
+  const selectedRecommendation = buildDestinationRecommendations().find(item => item.key === state.selectedDestinationKey);
   return `
     <section class="section ranking-section" id="ranking">
       <div class="section-title">
-        <span class="badge subtle">Curadoria ajustada pelo diagnóstico</span>
-        <h2>Destinos e hotéis recomendados</h2>
-        <p>Use os filtros para comparar logística, estrutura infantil, preço estimado e evidência visual. Cada hotel abre em uma página externa para consultar disponibilidade.</p>
+        <span class="badge subtle">Agora sim: hotéis</span>
+        <h2>Hotéis em ${escapeHtml(selectedRecommendation?.name || "destino escolhido")}</h2>
+        <p>Agora que o destino foi escolhido, compare estrutura infantil, faixa de preço e disponibilidade. Eu manteria a lista curta e olharia primeiro os melhores encaixes.</p>
       </div>
       ${ranked.length ? ConciergeMap(ranked) : ""}
+      <button class="button secondary compact-button back-destination-button" data-action="back-to-destinations">Trocar destino</button>
       ${HotelExplorerControls(ranked)}
       ${DestinationSummary(destinationGroups)}
       <div class="ranking-list">
@@ -268,7 +344,7 @@ function RankedHotelsSection() {
 }
 
 function HotelExplorerControls(rankedHotels) {
-  const destinations = buildDestinationOptions();
+  const destinations = buildDestinationOptions(rankedHotels);
   const amenityFilters = [
     ["copa", "Copa baby"],
     ["copa24", "Copa 24h"],
@@ -436,7 +512,7 @@ function rankHotelsForAnswers() {
   const must = arrayAnswer(answers.comfort_needs);
   const concerns = arrayAnswer(answers.avoid_risks);
   const intake = state.intake || {};
-  const avoidPlane = answers.displacement_limit === "Até 2h de carro" || answers.displacement_limit === "Até 4h de carro";
+  const budgetSeason = answers.budget_season_strategy || "";
   const babySmall = intake.childAge === "0 a 12 meses";
   const hasPet = intake.pet && intake.pet !== "Não vai pet";
 
@@ -480,6 +556,31 @@ function rankHotelsForAnswers() {
     if (answers.decision_profile === "Melhor estrutura, mesmo mais caro" && hotel.priceTier === "luxury") adjustedScore += 0.18;
     if (answers.decision_profile === "Evitar lotação e filas" && ["orlando", "beto-carrero-penha", "olimpia"].includes(hotel.destinationSlug)) adjustedScore -= 0.22;
 
+    if (budgetSeason === "Alta temporada, quero segurança mesmo pagando mais") {
+      if (["luxury", "upscale"].includes(hotel.priceTier) && hotel.worksOnRainyDay) adjustedScore += 0.24;
+      if (travelBurden(hotel) <= 150) adjustedScore += 0.12;
+      rankingNotes.push("bom para alta temporada");
+    }
+    if (budgetSeason === "Feriado curto, preciso logística simples") {
+      if (travelBurden(hotel) <= 120) adjustedScore += 0.32;
+      if (hotel.transferMinutes > 90 || hotel.driveTimeFromSaoPaulo > 180) adjustedScore -= 0.28;
+      rankingNotes.push("melhor para feriado curto");
+    }
+    if (budgetSeason === "Baixa temporada, prefiro custo-benefício") {
+      if (["mid", "upscale"].includes(hotel.priceTier)) adjustedScore += 0.24;
+      if (hotel.priceTier === "luxury") adjustedScore -= 0.12;
+      rankingNotes.push("olhar datas fora de pico");
+    }
+    if (budgetSeason === "Verão/praia, aceito pagar mais pelo clima") {
+      if (hotel.calmBeach || ["praia-do-forte", "porto-de-galinhas", "maceio-maragogi", "litoral-norte-sp"].includes(hotel.destinationSlug)) adjustedScore += 0.3;
+      if (hotel.allInclusive) adjustedScore += 0.12;
+      rankingNotes.push("depende de voo e clima");
+    }
+    if (budgetSeason === "Data flexível, quero a melhor oportunidade") {
+      if (hotel.priceTier !== "luxury" || hotel.driveTimeFromSaoPaulo) adjustedScore += 0.14;
+      rankingNotes.push("bom para monitorar oportunidade");
+    }
+
     if (concerns.includes("Traslado longo") && hotel.transferMinutes > 90) {
       adjustedScore -= 0.45;
       rankingNotes.push("atenção ao traslado");
@@ -505,7 +606,9 @@ function rankHotelsForAnswers() {
 
 function getFilteredRankedHotels() {
   const filters = state.hotelFilters;
-  const ranked = rankHotelsForAnswers().filter(hotel => matchesHotelFilters(hotel, filters));
+  const ranked = rankHotelsForAnswers()
+    .filter(hotel => !state.selectedDestinationKey || cityKeyForHotel(hotel) === state.selectedDestinationKey)
+    .filter(hotel => matchesHotelFilters(hotel, filters));
   if (filters.sort === "distance") {
     return ranked.sort((a, b) => travelBurden(a) - travelBurden(b) || b.adjustedScore - a.adjustedScore);
   }
@@ -559,9 +662,117 @@ function buildDestinationGroups(hotels) {
   return [...groups.values()].sort((a, b) => b.bestScore - a.bestScore || a.name.localeCompare(b.name)).slice(0, 12);
 }
 
-function buildDestinationOptions() {
+function buildDestinationRecommendations() {
+  const groups = new Map();
+  rankHotelsForAnswers().forEach(hotel => {
+    const key = cityKeyForHotel(hotel);
+    const current = groups.get(key) || {
+      key,
+      name: hotel.destination,
+      shortName: shortCityName(hotel.destination),
+      hotels: [],
+      bestScore: 0,
+      imageKey: imageKeyForHotelDestination(hotel)
+    };
+    current.hotels.push(hotel);
+    current.bestScore = Math.max(current.bestScore, hotel.adjustedScore || hotel.score);
+    groups.set(key, current);
+  });
+
+  return [...groups.values()].map(group => {
+    const sortedHotels = group.hotels.sort((a, b) => b.adjustedScore - a.adjustedScore || b.score - a.score);
+    const bestHotel = sortedHotels[0];
+    const topHotels = sortedHotels.slice(0, 2);
+    const topScoreAverage = topHotels.reduce((sum, hotel) => sum + hotel.adjustedScore, 0) / topHotels.length;
+    const score = Math.min(10, Math.round((topScoreAverage + destinationStrategicBonus(group, bestHotel)) * 10) / 10);
+    return {
+      ...group,
+      hotels: sortedHotels,
+      bestHotel,
+      score,
+      familyFit: buildFamilyFit(group, bestHotel),
+      reason: buildDestinationReason(group, bestHotel),
+      budgetNote: buildBudgetNote(group, bestHotel),
+      seasonNote: buildSeasonNote(group, bestHotel),
+      momCheck: buildMomCheck(group, bestHotel),
+      tags: recommendationTags(group, bestHotel)
+    };
+  }).sort((a, b) => b.score - a.score || b.bestScore - a.bestScore || a.name.localeCompare(b.name));
+}
+
+function destinationStrategicBonus(group, bestHotel) {
+  const answers = state.answers || {};
+  let bonus = group.hotels.length > 1 ? 0.1 : 0;
+  if (answers.budget_season_strategy === "Feriado curto, preciso logística simples" && travelBurden(bestHotel) <= 120) bonus += 0.18;
+  if (answers.budget_season_strategy === "Baixa temporada, prefiro custo-benefício" && group.hotels.some(hotel => hotel.priceTier === "mid")) bonus += 0.14;
+  if (answers.budget_season_strategy === "Verão/praia, aceito pagar mais pelo clima" && isBeachDestination(bestHotel)) bonus += 0.16;
+  if (answers.decision_profile === "Evitar lotação e filas" && ["orlando", "beto-carrero-penha", "olimpia", "gramado"].includes(bestHotel.destinationSlug)) bonus -= 0.22;
+  return bonus;
+}
+
+function buildFamilyFit(group, bestHotel) {
+  if (bestHotel.driveTimeFromSaoPaulo && bestHotel.driveTimeFromSaoPaulo <= 120) return "menos logística, mais previsibilidade";
+  if (isBeachDestination(bestHotel)) return "praia com estrutura para descansar";
+  if (bestHotel.allInclusive) return "alimentação mais resolvida";
+  if (bestHotel.hasKitchenette) return "rotina e autonomia";
+  return group.hotels.length > 1 ? "boa base para comparar hotéis" : "opção bem específica";
+}
+
+function buildDestinationReason(group, bestHotel) {
+  const answers = state.answers || {};
+  if (answers.travel_goal === "Primeira viagem sem susto") return `${group.shortName} reduz pontos de atrito: deslocamento mais simples, hotel com estrutura e menos decisões no dia.`;
+  if (answers.travel_goal === "Praia e piscina" && isBeachDestination(bestHotel)) return `${group.shortName} entrega o combo mais óbvio para família: água, pausa e resort como base principal.`;
+  if (answers.travel_goal === "Parque ou muita atividade") return `${group.shortName} faz sentido se a criança já aguenta dias mais cheios e vocês topam controlar fila e descanso.`;
+  if (answers.stay_style === "Hotel fazenda") return `${group.shortName} é uma escolha mais acolhedora quando a família quer natureza, refeição fácil e rotina menos urbana.`;
+  return `Eu colocaria ${group.shortName} na frente porque combina melhor logística, estrutura infantil e chance de a viagem fluir sem excesso de roteiro.`;
+}
+
+function buildBudgetNote(group, bestHotel) {
+  const strategy = state.answers?.budget_season_strategy || "";
+  const tiers = unique(group.hotels.map(hotel => hotel.priceTier));
+  const hasMid = tiers.includes("mid");
+  const hasLuxury = tiers.includes("luxury");
+  if (strategy.includes("Baixa temporada")) return hasMid ? "melhor chance de controlar diária fora de pico" : "vale monitorar promoção; tende a ser mais caro";
+  if (strategy.includes("Alta temporada")) return hasLuxury ? "não é barato, mas compra previsibilidade" : "pode performar bem se reservar cedo";
+  if (strategy.includes("Feriado curto")) return bestHotel.driveTimeFromSaoPaulo ? "economiza voo, mas atenção à estrada" : "voo curto ajuda; compre com antecedência";
+  if (strategy.includes("Verão/praia")) return "preço sobe rápido no calor; trave aéreo e política de cancelamento";
+  if (hasMid) return "há opção mais controlável para testar datas";
+  return "orçamento médio/alto; compare meia pensão, taxas e extras";
+}
+
+function buildSeasonNote(group, bestHotel) {
+  const period = state.intake?.travelPeriod || "Ainda não sei";
+  const strategy = state.answers?.budget_season_strategy || "";
+  if (strategy.includes("Baixa temporada")) return "fora de férias, eu procuraria melhor tarifa e mais espaço no hotel";
+  if (period === "Férias de julho" && ["gramado", "campos-do-jordao"].includes(bestHotel.destinationSlug)) return "julho combina com serra, mas lota e encarece bastante";
+  if (period === "Verão/Janeiro" && isBeachDestination(bestHotel)) return "verão favorece praia, mas exige reserva cedo e plano para chuva";
+  if (period === "Feriado prolongado") return travelBurden(bestHotel) <= 150 ? "boa para feriado porque a logística não engole a viagem" : "feriado pede chegada cedo e margem para imprevistos";
+  if (strategy.includes("Alta temporada")) return "priorize hotel com plano B, política clara e horários confortáveis";
+  return "com data flexível, eu compararia preço por semana e evitaria pico escolar";
+}
+
+function buildMomCheck(group, bestHotel) {
+  if (state.intake?.childAge === "0 a 12 meses" && !bestHotel.copaBaby) return "confirmar berço, copa baby e comida antes de reservar";
+  if (bestHotel.transferMinutes > 90) return "só escolheria com voo chegando cedo e traslado privado";
+  if (bestHotel.driveTimeFromSaoPaulo > 180) return "planejar paradas reais, não só tempo de mapa";
+  if (bestHotel.destinationSlug === "olimpia") return "bom para criança maior; para bebê eu teria cautela";
+  return "validar horário de chegada, refeições e política de cancelamento";
+}
+
+function recommendationTags(group, bestHotel) {
+  return unique([
+    bestHotel.driveTimeFromSaoPaulo ? `${formatHotelTime(bestHotel)} de carro` : `traslado ${bestHotel.transferMinutes || "?"} min`,
+    priceTierLabel(bestHotel.priceTier),
+    bestHotel.copaBaby ? "copa baby" : "",
+    bestHotel.allInclusive ? "all inclusive" : "",
+    bestHotel.worksOnRainyDay ? "plano B chuva" : "",
+    `${group.hotels.length} ${group.hotels.length === 1 ? "hotel" : "hotéis"}`
+  ]).slice(0, 4);
+}
+
+function buildDestinationOptions(hotels = curatedHotels) {
   const seen = new Map();
-  curatedHotels.forEach(hotel => seen.set(hotel.destinationSlug, destinationName(hotel.destinationSlug, hotel.destination)));
+  hotels.forEach(hotel => seen.set(hotel.destinationSlug, destinationName(hotel.destinationSlug, hotel.destination)));
   return [["all", "Todos"], ...[...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]))];
 }
 
@@ -868,9 +1079,36 @@ function handleClick(event) {
     state.quizIndex = 0;
     state.answers = {};
     state.result = null;
+    state.selectedDestinationKey = null;
+    state.showMoreDestinations = false;
     state.intakeComplete = false;
     render();
     setTimeout(() => document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    return;
+  }
+  if (action === "show-more-destinations") {
+    state.showMoreDestinations = true;
+    render();
+    setTimeout(() => document.getElementById("recomendacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    return;
+  }
+  if (action === "show-top-destinations") {
+    state.showMoreDestinations = false;
+    render();
+    setTimeout(() => document.getElementById("recomendacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    return;
+  }
+  if (action === "select-destination-recommendation") {
+    state.selectedDestinationKey = target.dataset.destinationKey;
+    state.hotelFilters = defaultHotelFilters();
+    render();
+    setTimeout(() => document.getElementById("ranking")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    return;
+  }
+  if (action === "back-to-destinations") {
+    state.selectedDestinationKey = null;
+    render();
+    setTimeout(() => document.getElementById("recomendacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return;
   }
   if (action === "hotel-filter") {
@@ -889,15 +1127,7 @@ function handleClick(event) {
     render();
   }
   if (action === "reset-hotel-filters") {
-    state.hotelFilters = {
-      destination: "all",
-      mode: "all",
-      price: "all",
-      image: "all",
-      amenities: [],
-      search: "",
-      sort: "score"
-    };
+    state.hotelFilters = defaultHotelFilters();
     render();
   }
   if (action === "calendar") {
@@ -954,6 +1184,7 @@ document.addEventListener("submit", event => {
     `Mês provável: ${form.get("month") || state.intake.travelPeriod || ""}`,
     `Quem vai: ${state.intake.adults || ""}, ${state.intake.children || ""}, ${state.intake.pet || ""}`,
     `Última viagem: ${state.intake.lastTrip || ""}`,
+    `Orçamento/época: ${state.answers.budget_season_strategy || ""}`,
     `Tipo de viagem: ${form.get("trip") || ""}`
   ].join("\n");
   window.open(leadWhatsAppUrl(text), "_blank", "noopener");
@@ -978,6 +1209,9 @@ function nextQuiz() {
     state.quizIndex += 1;
   } else {
     state.result = buildDiagnosisResult(state.answers);
+    state.selectedDestinationKey = null;
+    state.showMoreDestinations = false;
+    state.hotelFilters = defaultHotelFilters();
     setTimeout(() => document.getElementById("resultado")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
   render();
@@ -995,12 +1229,16 @@ function buildDiagnosisResult(answers) {
   const persona = inferFamilyPersona(answers, intake);
   const babySmall = intake.childAge === "0 a 12 meses";
   const hasPet = intake.pet && intake.pet !== "Não vai pet";
-  const profile = `${persona}. Viagem para ${intake.adults || "2 adultos"} e ${intake.children || "criança(s)"}, ${hasPet ? "com pet" : "sem pet"}, pensando em ${intake.travelPeriod || "data flexível"}. Última viagem: ${intake.lastTrip || "não informado"}.`;
+  const budgetSeason = answers.budget_season_strategy || "orçamento e data ainda flexíveis";
+  const profile = `${persona}. Viagem para ${intake.adults || "2 adultos"} e ${intake.children || "criança(s)"}, ${hasPet ? "com pet" : "sem pet"}, pensando em ${intake.travelPeriod || "data flexível"}. Estratégia: ${budgetSeason}. Última viagem: ${intake.lastTrip || "não informado"}.`;
   const prioritize = [
+    "escolher primeiro a cidade que reduz risco para a rotina da família, antes de comparar resort",
     answers.displacement_limit === "Até 2h de carro" ? "destinos muito próximos de São Paulo para reduzir imprevisibilidade" : "logística que combine deslocamento total, horário de chegada e tolerância da criança",
     babySmall ? "copa baby, alimentação fácil, quarto silencioso e pouca necessidade de sair do hotel" : "hotel que ofereça atividade, pausa e alimentação sem roteiro corrido",
     answers.stay_style === "Apart-hotel com cozinha" ? "hospedagens com kitchenette para manter rotina de lanche, leite e descanso" : "hospedagens com estrutura familiar real, não só fotos bonitas",
     hasPet ? "confirmar política pet, taxa, porte permitido e áreas de circulação antes de reservar" : "",
+    answers.budget_season_strategy === "Baixa temporada, prefiro custo-benefício" ? "usar baixa temporada para buscar melhor tarifa, mais espaço e menos fila" : "",
+    answers.budget_season_strategy === "Alta temporada, quero segurança mesmo pagando mais" ? "reservar cedo e priorizar política clara de cancelamento" : "",
     must.includes("Plano B para chuva") ? "plano B indoor para dias de chuva ou cansaço" : "",
     answers.decision_profile === "Evitar lotação e filas" ? "datas fora de pico e destinos menos dependentes de parque/fila" : ""
   ];
@@ -1047,6 +1285,38 @@ function matchesHotelFilter(hotel) {
   }
 }
 
+function cityKeyForHotel(hotel) {
+  return slugifyText(hotel.destination || hotel.destinationSlug || hotel.id);
+}
+
+function shortCityName(destination) {
+  return String(destination || "destino").split(",")[0].trim();
+}
+
+function imageKeyForHotelDestination(hotel) {
+  const destination = removeAccents(String(hotel.destination || "").toLowerCase());
+  if (destination.includes("campinas")) return "resort-interior-sp";
+  if (destination.includes("atibaia")) return "atibaia";
+  if (destination.includes("dourado")) return "hotel-fazenda-sp";
+  if (destination.includes("guaruja")) return "litoral-norte-sp";
+  if (hotel.destinationSlug === "resort-interior-sp") return null;
+  return hotel.destinationSlug;
+}
+
+function isBeachDestination(hotel) {
+  return Boolean(hotel.calmBeach || ["praia-do-forte", "porto-de-galinhas", "maceio-maragogi", "litoral-norte-sp"].includes(hotel.destinationSlug));
+}
+
+function priceTierLabel(tier) {
+  const labels = {
+    mid: "custo médio",
+    upscale: "médio/alto",
+    luxury: "alto investimento",
+    budget: "econômico"
+  };
+  return labels[tier] || "orçamento a confirmar";
+}
+
 function leadWhatsAppUrl(message) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
@@ -1058,6 +1328,7 @@ function normalizeHotel(hotel) {
   return {
     ...hotel,
     destinationSlug,
+    destinationKey: slugifyText(hotel.destination || destinationSlug),
     propertyType: hotel.propertyType || (hotel.allInclusive || hotel.kidsClub ? "resort" : "hotel"),
     priceTier: hotel.priceTier || inferPriceTier(hotel.score),
     officialSiteUrl: hotel.officialSiteUrl || sourceUrl,
@@ -1106,6 +1377,17 @@ function arrayAnswer(value) {
 
 function unique(items) {
   return [...new Set(items.filter(Boolean))];
+}
+
+function slugifyText(value) {
+  return removeAccents(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function removeAccents(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function escapeHtml(value) {
