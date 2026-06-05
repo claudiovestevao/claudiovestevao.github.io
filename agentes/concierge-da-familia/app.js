@@ -166,11 +166,56 @@ function RankedHotelsSection() {
         <h2>Hotéis ordenados por score</h2>
         <p>${state.result ? "Lista em ordem decrescente, recalculada a partir das suas respostas." : "Faça o diagnóstico acima para ajustar o ranking ao perfil da sua família."}</p>
       </div>
+      ${ConciergeMap(ranked)}
       <div class="ranking-list">
         ${ranked.map((hotel, index) => RankedHotelRow(hotel, index)).join("")}
       </div>
     </section>
   `;
+}
+
+function ConciergeMap(rankedHotels) {
+  const topHotel = rankedHotels[0];
+  const topDrive = rankedHotels.find(hotel => hotel.departureMode === "carro");
+  const topBeach = rankedHotels.find(hotel => hotel.departureMode === "voo");
+  return `
+    <div class="concierge-map-card" aria-label="Mapa simplificado com destinos recomendados">
+      <div class="map-copy">
+        <span class="badge subtle">Mapa da curadoria</span>
+        <h3>De São Paulo para destinos reais</h3>
+        <p>O ranking trabalha com lugares concretos, como ${escapeHtml(topHotel.destination)}, ${escapeHtml(topDrive?.destination || "Atibaia, SP")} e ${escapeHtml(topBeach?.destination || "Porto de Galinhas, PE")}.</p>
+      </div>
+      <div class="map-canvas" role="img" aria-label="Mapa visual simplificado com São Paulo como origem e pins de hotéis">
+        <span class="map-origin">São Paulo</span>
+        ${rankedHotels.map((hotel, index) => MapPin(hotel, index)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function MapPin(hotel, index) {
+  const position = hotelMapPosition(hotel.id);
+  const offset = index % 2 === 0 ? 0 : 1.6;
+  return `
+    <span class="map-pin" style="left:${position.x + offset}%;top:${position.y + offset}%">
+      <b>${index + 1}</b>
+      <small>${escapeHtml(position.label)}</small>
+    </span>
+  `;
+}
+
+function hotelMapPosition(id) {
+  const positions = {
+    "royal-palm-plaza-campinas": { x: 38, y: 62, label: "Campinas" },
+    "bourbon-atibaia": { x: 45, y: 54, label: "Atibaia" },
+    "club-med-lake-paradise": { x: 56, y: 61, label: "Mogi das Cruzes" },
+    "mavsa-resort": { x: 30, y: 66, label: "Cesário Lange" },
+    "tivoli-praia-do-forte": { x: 74, y: 34, label: "Praia do Forte" },
+    "salinas-maragogi": { x: 79, y: 23, label: "Maragogi" },
+    "summerville-porto-galinhas": { x: 82, y: 27, label: "Porto de Galinhas" },
+    "enotel-porto-galinhas": { x: 84, y: 31, label: "Porto de Galinhas" }
+  };
+  return positions[id] || { x: 55, y: 50, label: "Destino" };
 }
 
 function RankedHotelRow(hotel, index) {
@@ -606,10 +651,10 @@ function buildDiagnosisResult(answers) {
   const profile = `Família de ${answers.sao_paulo_region || "São Paulo"}, com ${answers.child_age || "criança pequena"}, busca ${answers.trip_type || "uma viagem em família"} e precisa equilibrar logística, rotina e estrutura saindo da capital.`;
   const prioritize = [
     south ? "Congonhas pode ser conveniente dependendo do destino e horário, mas Guarulhos pode oferecer mais voos diretos." : "comparar Congonhas, Guarulhos e Viracopos conforme horário, destino e deslocamento de casa",
-    avoidPlane ? "resort no interior de SP, hotel fazenda, Atibaia, São Roque ou litoral norte com alerta de trânsito" : "destino com voo direto, horário bom e traslado simples",
+    avoidPlane ? "Campinas, Atibaia, Mogi das Cruzes ou Cesário Lange, com carro saindo da capital" : "Porto de Galinhas, Praia do Forte ou Maragogi, sempre com voo direto e traslado planejado",
     babySmall ? "copa baby, hotel com restaurante, pouca necessidade de deslocamento e traslado até 1h" : "roteiro leve com pausas e atividades adequadas por idade",
     concerns.includes("Sono/rotina") ? "hotel que sustente tarde de descanso e quarto silencioso" : "hotel com estrutura real para família",
-    july ? "resort no interior, hotel fazenda, Gramado com roteiro leve ou Nordeste com voo direto" : "plano B para chuva e conforto dos pais"
+    july ? "Campinas, Atibaia ou Mogi das Cruzes para carro curto; Porto de Galinhas ou Praia do Forte se a família quiser praia" : "plano B para chuva e conforto dos pais"
   ];
   const avoid = [
     "destinos com conexão desnecessária",
@@ -624,9 +669,9 @@ function buildDiagnosisResult(answers) {
     prioritize: unique(prioritize).slice(0, 6),
     avoid: unique(avoid).slice(0, 5),
     paths: [
-      { title: "Resort no interior de SP", text: "melhor se quiser evitar avião e reduzir logística." },
-      { title: "Nordeste com voo direto", text: "melhor se quiser praia e estrutura de resort." },
-      { title: "Serra/cidade charmosa com roteiro leve", text: "melhor se quiser clima diferente, mas exige cuidado com deslocamentos e lotação." }
+      { title: "Campinas ou Atibaia", text: "melhor se quiser evitar avião e reduzir logística." },
+      { title: "Porto de Galinhas ou Praia do Forte", text: "melhor se quiser praia e estrutura de resort." },
+      { title: "Gramado ou Campos do Jordão", text: "melhor se quiser clima diferente, mas exige cuidado com deslocamentos e lotação." }
     ]
   };
 }

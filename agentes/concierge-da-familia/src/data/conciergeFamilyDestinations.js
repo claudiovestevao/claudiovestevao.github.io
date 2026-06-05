@@ -1,7 +1,7 @@
 export const conciergeDestinations = [
   {
     id: "resort-interior-sp",
-    name: "Resort no interior de SP",
+    name: "Atibaia, Campinas ou Mogi das Cruzes",
     region: "S?o Paulo, Brasil",
     originFocus: "Capital de S?o Paulo",
     idealAge: "6 meses a 5 anos",

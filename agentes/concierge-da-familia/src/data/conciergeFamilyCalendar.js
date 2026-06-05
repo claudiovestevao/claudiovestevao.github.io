@@ -10,7 +10,7 @@ export const conciergeCalendar = [
     id: "carnaval",
     label: "Carnaval",
     title: "Carnaval com crian?a pequena",
-    bestPaths: ["hotel fazenda", "resort no interior", "praia com estrutura e pouco deslocamento"],
+    bestPaths: ["hotel fazenda perto de Atibaia", "Campinas ou Mogi das Cruzes", "Praia do Forte ou Porto de Galinhas com voo direto"],
     attention: ["lota??o", "barulho", "estradas congestionadas", "evitar roteiro com muitos deslocamentos"]
   },
   {
@@ -24,7 +24,7 @@ export const conciergeCalendar = [
     id: "julho",
     label: "F?rias de julho",
     title: "F?rias de julho com beb? saindo de SP",
-    bestPaths: ["resorts no interior de SP", "hotel fazenda com estrutura", "Gramado com roteiro leve", "Nordeste com voo direto", "Campos do Jord?o com cuidado de lota??o"],
+    bestPaths: ["Campinas, Atibaia ou Mogi das Cruzes", "hotel fazenda com estrutura", "Gramado com roteiro leve", "Porto de Galinhas ou Praia do Forte com voo direto", "Campos do Jord?o com cuidado de lota??o"],
     attention: ["pre?os mais altos", "aeroportos mais cheios", "frio em destinos de serra", "necessidade de reservar restaurantes", "evitar roteiros urbanos corridos", "at?n??o a voos chegando tarde"]
   },
   {
@@ -59,7 +59,7 @@ export const conciergeCalendar = [
     id: "fim-semana",
     label: "Fim de semana",
     title: "Fim de semana saindo da capital",
-    bestPaths: ["Atibaia", "S?o Roque", "resort no interior", "hotel fazenda curto"],
+    bestPaths: ["Atibaia", "S?o Roque", "Campinas ou Mogi das Cruzes", "hotel fazenda curto"],
     attention: ["sair fora do pico", "n?o exagerar no roteiro", "levar itens de rotina do beb?"]
   }
 ];

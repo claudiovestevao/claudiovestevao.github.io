@@ -627,6 +627,104 @@ p {
   scroll-margin-top: 70px;
 }
 
+.concierge-map-card {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(231, 248, 239, .72), transparent 42%),
+    rgba(255, 255, 255, .94);
+  box-shadow: 0 12px 34px rgba(0, 53, 128, .08);
+}
+
+.map-copy {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.map-copy h3,
+.map-copy p {
+  margin-bottom: 0;
+}
+
+.map-canvas {
+  position: relative;
+  min-height: 260px;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid #c9dbf2;
+  background:
+    radial-gradient(circle at 49% 66%, rgba(0, 59, 149, .2) 0 12px, transparent 13px),
+    radial-gradient(circle at 72% 24%, rgba(0, 108, 228, .11), transparent 8rem),
+    radial-gradient(circle at 32% 68%, rgba(254, 187, 2, .14), transparent 8rem),
+    linear-gradient(135deg, #eef7ff 0%, #fff 58%, #e7f8ef 100%);
+}
+
+.map-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 12% 11% 10% 20%;
+  border: 2px dashed rgba(0, 59, 149, .18);
+  border-radius: 54% 46% 42% 58% / 45% 37% 63% 55%;
+  transform: rotate(-12deg);
+}
+
+.map-origin {
+  position: absolute;
+  left: 46%;
+  top: 64%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  padding: 9px 12px;
+  color: #fff;
+  background: var(--blue);
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 0 0 8px rgba(0, 108, 228, .12);
+}
+
+.map-pin {
+  position: absolute;
+  z-index: 3;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  padding: 5px 8px 5px 5px;
+  color: var(--blue);
+  background: #fff;
+  border: 1px solid rgba(0, 108, 228, .22);
+  box-shadow: 0 10px 24px rgba(0, 53, 128, .12);
+}
+
+.map-pin b {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--blue);
+  font-size: 12px;
+}
+
+.map-pin small {
+  max-width: 106px;
+  overflow: hidden;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ranking-list {
   display: grid;
   gap: 12px;
@@ -888,6 +986,18 @@ summary {
 }
 
 @media (max-width: 759px) {
+  .map-canvas {
+    min-height: 240px;
+  }
+
+  .map-pin {
+    padding-right: 5px;
+  }
+
+  .map-pin small {
+    display: none;
+  }
+
   .ranking-row {
     grid-template-columns: auto 1fr;
     align-items: start;
@@ -931,6 +1041,11 @@ summary {
   .database-examples,
   .lead-box {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .concierge-map-card {
+    grid-template-columns: minmax(0, .82fr) minmax(360px, 1.18fr);
+    align-items: stretch;
   }
 
   .destination-grid,
