@@ -21,18 +21,10 @@ render();
 function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
-    ${SaoPauloMvpFocusSection()}
-    ${ConciergeDifferentiationSection()}
     ${ConciergeDiagnosisQuiz()}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
-    ${BabyConciergeScore()}
-    ${CuratedDestinationsSection()}
-    ${CuratedHotelsSection()}
-    ${TravelCalendarSection()}
-    ${AvoidPerrengueSection()}
-    ${ConciergeDatabaseSection()}
-    ${CommercialTransparencySection()}
-    ${ConciergeLeadCaptureForm()}
+    ${state.result ? RankedHotelsSection() : ""}
+    ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
 }
 
@@ -47,27 +39,14 @@ function AgentCardConciergeFamilia() {
 
 function ConciergeHeroSection() {
   return `
-    <section class="hero section" id="topo">
+    <section class="hero section minimal-hero" id="topo">
       <div class="hero-copy">
-        <span class="badge">MVP exclusivo para famílias da capital de São Paulo</span>
-        <h1>Planeje a viagem da sua família saindo de São Paulo, com a segurança de quem entende bebês.</h1>
-        <p>O Concierge da Família encontra destinos, hotéis e roteiros avaliados por copa baby, voo curto, traslado fácil, viagem de carro viável, alimentação, rotina, segurança e plano B.</p>
-        <strong class="hero-line">Bonito no Instagram não basta. Precisa funcionar com bebê, saindo de São Paulo.</strong>
+        <span class="badge">Concierge para famílias de São Paulo</span>
+        <h1>Encontre a viagem certa para sua família.</h1>
+        <p>Faça um diagnóstico rápido e veja hotéis reais ordenados pelo Score Bebê Concierge, do melhor para o menos indicado ao seu perfil.</p>
         <div class="hero-actions">
           <a class="button primary" href="#diagnostico">Começar diagnóstico</a>
-          <a class="button secondary" href="#destinos">Ver destinos saindo de SP</a>
         </div>
-      </div>
-      <div class="sp-map" aria-label="Mapa ilustrativo com São Paulo como origem">
-        <div class="map-world">Futuro: outras regiões</div>
-        <div class="sp-dot">SP</div>
-        <span class="route r1"></span>
-        <span class="route r2"></span>
-        <span class="route r3"></span>
-        <span class="floating-card c1">Voo direto</span>
-        <span class="floating-card c2">Traslado até 1h</span>
-        <span class="floating-card c3">Copa baby confirmada</span>
-        <span class="floating-card c4">Carro até 3h</span>
       </div>
     </section>
   `;
@@ -122,9 +101,9 @@ function ConciergeDiagnosisQuiz() {
   return `
     <section class="section quiz-section" id="diagnostico">
       <div class="section-title">
-        <span class="badge subtle">Diagnóstico inteligente</span>
-        <h2>Descubra a viagem ideal para sua família saindo de São Paulo</h2>
-        <p>Uma boa viagem com bebê começa antes da reserva. Responda uma conversa curta e veja uma recomendação inicial.</p>
+        <span class="badge subtle">Diagnóstico</span>
+        <h2>Responda algumas perguntas rápidas</h2>
+        <p>Usamos suas respostas para ajustar o ranking de hotéis e evitar escolhas que parecem boas, mas não funcionam bem com criança pequena.</p>
       </div>
       <div class="quiz-card">
         <div class="quiz-top">
@@ -153,34 +132,111 @@ function QuizOption(question, option) {
 
 function ConciergeDiagnosisResult(result) {
   return `
-    <section class="section result-section" id="resultado">
-      <div class="section-title">
-        <span class="badge">Resultado inicial</span>
-        <h2>Seu perfil de viagem saindo de São Paulo</h2>
+    <section class="section result-section compact-result" id="resultado">
+      <div class="result-card good">
+        <span class="badge">Resultado</span>
+        <h2>Seu perfil de viagem</h2>
         <p>${escapeHtml(result.profile)}</p>
-      </div>
-      <div class="grid three">
-        <div class="result-card good">
+        <div class="quick-insights">
+          <div>
           <h3>Recomendamos priorizar</h3>
-          ${BulletList(result.prioritize)}
-        </div>
-        <div class="result-card avoid">
+            ${BulletList(result.prioritize.slice(0, 3))}
+          </div>
+          <div>
           <h3>Evitar por enquanto</h3>
-          ${BulletList(result.avoid)}
-        </div>
-        <div class="result-card">
-          <h3>3 caminhos que combinam</h3>
-          ${result.paths.map(path => `
-            <article class="mini-path">
-              <strong>${escapeHtml(path.title)}</strong>
-              <span>${escapeHtml(path.text)}</span>
-            </article>
-          `).join("")}
+            ${BulletList(result.avoid.slice(0, 2))}
+          </div>
         </div>
       </div>
-      <a class="button primary wide" href="${leadWhatsAppUrl("Quero receber opções curadas para minha família saindo de São Paulo.")}" target="_blank" rel="noopener">Receber opções curadas no WhatsApp</a>
     </section>
   `;
+}
+
+function RankedHotelsSection() {
+  const ranked = rankHotelsForAnswers();
+  return `
+    <section class="section ranking-section" id="ranking">
+      <div class="section-title">
+        <span class="badge subtle">${state.result ? "Ranking ajustado pelo diagnóstico" : "Ranking inicial"}</span>
+        <h2>Hotéis ordenados por score</h2>
+        <p>${state.result ? "Lista em ordem decrescente, recalculada a partir das suas respostas." : "Faça o diagnóstico acima para ajustar o ranking ao perfil da sua família."}</p>
+      </div>
+      <div class="ranking-list">
+        ${ranked.map((hotel, index) => RankedHotelRow(hotel, index)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function RankedHotelRow(hotel, index) {
+  return `
+    <article class="ranking-row">
+      <span class="rank-number">${index + 1}</span>
+      ${TravelImage(hotel.image, hotel.name, hotel.imageNote)}
+      <div class="ranking-copy">
+        <div class="ranking-title">
+          <h3>${escapeHtml(hotel.name)}</h3>
+          <span>${escapeHtml(hotel.destination)}</span>
+        </div>
+        <p>${escapeHtml(hotel.verdict)}</p>
+        <div class="tags compact-tags">
+          ${hotel.departureMode === "carro" ? "<span>carro</span>" : "<span>voo direto</span>"}
+          ${hotel.copaBaby ? "<span>copa baby</span>" : ""}
+          ${hotel.allInclusive ? "<span>all inclusive</span>" : ""}
+          ${hotel.worksOnRainyDay ? "<span>plano B chuva</span>" : ""}
+        </div>
+        ${hotel.rankingNotes.length ? `<small>${escapeHtml(hotel.rankingNotes.join(" · "))}</small>` : ""}
+        ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener">Fonte oficial</a>` : ""}
+      </div>
+      <div class="ranking-score">
+        <strong>${hotel.adjustedScore.toFixed(1)}</strong>
+        <span>/10</span>
+      </div>
+    </article>
+  `;
+}
+
+function rankHotelsForAnswers() {
+  const answers = state.answers || {};
+  const must = arrayAnswer(answers.must_have);
+  const concerns = arrayAnswer(answers.main_concerns);
+  const avoidPlane = answers.max_flight === "Prefiro evitar avião" || answers.airport_preference === "Prefiro evitar avião";
+  const babySmall = answers.child_age === "0 a 12 meses";
+
+  return conciergeHotels.map(hotel => {
+    let adjustedScore = hotel.score;
+    const rankingNotes = [];
+
+    if (avoidPlane && hotel.departureMode === "carro") {
+      adjustedScore += 0.35;
+      rankingNotes.push("bom para evitar aeroporto");
+    }
+    if (!avoidPlane && hotel.directFlight) {
+      adjustedScore += 0.15;
+      rankingNotes.push("tem lógica de voo direto");
+    }
+    if (must.includes("Copa baby") && hotel.copaBaby) adjustedScore += 0.35;
+    if (must.includes("Copa baby 24h") && hotel.copaBaby24h) adjustedScore += 0.45;
+    if (must.includes("All inclusive") && hotel.allInclusive) adjustedScore += 0.25;
+    if (must.includes("Hotel que funcione mesmo com chuva") && hotel.worksOnRainyDay) adjustedScore += 0.2;
+    if (must.includes("Não precisar alugar carro") && hotel.departureMode === "voo") adjustedScore += 0.2;
+    if (concerns.includes("Traslado") && hotel.transferMinutes > 90) {
+      adjustedScore -= 0.45;
+      rankingNotes.push("atenção ao traslado");
+    }
+    if (concerns.includes("Estrada") && hotel.driveTimeFromSaoPaulo > 120) {
+      adjustedScore -= 0.35;
+      rankingNotes.push("estrada mais longa");
+    }
+    if (babySmall && hotel.transferMinutes > 90) adjustedScore -= 0.35;
+    if (babySmall && hotel.copaBaby) rankingNotes.push("mais forte para bebê pequeno");
+
+    return {
+      ...hotel,
+      adjustedScore: Math.max(0, Math.min(10, Math.round(adjustedScore * 10) / 10)),
+      rankingNotes: rankingNotes.slice(0, 2)
+    };
+  }).sort((a, b) => b.adjustedScore - a.adjustedScore || b.score - a.score);
 }
 
 function BabyConciergeScore() {
@@ -539,7 +595,7 @@ function buildDiagnosisResult(answers) {
   const concerns = arrayAnswer(answers.main_concerns);
   const must = arrayAnswer(answers.must_have);
   const avoidPlane = answers.max_flight === "Prefiro evitar avião" || answers.airport_preference === "Prefiro evitar avião";
-  const babySmall = ["0 a 6 meses", "6 a 12 meses"].includes(answers.child_age);
+  const babySmall = answers.child_age === "0 a 12 meses";
   const south = answers.sao_paulo_region === "Zona Sul";
   const july = answers.travel_period === "Férias de julho";
   const profile = `Família de ${answers.sao_paulo_region || "São Paulo"}, com ${answers.child_age || "criança pequena"}, busca ${answers.trip_type || "uma viagem em família"} e precisa equilibrar logística, rotina e estrutura saindo da capital.`;

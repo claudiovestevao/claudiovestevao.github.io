@@ -1,58 +1,40 @@
 export const conciergeQuizQuestions = [
   {
-    id: "sao_paulo_region",
-    question: "Em qual regi?o de S?o Paulo voc?s moram?",
-    type: "single",
-    options: ["Zona Sul", "Zona Oeste", "Zona Norte", "Zona Leste", "Centro", "Grande S?o Paulo", "Prefiro n?o informar"]
-  },
-  {
     id: "child_age",
-    question: "Qual a idade do beb? ou crian?a?",
+    question: "Qual a idade da criança?",
     type: "single",
-    options: ["0 a 6 meses", "6 a 12 meses", "1 a 2 anos", "3 a 5 anos", "6+ anos", "Tenho mais de uma crian?a"]
+    options: ["0 a 12 meses", "1 a 2 anos", "3 a 5 anos", "6+ anos"]
   },
   {
     id: "travel_period",
-    question: "Quando voc?s querem viajar?",
+    question: "Quando vocês querem viajar?",
     type: "single",
-    options: ["Janeiro", "Carnaval", "Semana Santa", "F?rias de julho", "Semana da crian?a", "Natal/R?veillon", "Feriado prolongado", "Ainda n?o sei"]
+    options: ["Férias de julho", "Feriado prolongado", "Verão/Janeiro", "Ainda não sei"]
   },
   {
     id: "trip_type",
-    question: "Por qual tipo de viagem voc?s querem comecar?",
+    question: "Que tipo de viagem combina mais agora?",
     type: "single",
-    options: ["Resort", "Praia", "Campo ou hotel fazenda", "Parque", "Cidade charmosa", "Internacional leve", "Viagem de carro perto de SP", "Ainda n?o sei"]
+    options: ["Resort perto de SP", "Praia com resort", "Hotel fazenda", "Ainda não sei"]
   },
   {
     id: "max_flight",
-    question: "Qual tempo maximo de voo parece confortavel?",
+    question: "Como vocês preferem se deslocar?",
     type: "single",
-    options: ["Prefiro evitar avi?o", "At? 1h", "At? 2h", "At? 3h", "At? 5h", "Aceito voo longo se valer a pena"]
-  },
-  {
-    id: "max_ground",
-    question: "Qual tempo maximo de carro ou traslado parece confortavel?",
-    type: "single",
-    options: ["At? 1h", "At? 2h", "At? 3h", "At? 5h", "Aceito mais se o destino valer muito"]
-  },
-  {
-    id: "airport_preference",
-    question: "Qual aeroporto voc?s preferem usar, se houver voo?",
-    type: "single",
-    options: ["Congonhas", "Guarulhos", "Viracopos", "O que tiver melhor voo", "Prefiro evitar avi?o", "N?o sei"]
+    options: ["Prefiro evitar avião", "Voo direto curto", "Aceito voo se valer muito", "Ainda não sei"]
   },
   {
     id: "must_have",
-    question: "O que e indispensavel para voc?s?",
+    question: "O que é indispensável?",
     type: "multi",
-    max: 5,
-    options: ["Copa baby", "Copa baby 24h", "Ber?o", "Cadeir?o", "Papinha ou comida infantil", "Piscina infantil", "Recrea??o", "Praia calma", "Farm?cia/hospital por perto", "Hotel que funcione mesmo com chuva", "Transfer confi?vel", "N?o precisar alugar carro"]
+    max: 3,
+    options: ["Copa baby", "Copa baby 24h", "All inclusive", "Piscina infantil", "Hotel que funcione mesmo com chuva", "Não precisar alugar carro"]
   },
   {
     id: "main_concerns",
-    question: "O que mais preocupa voc?s?",
+    question: "O que mais preocupa vocês?",
     type: "multi",
-    max: 4,
-    options: ["Voo", "Sono/rotina", "Alimenta??o", "Traslado", "Estrada", "Sa?de", "Chuva", "Hotel sem estrutura", "Crian?a entediada", "Gastar caro e errar"]
+    max: 3,
+    options: ["Sono/rotina", "Alimentação", "Traslado", "Estrada", "Saúde", "Gastar caro e errar"]
   }
 ];
