@@ -1,5 +1,6 @@
 import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js";
 import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js";
 import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js";
 import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js";
 
@@ -9,10 +10,21 @@ const state = {
   answers: {},
   result: null,
   selectedCalendar: "julho",
-  hotelFilter: "all"
+  hotelFilter: "all",
+  hotelFilters: {
+    destination: "all",
+    mode: "all",
+    price: "all",
+    image: "all",
+    amenities: [],
+    search: "",
+    sort: "score"
+  }
 };
 
+const curatedHotels = [...conciergeHotels, ...conciergeHotelAdditions].map(normalizeHotel);
 const app = document.getElementById("app");
+let searchRenderTimer;
 
 document.addEventListener("click", handleClick);
 document.addEventListener("input", handleInput);
@@ -158,19 +170,85 @@ function ConciergeDiagnosisResult(result) {
 }
 
 function RankedHotelsSection() {
-  const ranked = rankHotelsForAnswers();
+  const ranked = getFilteredRankedHotels();
+  const destinationGroups = buildDestinationGroups(ranked);
   return `
     <section class="section ranking-section" id="ranking">
       <div class="section-title">
-        <span class="badge subtle">${state.result ? "Ranking ajustado pelo diagnóstico" : "Ranking inicial"}</span>
-        <h2>Hotéis ordenados por score</h2>
-        <p>${state.result ? "Lista em ordem decrescente, recalculada a partir das suas respostas." : "Faça o diagnóstico acima para ajustar o ranking ao perfil da sua família."}</p>
+        <span class="badge subtle">Curadoria ajustada pelo diagnóstico</span>
+        <h2>Destinos e hotéis recomendados</h2>
+        <p>Use os filtros para comparar logística, estrutura infantil, preço estimado e evidência visual. Cada hotel abre em uma página externa para consultar disponibilidade.</p>
       </div>
-      ${ConciergeMap(ranked)}
+      ${ranked.length ? ConciergeMap(ranked) : ""}
+      ${HotelExplorerControls(ranked)}
+      ${DestinationSummary(destinationGroups)}
       <div class="ranking-list">
-        ${ranked.map((hotel, index) => RankedHotelRow(hotel, index)).join("")}
+        ${ranked.length ? ranked.map((hotel, index) => RankedHotelCard(hotel, index)).join("") : EmptyHotelState()}
       </div>
     </section>
+  `;
+}
+
+function HotelExplorerControls(rankedHotels) {
+  const destinations = buildDestinationOptions();
+  const amenityFilters = [
+    ["copa", "Copa baby"],
+    ["copa24", "Copa 24h"],
+    ["kidsClub", "Kids club"],
+    ["kidsPool", "Piscina infantil"],
+    ["heatedPool", "Piscina aquecida"],
+    ["allInclusive", "All inclusive"],
+    ["rain", "Plano B chuva"],
+    ["kitchen", "Kitchenette"]
+  ];
+  return `
+    <div class="hotel-explorer">
+      <div class="filter-summary">
+        <strong>${rankedHotels.length}</strong>
+        <span>hotéis qualificados encontrados</span>
+      </div>
+      <label class="search-field">
+        <span>Buscar hotel ou destino</span>
+        <input type="search" value="${escapeAttr(state.hotelFilters.search)}" placeholder="Ex: Gramado, copa baby, resort" data-action="hotel-search">
+      </label>
+      <div class="select-grid">
+        ${FilterSelect("destination", "Destino", destinations)}
+        ${FilterSelect("mode", "Deslocamento", [["all", "Todos"], ["carro", "Carro"], ["voo", "Voo"], ["voo internacional", "Internacional"]])}
+        ${FilterSelect("price", "Faixa", [["all", "Todas"], ["mid", "Mid"], ["upscale", "Upscale"], ["luxury", "Luxury"]])}
+        ${FilterSelect("sort", "Ordenar", [["score", "Melhor score"], ["distance", "Menor deslocamento"], ["name", "Nome"]])}
+        ${FilterSelect("image", "Imagem", [["all", "Todas"], ["verified", "Com imagem"], ["missing", "Sem imagem"]])}
+      </div>
+      <div class="filters amenity-filters">
+        ${amenityFilters.map(([id, label]) => `
+          <button class="filter ${state.hotelFilters.amenities.includes(id) ? "active" : ""}" data-action="amenity-filter" data-filter="${id}">${label}</button>
+        `).join("")}
+        <button class="filter reset-filter" data-action="reset-hotel-filters">Limpar filtros</button>
+      </div>
+    </div>
+  `;
+}
+
+function FilterSelect(id, label, options) {
+  return `
+    <label class="filter-select">
+      <span>${escapeHtml(label)}</span>
+      <select data-action="hotel-select" data-filter="${id}">
+        ${options.map(([value, text]) => `<option value="${escapeAttr(value)}" ${state.hotelFilters[id] === value ? "selected" : ""}>${escapeHtml(text)}</option>`).join("")}
+      </select>
+    </label>
+  `;
+}
+
+function DestinationSummary(groups) {
+  return `
+    <div class="destination-strip" aria-label="Destinos com hotéis filtrados">
+      ${groups.map(group => `
+        <button class="destination-pill ${state.hotelFilters.destination === group.slug ? "active" : ""}" data-action="destination-filter" data-destination="${escapeAttr(group.slug)}">
+          <strong>${escapeHtml(group.name)}</strong>
+          <span>${group.count} ${group.count === 1 ? "hotel" : "hotéis"}</span>
+        </button>
+      `).join("")}
+    </div>
   `;
 }
 
@@ -208,21 +286,34 @@ function hotelMapPosition(id) {
   const positions = {
     "royal-palm-plaza-campinas": { x: 38, y: 62, label: "Campinas" },
     "bourbon-atibaia": { x: 45, y: 54, label: "Atibaia" },
+    "taua-resort-atibaia": { x: 47, y: 55, label: "Atibaia" },
     "club-med-lake-paradise": { x: 56, y: 61, label: "Mogi das Cruzes" },
     "mavsa-resort": { x: 30, y: 66, label: "Cesário Lange" },
     "tivoli-praia-do-forte": { x: 74, y: 34, label: "Praia do Forte" },
     "salinas-maragogi": { x: 79, y: 23, label: "Maragogi" },
     "summerville-porto-galinhas": { x: 82, y: 27, label: "Porto de Galinhas" },
-    "enotel-porto-galinhas": { x: 84, y: 31, label: "Porto de Galinhas" }
+    "enotel-porto-galinhas": { x: 84, y: 31, label: "Porto de Galinhas" },
+    "hot-beach-resort-olimpia": { x: 27, y: 48, label: "Olimpia" },
+    "wish-foz-do-iguacu": { x: 20, y: 82, label: "Foz" },
+    "recanto-cataratas-resort": { x: 23, y: 84, label: "Foz" },
+    "hotel-alpestre-gramado": { x: 31, y: 88, label: "Gramado" },
+    "wish-serrano-gramado": { x: 34, y: 86, label: "Gramado" },
+    "clara-dourado-resort": { x: 34, y: 54, label: "Dourado" },
+    "toriba-campos-do-jordao": { x: 60, y: 58, label: "Campos" },
+    "villa-rossa-sao-roque": { x: 40, y: 68, label: "Sao Roque" },
+    "casa-grande-guaruja": { x: 55, y: 74, label: "Guaruja" },
+    "vila-olaria-penha": { x: 38, y: 82, label: "Penha" },
+    "bulnes-eco-suites-buenos-aires": { x: 26, y: 92, label: "Buenos Aires" },
+    "disney-art-of-animation-resort": { x: 14, y: 28, label: "Orlando" }
   };
   return positions[id] || { x: 55, y: 50, label: "Destino" };
 }
 
-function RankedHotelRow(hotel, index) {
+function RankedHotelCard(hotel, index) {
   return `
     <article class="ranking-row">
       <span class="rank-number">${index + 1}</span>
-      ${TravelImage(hotel.image, hotel.name, hotel.imageNote)}
+      ${TravelImage(hotel.image, hotel.name, hotel.imageNote, hotel.imageConfidence)}
       <div class="ranking-copy">
         <div class="ranking-title">
           <h3>${escapeHtml(hotel.name)}</h3>
@@ -232,17 +323,33 @@ function RankedHotelRow(hotel, index) {
         <div class="tags compact-tags">
           ${hotel.departureMode === "carro" ? "<span>carro</span>" : "<span>voo direto</span>"}
           ${hotel.copaBaby ? "<span>copa baby</span>" : ""}
+          ${hotel.kidsClub ? "<span>kids club</span>" : ""}
+          ${hotel.heatedPool ? "<span>piscina aquecida</span>" : ""}
           ${hotel.allInclusive ? "<span>all inclusive</span>" : ""}
           ${hotel.worksOnRainyDay ? "<span>plano B chuva</span>" : ""}
         </div>
         ${hotel.rankingNotes.length ? `<small>${escapeHtml(hotel.rankingNotes.join(" · "))}</small>` : ""}
-        ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener">Fonte oficial</a>` : ""}
+        <div class="availability-actions">
+          <a class="button primary compact-button" href="${escapeAttr(hotel.officialSiteUrl || hotel.sourceUrl)}" target="_blank" rel="noopener">Ver disponibilidade</a>
+          <a class="button secondary compact-button" href="${escapeAttr(hotel.bookingUrl || bookingSearchUrl(hotel))}" target="_blank" rel="noopener">Buscar no Booking</a>
+          ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener">Fonte da curadoria</a>` : ""}
+        </div>
       </div>
       <div class="ranking-score">
         <strong>${hotel.adjustedScore.toFixed(1)}</strong>
         <span>/10</span>
       </div>
     </article>
+  `;
+}
+
+function EmptyHotelState() {
+  return `
+    <div class="empty-state">
+      <strong>Nenhum hotel com estes filtros.</strong>
+      <p>Remova algum critério ou limpe os filtros para voltar à curadoria completa.</p>
+      <button class="button secondary" data-action="reset-hotel-filters">Limpar filtros</button>
+    </div>
   `;
 }
 
@@ -253,7 +360,7 @@ function rankHotelsForAnswers() {
   const avoidPlane = answers.max_flight === "Prefiro evitar avião" || answers.airport_preference === "Prefiro evitar avião";
   const babySmall = answers.child_age === "0 a 12 meses";
 
-  return conciergeHotels.map(hotel => {
+  return curatedHotels.map(hotel => {
     let adjustedScore = hotel.score;
     const rankingNotes = [];
 
@@ -287,6 +394,73 @@ function rankHotelsForAnswers() {
       rankingNotes: rankingNotes.slice(0, 2)
     };
   }).sort((a, b) => b.adjustedScore - a.adjustedScore || b.score - a.score);
+}
+
+function getFilteredRankedHotels() {
+  const filters = state.hotelFilters;
+  const ranked = rankHotelsForAnswers().filter(hotel => matchesHotelFilters(hotel, filters));
+  if (filters.sort === "distance") {
+    return ranked.sort((a, b) => travelBurden(a) - travelBurden(b) || b.adjustedScore - a.adjustedScore);
+  }
+  if (filters.sort === "name") {
+    return ranked.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return ranked;
+}
+
+function matchesHotelFilters(hotel, filters) {
+  if (filters.destination !== "all" && hotel.destinationSlug !== filters.destination) return false;
+  if (filters.mode !== "all" && !hotel.departureMode.includes(filters.mode)) return false;
+  if (filters.price !== "all" && hotel.priceTier !== filters.price) return false;
+  if (filters.image === "verified" && hotel.imageConfidence === "missing") return false;
+  if (filters.image === "missing" && hotel.imageConfidence !== "missing") return false;
+  if (filters.search) {
+    const haystack = [hotel.name, hotel.destination, hotel.idealAge, hotel.verdict, hotel.mainStrength, hotel.propertyType].join(" ").toLowerCase();
+    if (!haystack.includes(filters.search.toLowerCase())) return false;
+  }
+  return filters.amenities.every(filter => matchesAmenity(hotel, filter));
+}
+
+function matchesAmenity(hotel, filter) {
+  const checks = {
+    copa: hotel.copaBaby,
+    copa24: hotel.copaBaby24h,
+    kidsClub: hotel.kidsClub,
+    kidsPool: hotel.kidsPool,
+    heatedPool: hotel.heatedPool,
+    allInclusive: hotel.allInclusive,
+    rain: hotel.worksOnRainyDay,
+    kitchen: hotel.hasKitchenette
+  };
+  return Boolean(checks[filter]);
+}
+
+function travelBurden(hotel) {
+  if (hotel.driveTimeFromSaoPaulo) return hotel.driveTimeFromSaoPaulo;
+  return 180 + (hotel.transferMinutes || 90);
+}
+
+function buildDestinationGroups(hotels) {
+  const groups = new Map();
+  hotels.forEach(hotel => {
+    const slug = hotel.destinationSlug || hotel.id;
+    const current = groups.get(slug) || { slug, name: destinationName(slug, hotel.destination), count: 0, bestScore: 0 };
+    current.count += 1;
+    current.bestScore = Math.max(current.bestScore, hotel.adjustedScore || hotel.score);
+    groups.set(slug, current);
+  });
+  return [...groups.values()].sort((a, b) => b.bestScore - a.bestScore || a.name.localeCompare(b.name)).slice(0, 12);
+}
+
+function buildDestinationOptions() {
+  const seen = new Map();
+  curatedHotels.forEach(hotel => seen.set(hotel.destinationSlug, destinationName(hotel.destinationSlug, hotel.destination)));
+  return [["all", "Todos"], ...[...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]))];
+}
+
+function destinationName(slug, fallback) {
+  const destination = conciergeDestinations.find(item => item.id === slug);
+  return destination?.name || fallback || slug;
 }
 
 function BabyConciergeScore() {
@@ -384,7 +558,7 @@ function CuratedHotelsSection() {
     ["rain", "Funciona com chuva"],
     ["noCar", "Não precisa alugar carro"]
   ];
-  const filtered = conciergeHotels.filter(matchesHotelFilter);
+  const filtered = curatedHotels.filter(matchesHotelFilter);
   return `
     <section class="section band" id="hoteis">
       <div class="section-title">
@@ -434,10 +608,17 @@ function CuratedHotelCard(hotel) {
   `;
 }
 
-function TravelImage(src, alt, note = "Foto inspiracional") {
-  if (!src) return "";
+function TravelImage(src, alt, note = "Foto do destino", confidence = "destination") {
+  if (!src || confidence === "missing") {
+    return `
+      <figure class="travel-image missing-image">
+        <div class="warning-mark" aria-hidden="true">!</div>
+        <figcaption>${escapeHtml(note || "Imagem do local ainda não verificada")}</figcaption>
+      </figure>
+    `;
+  }
   return `
-    <figure class="travel-image">
+    <figure class="travel-image ${confidence === "destination" ? "verified-image" : ""}">
       <img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" loading="lazy">
       <figcaption>${escapeHtml(note)}</figcaption>
     </figure>
@@ -588,13 +769,48 @@ function handleClick(event) {
     state.hotelFilter = target.dataset.filter;
     render();
   }
+  if (action === "amenity-filter") {
+    const filter = target.dataset.filter;
+    state.hotelFilters.amenities = state.hotelFilters.amenities.includes(filter)
+      ? state.hotelFilters.amenities.filter(item => item !== filter)
+      : [...state.hotelFilters.amenities, filter];
+    render();
+  }
+  if (action === "destination-filter") {
+    state.hotelFilters.destination = target.dataset.destination;
+    render();
+  }
+  if (action === "reset-hotel-filters") {
+    state.hotelFilters = {
+      destination: "all",
+      mode: "all",
+      price: "all",
+      image: "all",
+      amenities: [],
+      search: "",
+      sort: "score"
+    };
+    render();
+  }
   if (action === "calendar") {
     state.selectedCalendar = target.dataset.calendar;
     render();
   }
 }
 
-function handleInput() {}
+function handleInput(event) {
+  const target = event.target.closest("[data-action]");
+  if (!target) return;
+  if (target.dataset.action === "hotel-search") {
+    state.hotelFilters.search = target.value;
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer = setTimeout(render, 180);
+  }
+  if (target.dataset.action === "hotel-select") {
+    state.hotelFilters[target.dataset.filter] = target.value;
+    render();
+  }
+}
 
 document.addEventListener("submit", event => {
   if (event.target.id !== "leadForm") return;
@@ -692,6 +908,45 @@ function matchesHotelFilter(hotel) {
 
 function leadWhatsAppUrl(message) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+function normalizeHotel(hotel) {
+  const sourceUrl = hotel.sourceUrl || hotel.officialSiteUrl;
+  return {
+    ...hotel,
+    destinationSlug: hotel.destinationSlug || inferDestinationSlug(hotel),
+    propertyType: hotel.propertyType || (hotel.allInclusive || hotel.kidsClub ? "resort" : "hotel"),
+    priceTier: hotel.priceTier || inferPriceTier(hotel.score),
+    officialSiteUrl: hotel.officialSiteUrl || sourceUrl,
+    sourceUrl,
+    kidsClub: hotel.kidsClub ?? hotel.recreation ?? false,
+    heatedPool: hotel.heatedPool ?? false,
+    hasKitchenette: hotel.hasKitchenette ?? false,
+    imageConfidence: hotel.imageConfidence || (hotel.image ? "inspirational" : "missing"),
+    imageNote: hotel.imageNote || (hotel.image ? "Imagem de apoio do destino" : "Imagem do local ainda não verificada")
+  };
+}
+
+function inferDestinationSlug(hotel) {
+  const text = [hotel.id, hotel.destination].join(" ").toLowerCase();
+  if (text.includes("atibaia") || text.includes("campinas") || text.includes("mogi") || text.includes("cesario")) return "resort-interior-sp";
+  if (text.includes("praia do forte")) return "praia-do-forte";
+  if (text.includes("porto de galinhas")) return "porto-de-galinhas";
+  if (text.includes("maragogi") || text.includes("maceio")) return "maceio-maragogi";
+  if (text.includes("foz")) return "foz-do-iguacu";
+  if (text.includes("gramado")) return "gramado";
+  if (text.includes("orlando")) return "orlando";
+  return "outros";
+}
+
+function inferPriceTier(score) {
+  if (score >= 8.8) return "luxury";
+  if (score >= 7.8) return "upscale";
+  return "mid";
+}
+
+function bookingSearchUrl(hotel) {
+  return `https://www.booking.com/searchresults.pt-br.html?ss=${encodeURIComponent(`${hotel.name} ${hotel.destination}`)}`;
 }
 
 function arrayAnswer(value) {
