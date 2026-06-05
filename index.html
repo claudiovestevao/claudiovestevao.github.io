@@ -77,7 +77,7 @@
     }
     .agents{
       display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
+      grid-template-columns:repeat(4,minmax(0,1fr));
       gap:1rem;
       margin-top:1rem;
     }
@@ -164,7 +164,10 @@
       font-size:.9rem;
       text-align:center;
     }
-    @media (max-width:860px){
+    @media (max-width:1080px){
+      .agents{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width:720px){
       .agents{grid-template-columns:1fr}
       .agent{min-height:auto}
     }
@@ -223,6 +226,21 @@
         </ul>
         <span class="cta">Em breve</span>
       </article>
+
+      <a class="agent" href="/agentes/concierge-da-familia/">
+        <div class="agent-top">
+          <div class="icon">✈️</div>
+          <span class="status live">MVP SP</span>
+        </div>
+        <h2>Concierge da Família</h2>
+        <p>Encontre destinos, resorts e roteiros que realmente funcionam para famílias da capital de São Paulo com bebês e crianças pequenas.</p>
+        <ul>
+          <li>viagens com bebês saindo de São Paulo</li>
+          <li>resorts com copa baby e logística avaliada</li>
+          <li>curadoria premium com IA para planejamento</li>
+        </ul>
+        <span class="cta">Planejar viagem da família →</span>
+      </a>
     </section>
 
     <footer>claudiocode.dev</footer>
