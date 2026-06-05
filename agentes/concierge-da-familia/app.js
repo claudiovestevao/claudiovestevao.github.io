@@ -41,9 +41,14 @@ function ConciergeHeroSection() {
   return `
     <section class="hero section minimal-hero" id="topo">
       <div class="hero-copy">
-        <span class="badge">Concierge para famílias de São Paulo</span>
+        <span class="badge">Concierge para famílias com bebês</span>
         <h1>Encontre a viagem certa para sua família.</h1>
-        <p>Faça um diagnóstico rápido e veja hotéis reais ordenados pelo Score Bebê Concierge, do melhor para o menos indicado ao seu perfil.</p>
+        <p>Um diagnóstico rápido para escolher hotéis reais pensando em rotina, sono, alimentação, traslado e conforto dos pais.</p>
+        <div class="family-cues" aria-label="Critérios de curadoria familiar">
+          <span>Bebês</span>
+          <span>Crianças pequenas</span>
+          <span>Rotina da família</span>
+        </div>
         <div class="hero-actions">
           <a class="button primary" href="#diagnostico">Começar diagnóstico</a>
         </div>
