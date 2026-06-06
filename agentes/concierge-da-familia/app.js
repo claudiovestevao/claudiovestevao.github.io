@@ -1,10 +1,10 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=destination-experience-v5-20260606";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=destination-experience-v5-20260606";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=destination-experience-v5-20260606";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=destination-experience-v5-20260606";
-import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=destination-experience-v5-20260606";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=destination-experience-v5-20260606";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=destination-experience-v5-20260606";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=popular-destinations-v6-20260606";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=popular-destinations-v6-20260606";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=popular-destinations-v6-20260606";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=popular-destinations-v6-20260606";
+import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=popular-destinations-v6-20260606";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=popular-destinations-v6-20260606";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=popular-destinations-v6-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -12,7 +12,9 @@ const state = {
   intake: {},
   intakeDraft: {
     childrenCount: "1",
-    travelTimingMode: "unknown"
+    travelTimingMode: "unknown",
+    destinationInterestKey: "",
+    destinationInterestName: ""
   },
   leadId: null,
   quizIndex: 0,
@@ -60,6 +62,7 @@ function defaultHotelFilters() {
 function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
+    ${!state.result ? PopularFamilyDestinationsSection() : ""}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
     ${state.result ? ShareableResultSection(state.result) : ""}
     ${state.result ? DestinationRecommendationsSection() : ""}
@@ -98,6 +101,82 @@ function ConciergeHeroSection() {
   `;
 }
 
+function PopularFamilyDestinationsSection() {
+  const destinations = popularFamilyDestinations();
+  return `
+    <section class="section popular-destinations" id="destinos-em-alta">
+      <div class="section-title compact-title">
+        <span class="badge subtle">Curadoria em alta para famílias de São Paulo</span>
+        <h2>Destinos que eu olharia antes de reservar qualquer hotel.</h2>
+        <p>Este bloco inspira a escolha sem substituir o diagnóstico: por enquanto é uma vitrine editorial baseada na curadoria familiar. Com mais cliques e diagnósticos no Supabase, ele pode virar ranking real de procura.</p>
+      </div>
+      <div class="popular-destination-grid" aria-label="Destinos em alta para famílias de São Paulo">
+        ${destinations.map((destination, index) => PopularDestinationCard(destination, index)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function popularFamilyDestinations() {
+  return [
+    {
+      key: "atibaia-sp",
+      name: "Atibaia",
+      imageKey: "atibaia",
+      eyebrow: "1h30 de carro",
+      reason: "resort, montanha e primeira viagem sem aeroporto"
+    },
+    {
+      key: "praia-do-forte-ba",
+      name: "Praia do Forte",
+      imageKey: "praia-do-forte",
+      eyebrow: "praia + Projeto Tamar",
+      reason: "vila caminhável, resort e passeio educativo"
+    },
+    {
+      key: "porto-de-galinhas-pe",
+      name: "Porto de Galinhas",
+      imageKey: "porto-de-galinhas",
+      eyebrow: "piscinas naturais",
+      reason: "mar bonito, resorts e centrinho fácil para família"
+    },
+    {
+      key: "gramado-rs",
+      name: "Gramado",
+      imageKey: "gramado",
+      eyebrow: "serra e programação",
+      reason: "gastronomia, parques e plano B para chuva"
+    },
+    {
+      key: "olimpia-sp",
+      name: "Olímpia",
+      imageKey: "olimpia",
+      eyebrow: "parque aquático",
+      reason: "boa para criança maior e hotel com lazer concentrado"
+    }
+  ];
+}
+
+function PopularDestinationCard(destination, index) {
+  const image = approvedDestinationImage(destination.imageKey);
+  const experience = destinationExperienceByKey.get(destination.key);
+  const why = experience?.whyVisit || destination.reason;
+  return `
+    <button class="popular-destination-card popular-card-${index + 1}" type="button" data-action="popular-destination" data-destination-key="${escapeAttr(destination.key)}" data-destination-name="${escapeAttr(destination.name)}">
+      ${DestinationImage(destination.imageKey, destination.name)}
+      <span class="popular-card-scrim" aria-hidden="true"></span>
+      <span class="popular-card-copy">
+        <span class="popular-card-topline">
+          <span>${escapeHtml(destination.eyebrow)}</span>
+          <b>${image ? "foto verificada" : "foto pendente"}</b>
+        </span>
+        <strong>${escapeHtml(destination.name)}</strong>
+        <small>${escapeHtml(why)}</small>
+      </span>
+    </button>
+  `;
+}
+
 function ConciergeQuickIntakeForm() {
   const childrenCount = Number.parseInt(state.intakeDraft.childrenCount, 10) || 0;
   const travelMode = state.intakeDraft.travelTimingMode || "unknown";
@@ -108,6 +187,7 @@ function ConciergeQuickIntakeForm() {
         <div class="progress"><i style="width:14%"></i></div>
       </div>
       <h3>Antes do diagnóstico, conte quem vai viajar.</h3>
+      ${state.intakeDraft.destinationInterestName ? `<p class="intent-note">Vamos testar se ${escapeHtml(state.intakeDraft.destinationInterestName)} combina mesmo com sua família.</p>` : ""}
       <div class="intake-grid">
         <label>Nome<input name="name" required autocomplete="name" placeholder="Seu nome"></label>
         <label>WhatsApp<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="11999999999"></label>
@@ -1266,6 +1346,21 @@ function handleClick(event) {
   const target = event.target.closest("[data-action]");
   if (!target) return;
   const action = target.dataset.action;
+  if (action === "popular-destination") {
+    state.intakeDraft.destinationInterestKey = target.dataset.destinationKey || "";
+    state.intakeDraft.destinationInterestName = target.dataset.destinationName || "";
+    trackEvent("popular_destination_clicked", {
+      destinationKey: state.intakeDraft.destinationInterestKey,
+      destinationName: state.intakeDraft.destinationInterestName,
+      source: "homepage_curated_grid"
+    });
+    render();
+    setTimeout(() => {
+      document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.querySelector("#intakeForm [name='name']")?.focus({ preventScroll: true });
+    }, 40);
+    return;
+  }
   if (action === "quiz-answer") return answerQuiz(target.dataset.question, target.dataset.value);
   if (action === "quiz-next") return nextQuiz();
   if (action === "quiz-back") return backQuiz();
@@ -1671,10 +1766,13 @@ document.addEventListener("submit", event => {
         month: form.get("travelMonth") || "",
         flexibleWindow: form.get("flexibleWindow") || ""
       }),
-      lastTrip: form.get("lastTrip") || ""
+      lastTrip: form.get("lastTrip") || "",
+      interestDestinationKey: state.intakeDraft.destinationInterestKey || "",
+      interestDestinationName: state.intakeDraft.destinationInterestName || ""
     };
     state.answers.child_age = state.intake.childAge;
     state.answers.travel_period = state.intake.travelPeriod;
+    state.answers.destination_interest = state.intake.interestDestinationName;
     state.intakeComplete = true;
     trackEvent("diagnosis_intake_completed", {
       travelPeriod: state.intake.travelPeriod,
@@ -1684,7 +1782,9 @@ document.addEventListener("submit", event => {
       children: state.intake.childrenCount,
       rooms: state.intake.roomsCount,
       childAges: state.intake.childAges,
-      lastTrip: state.intake.lastTrip
+      lastTrip: state.intake.lastTrip,
+      interestDestinationKey: state.intake.interestDestinationKey,
+      interestDestinationName: state.intake.interestDestinationName
     });
     persistLeadIntake("intake_completed");
     render();
@@ -1704,6 +1804,7 @@ document.addEventListener("submit", event => {
     `Quem vai: ${state.intake.adults || ""}, ${state.intake.children || ""}, ${state.intake.roomsCount || ""} quarto(s), ${state.intake.pet || ""}`,
     `Idades das crianças: ${(state.intake.childAges || []).join(", ") || "não informado"}`,
     `Última viagem: ${state.intake.lastTrip || ""}`,
+    `Destino de interesse: ${state.intake.interestDestinationName || "não informado"}`,
     `Orçamento/época: ${state.answers.budget_season_strategy || ""}`,
     `Tipo de viagem: ${form.get("trip") || ""}`
   ].join("\n");
