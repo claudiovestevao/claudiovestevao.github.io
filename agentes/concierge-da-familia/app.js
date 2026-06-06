@@ -559,6 +559,7 @@ function ConciergeDiagnosisResult(result) {
           <span>Separei as 3 opções mais fortes para comparar hotel e disponibilidade sem abrir mil abas.</span>
           <a class="button primary compact-button" href="#recomendacoes">Ver minhas 3 cidades</a>
         </div>
+        ${ExcellenceCriteriaPanel()}
       </div>
     </section>
   `;
@@ -590,6 +591,38 @@ function TravelTimingResultPanel() {
         <span>Eventos e movimento</span>
         <b>${escapeHtml(timing.events)}</b>
       </div>
+    </div>
+  `;
+}
+
+function ExcellenceCriteriaPanel() {
+  return `
+    <div class="criteria-transparency" aria-label="Critérios de curadoria de excelência">
+      <div class="criteria-title">
+        <span class="badge subtle">Curadoria de excelência</span>
+        <h3>Como os selos são calculados</h3>
+        <p>O selo não é publicidade e não garante preço, disponibilidade ou experiência perfeita. Ele é uma leitura da plataforma para reduzir risco familiar antes da reserva.</p>
+      </div>
+      <div class="criteria-grid">
+        ${CriteriaItem("Ouro", "Experiência Família Excelente", "Score alto, baixa fricção logística, boa estrutura infantil, dados públicos fortes e poucos alertas sazonais.")}
+        ${CriteriaItem("Prata", "Muito bom para Famílias", "Boa escolha para a maioria das famílias, com alguns pontos que devem ser confirmados antes de reservar.")}
+        ${CriteriaItem("Bronze", "Muito bom para famílias", "Pode funcionar bem, mas exige mais planejamento de horário, alimentação, deslocamento ou rotina da criança.")}
+      </div>
+      <div class="criteria-factors">
+        <span><b>Dados usados</b> Google Places, rotas, hotéis curados, fotos reais, avaliações públicas e base Supabase.</span>
+        <span><b>Pesos principais</b> idade das crianças, distância, tempo, alimentação, estrutura infantil, clima, eventos, custo e risco de perrengue.</span>
+        <span><b>Bloqueios</b> hotel sem requisito mínimo familiar não entra como recomendado, mesmo que pareça bom comercialmente.</span>
+      </div>
+    </div>
+  `;
+}
+
+function CriteriaItem(level, title, text) {
+  return `
+    <div>
+      <strong>${escapeHtml(level)}</strong>
+      <b>${escapeHtml(title)}</b>
+      <span>${escapeHtml(text)}</span>
     </div>
   `;
 }
@@ -710,7 +743,14 @@ function DestinationRecommendationCard(recommendation, index) {
 }
 
 function FamilyMedalBadge(score) {
-  return `<span class="family-medal ${escapeAttr(score.medal)}">${escapeHtml(score.label)}</span>`;
+  return `<span class="family-medal ${escapeAttr(score.medal)}">${escapeHtml(familyMedalDisplayLabel(score.medal, score.label))}</span>`;
+}
+
+function familyMedalDisplayLabel(medal, fallback = "") {
+  if (medal === "gold") return "Ouro - Experiência Família Excelente";
+  if (medal === "silver") return "Prata - Muito bom para Famílias";
+  if (medal === "bronze") return "Bronze - Muito bom para famílias";
+  return fallback || "Não recomendar";
 }
 
 function DestinationFactModules(recommendation, liveSummary, experience, googleCoverage) {
