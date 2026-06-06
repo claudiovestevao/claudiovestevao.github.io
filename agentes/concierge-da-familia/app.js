@@ -845,7 +845,7 @@ function destinationDecisionFacts(recommendation, liveSummary, experience, googl
         ? `${oneWayKm} km · ${formatMinutesLabel(driveMinutes || estimateDriveMinutes(oneWayKm))}`
         : `voo + traslado ${bestHotel.transferMinutes || "?"} min`,
       detail: isRoadTrip
-        ? `Centro de SP como referência; pedágio ~${formatCurrency(tollRoundTrip)} ida e volta`
+        ? `Centro de SP como referência; pedágio ~${formatMoneyEstimate(tollRoundTrip)} ida e volta`
         : `Saída: ${bestHotel.recommendedAirport || "aeroporto a definir"}`
     },
     timing: {
@@ -854,16 +854,16 @@ function destinationDecisionFacts(recommendation, liveSummary, experience, googl
     },
     cost: {
       primary: isRoadTrip
-        ? `${formatCurrency(tripTotal)} est.`
+        ? `${formatMoneyEstimate(tripTotal)} est.`
         : `${priceTierLabel(bestHotel.priceTier)} + aéreo`,
       detail: isRoadTrip
-        ? `SUV: combustível ~${formatCurrency(fuelRoundTrip)}; diária média ~${formatCurrency(nightlyAverage)}`
-        : `diária média ~${formatCurrency(nightlyAverage)}; aéreo varia por data`
+        ? `SUV: combustível ~${formatMoneyEstimate(fuelRoundTrip)}; diária média ~${formatMoneyEstimate(nightlyAverage)}`
+        : `diária média ~${formatMoneyEstimate(nightlyAverage)}; aéreo varia por data`
     },
     food: {
       primary: mealPlanLabel(bestHotel),
       detail: foodDaily
-        ? `alimentação extra ~${formatCurrency(foodDaily)}/dia para a família`
+        ? `alimentação extra ~${formatMoneyEstimate(foodDaily)}/dia para a família`
         : "sem custo extra relevante de refeição no hotel"
     },
     safety: {
@@ -3192,10 +3192,10 @@ function estimateTripCost(answers, intake) {
     economicMin,
     economicMax,
     balancedMax,
-    headline: `${formatCurrency(economicMin)} a ${formatCurrency(balancedMax)}`,
-    economic: `${formatCurrency(economicMin)}-${formatCurrency(economicMax)}`,
-    balanced: `${formatCurrency(balancedMin)}-${formatCurrency(balancedMax)}`,
-    comfort: `${formatCurrency(comfortMin)}-${formatCurrency(comfortMax)}`,
+    headline: `${formatMoneyEstimate(economicMin)} a ${formatMoneyEstimate(balancedMax)}`,
+    economic: `${formatMoneyEstimate(economicMin)}-${formatMoneyEstimate(economicMax)}`,
+    balanced: `${formatMoneyEstimate(balancedMin)}-${formatMoneyEstimate(balancedMax)}`,
+    comfort: `${formatMoneyEstimate(comfortMin)}-${formatMoneyEstimate(comfortMax)}`,
     note: `Faixa estimada para ${answers.trip_duration || "3 noites"} considerando hospedagem, transporte, alimentação e extras básicos.`
   };
 }
@@ -3229,8 +3229,18 @@ function budgetMaxValue(range) {
   return map[range] || null;
 }
 
-function formatCurrency(value) {
-  return `R$ ${Math.round(value).toLocaleString("pt-BR")}`;
+function formatMoneyEstimate(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "R$ ?";
+  if (Math.abs(numeric) >= 1000) {
+    const rounded = Math.round(numeric / 100) / 10;
+    return `R$ ${rounded.toLocaleString("pt-BR", {
+      minimumFractionDigits: Number.isInteger(rounded) ? 0 : 1,
+      maximumFractionDigits: 1
+    })}k`;
+  }
+  const rounded = Math.round(numeric / 50) * 50;
+  return `R$ ${rounded.toLocaleString("pt-BR")}`;
 }
 
 function numberLabel(value, digits = 0) {
