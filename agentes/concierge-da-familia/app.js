@@ -8,6 +8,7 @@ import { conciergeFamilyItineraries } from "./src/data/conciergeFamilyItinerarie
 import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=family-score-v1-20260606";
 import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=family-score-v1-20260606";
 import { conciergeGooglePlacesCoverage } from "./src/data/conciergeGooglePlacesCoverage.js?v=google-coverage-v1-20260606";
+import { familyDestinationCatalog1001Meta } from "./src/data/familyDestinationCatalog1001Meta.js?v=family-catalog-1001-v1-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -284,7 +285,7 @@ function ConciergeHeroSection() {
         </div>
         <div class="family-cues" aria-label="Critérios de curadoria familiar">
           <span>Mapa primeiro</span>
-          <span>2 minutos</span>
+          <span>${numberLabel(familyDestinationCatalog1001Meta.count, 0)} destinos base</span>
           <span>Hotel só depois</span>
         </div>
       </div>
