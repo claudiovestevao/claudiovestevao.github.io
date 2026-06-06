@@ -1215,7 +1215,7 @@ p {
 
 .recommendation-card {
   display: grid;
-  grid-template-columns: auto minmax(210px, .42fr) minmax(0, 1fr);
+  grid-template-columns: auto minmax(260px, .52fr) minmax(0, 1fr);
   gap: 14px;
   align-items: stretch;
   border: 1px solid var(--line);
@@ -1269,6 +1269,119 @@ p {
   border-radius: 16px;
 }
 
+.destination-photo-gallery {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  min-width: 0;
+  min-height: 270px;
+}
+
+.gallery-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.gallery-topline span {
+  color: var(--blue);
+}
+
+.gallery-topline a {
+  color: var(--terra);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(160px, 1fr) minmax(96px, .58fr);
+  gap: 6px;
+  min-height: 250px;
+}
+
+.gallery-photo {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  border-radius: 16px;
+  background: #eaf3ff;
+}
+
+.main-photo {
+  grid-column: 1 / -1;
+}
+
+.gallery-photo a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+}
+
+.gallery-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.gallery-photo figcaption {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  left: 7px;
+  z-index: 2;
+  display: grid;
+  gap: 1px;
+  max-width: calc(100% - 14px);
+  padding: 5px 7px;
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(0, 27, 64, .66);
+  backdrop-filter: blur(7px);
+}
+
+.gallery-photo figcaption span,
+.gallery-photo figcaption small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-photo figcaption span {
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.gallery-photo figcaption small {
+  font-size: 9px;
+  opacity: .88;
+  font-weight: 800;
+}
+
+.missing-gallery {
+  align-content: stretch;
+}
+
+.gallery-warning {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px dashed rgba(168, 85, 0, .45);
+  border-radius: 12px;
+  color: var(--terra);
+  background: #fff8df;
+  font-size: 12px;
+  font-weight: 850;
+}
+
 .recommendation-copy {
   display: grid;
   align-content: start;
@@ -1279,6 +1392,12 @@ p {
 .recommendation-copy h3,
 .recommendation-copy p {
   margin-bottom: 0;
+}
+
+.hotel-availability-cta {
+  width: fit-content;
+  border-radius: 14px;
+  padding-inline: 18px;
 }
 
 .eyebrow {
@@ -1970,8 +2089,22 @@ summary {
     min-height: 180px;
   }
 
+  .destination-photo-gallery {
+    grid-column: 1 / -1;
+    min-height: 238px;
+  }
+
+  .gallery-grid {
+    grid-template-rows: minmax(140px, 1fr) minmax(88px, .58fr);
+    min-height: 228px;
+  }
+
   .recommendation-copy {
     grid-column: 1 / -1;
+  }
+
+  .hotel-availability-cta {
+    width: 100%;
   }
 
   .decision-lens {

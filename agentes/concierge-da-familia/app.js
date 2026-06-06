@@ -1,10 +1,11 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=popular-destinations-v6-20260606";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=popular-destinations-v6-20260606";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=popular-destinations-v6-20260606";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=popular-destinations-v6-20260606";
-import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=popular-destinations-v6-20260606";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=popular-destinations-v6-20260606";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=popular-destinations-v6-20260606";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=destination-galleries-v8-20260606";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=destination-galleries-v8-20260606";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=destination-galleries-v8-20260606";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=destination-galleries-v8-20260606";
+import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=destination-galleries-v8-20260606";
+import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=destination-galleries-v8-20260606";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=destination-galleries-v8-20260606";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=destination-galleries-v8-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -37,6 +38,11 @@ const state = {
 
 const destinationImagesByKey = new Map(conciergeDestinationImages.map(image => [image.key, image]));
 const destinationExperienceByKey = new Map(conciergeDestinationExperience.map(item => [item.key, item]));
+const destinationGalleriesByKey = new Map();
+conciergeDestinationGalleries.forEach(gallery => {
+  destinationGalleriesByKey.set(gallery.key, gallery);
+  (gallery.aliases || []).forEach(alias => destinationGalleriesByKey.set(alias, gallery));
+});
 const curatedHotels = [...conciergeHotels, ...conciergeHotelAdditions].map(normalizeHotel);
 const sessionId = getOrCreateSessionId();
 const supabaseConfig = resolveSupabaseConfig();
@@ -491,11 +497,14 @@ function DestinationRecommendationCard(recommendation, index) {
         <span>${index + 1}</span>
         <strong>${recommendation.score.toFixed(1)}</strong>
       </div>
-      ${DestinationImage(recommendation.imageKey, recommendation.name)}
+      ${DestinationPhotoGallery(recommendation)}
       <div class="recommendation-copy">
         <span class="eyebrow">${escapeHtml(recommendation.familyFit)}</span>
         <h3>${escapeHtml(recommendation.name)}</h3>
         <p>${escapeHtml(recommendation.reason)}</p>
+        <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
+          ${active ? "Hotéis e disponibilidade abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
+        </button>
         <div class="decision-lens">
           <div>
             <b>Orçamento</b>
@@ -514,9 +523,6 @@ function DestinationRecommendationCard(recommendation, index) {
         <div class="tags compact-tags">
           ${recommendation.tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}
         </div>
-        <button class="button primary" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
-          ${active ? "Hotéis deste destino abaixo" : `Ver hotéis em ${escapeHtml(recommendation.shortName)}`}
-        </button>
       </div>
     </article>
   `;
@@ -1194,6 +1200,75 @@ function DestinationImage(destinationKey, alt) {
     image ? `${image.alt || alt} · ${image.attributionText}` : "Imagem do destino pendente de revisão",
     image ? "destination" : "missing"
   );
+}
+
+function DestinationPhotoGallery(recommendation) {
+  const gallery = galleryForRecommendation(recommendation);
+  const photos = Array.isArray(gallery?.photos) ? gallery.photos.filter(photo => photo?.status === "approved") : [];
+  if (photos.length < 3) {
+    return `
+      <div class="destination-photo-gallery missing-gallery">
+        ${DestinationImage(recommendation.imageKey, recommendation.name)}
+        <div class="gallery-warning">
+          <strong>Fotos em validação</strong>
+          <span>Este destino ainda não tem as 3 fotos reais obrigatórias aprovadas.</span>
+        </div>
+      </div>
+    `;
+  }
+  const gallerySource = gallerySourceForPhotos(photos);
+  return `
+    <div class="destination-photo-gallery" aria-label="Fotos reais de ${escapeAttr(recommendation.name)}">
+      <div class="gallery-topline">
+        <span>3 fotos reais em alta resolução</span>
+        <a href="${escapeAttr(gallerySource.url)}" target="_blank" rel="noopener">${escapeHtml(gallerySource.label)}</a>
+      </div>
+      <div class="gallery-grid">
+        ${photos.slice(0, 3).map((photo, index) => DestinationGalleryPhoto(photo, index, recommendation)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function DestinationGalleryPhoto(photo, index, recommendation) {
+  const src = photo.thumbnailUrl || photo.imageUrl;
+  const highResUrl = photo.imageUrl || photo.sourceUrl || src;
+  const note = `${photo.width}x${photo.height} · ${photo.license || "fonte pública"}`;
+  return `
+    <figure class="gallery-photo ${index === 0 ? "main-photo" : "thumb-photo"}">
+      <a href="${escapeAttr(highResUrl)}" target="_blank" rel="noopener" data-track="destination_photo_click" data-source="${escapeAttr(photo.source || "wikimedia_commons")}" data-destination="${escapeAttr(recommendation.name)}" data-hotel-id="" data-hotel-name="${escapeAttr(photo.title || recommendation.name)}">
+        <div class="warning-mark image-error-mark" aria-hidden="true">!</div>
+        <img src="${escapeAttr(src)}" alt="${escapeAttr(photo.alt || recommendation.name)}" loading="lazy" onerror="this.hidden=true;this.closest('figure').classList.add('missing-image','image-load-failed');">
+      </a>
+      <figcaption>
+        <span>${escapeHtml(photo.alt || recommendation.name)}</span>
+        <small>${escapeHtml(note)}</small>
+      </figcaption>
+    </figure>
+  `;
+}
+
+function galleryForRecommendation(recommendation) {
+  return destinationGalleriesByKey.get(recommendation.key)
+    || destinationGalleriesByKey.get(recommendation.bestHotel?.destinationSlug)
+    || destinationGalleriesByKey.get(recommendation.imageKey)
+    || destinationGalleriesByKey.get(recommendation.bestHotel?.destinationKey);
+}
+
+function gallerySourceForPhotos(photos) {
+  const labels = new Set(photos.map(photoSourceLabel));
+  const firstSourceUrl = photos.find(photo => photo.sourceUrl)?.sourceUrl;
+  return {
+    label: labels.size === 1 ? [...labels][0] : "fontes verificadas",
+    url: firstSourceUrl || "https://commons.wikimedia.org/"
+  };
+}
+
+function photoSourceLabel(photo) {
+  if (photo.sourceLabel) return photo.sourceLabel;
+  if (photo.source === "wikimedia_commons") return "Wikimedia Commons";
+  if (photo.source === "official_hotel_site") return "site oficial";
+  return "fonte verificada";
 }
 
 function TravelImage(src, alt, note = "Foto do destino", confidence = "destination") {
