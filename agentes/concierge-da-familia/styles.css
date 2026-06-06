@@ -1753,6 +1753,53 @@ p {
   padding-inline: 14px;
 }
 
+.destination-fact-modules {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.decision-fact {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-width: 0;
+  min-height: 92px;
+  border: 1px solid rgba(0, 108, 228, .16);
+  border-radius: 12px;
+  padding: 7px;
+  background: #fff;
+}
+
+.decision-fact > span {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #eef7ff;
+  font-size: 15px;
+}
+
+.decision-fact b {
+  color: var(--blue);
+  font-size: 10px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.decision-fact strong {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.decision-fact small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.25;
+}
+
 .live-signals {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2466,6 +2513,10 @@ summary {
   .how-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .destination-fact-modules {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 759px) {
@@ -2734,6 +2785,14 @@ summary {
 
   .google-trust-panel {
     grid-template-columns: 1fr;
+  }
+
+  .destination-fact-modules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .decision-fact {
+    min-height: 86px;
   }
 
   .live-hotel-grid {

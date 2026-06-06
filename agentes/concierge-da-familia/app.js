@@ -41,6 +41,9 @@ const destinationImagesByKey = new Map(conciergeDestinationImages.map(image => [
 const destinationExperienceByKey = new Map(conciergeDestinationExperience.map(item => [item.key, item]));
 const googleCoverageDestinationsById = new Map(conciergeGooglePlacesCoverage.destinations.map(place => [place.id, place]));
 const googleCoverageHotelsById = new Map(conciergeGooglePlacesCoverage.hotels.map(place => [place.id, place]));
+const SAO_PAULO_CENTER = { latitude: -23.55052, longitude: -46.63331 };
+const SUV_KM_PER_LITER = 8.5;
+const GASOLINE_BRL_PER_LITER = 6.1;
 const destinationGalleriesByKey = new Map();
 conciergeDestinationGalleries.forEach(gallery => {
   destinationGalleriesByKey.set(gallery.key, gallery);
@@ -654,6 +657,7 @@ function DestinationRecommendationCard(recommendation, index) {
         </div>
         <h3>${escapeHtml(recommendation.name)}</h3>
         <p>${escapeHtml(recommendation.reason)}</p>
+        ${DestinationFactModules(recommendation, liveSummary, experience, googleCoverage)}
         <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
           ${active ? "Hotéis e disponibilidade abertos abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
         </button>
@@ -686,6 +690,87 @@ function DestinationRecommendationCard(recommendation, index) {
 
 function FamilyMedalBadge(score) {
   return `<span class="family-medal ${escapeAttr(score.medal)}">${escapeHtml(score.label)}</span>`;
+}
+
+function DestinationFactModules(recommendation, liveSummary, experience, googleCoverage) {
+  const facts = destinationDecisionFacts(recommendation, liveSummary, experience, googleCoverage);
+  return `
+    <div class="destination-fact-modules" aria-label="Dados objetivos para escolher ${escapeAttr(recommendation.name)}">
+      ${DecisionFact("🛣️", "Logística", facts.logistics.primary, facts.logistics.detail)}
+      ${DecisionFact("💰", "Custo total", facts.cost.primary, facts.cost.detail)}
+      ${DecisionFact("🍽️", "Alimentação", facts.food.primary, facts.food.detail)}
+      ${DecisionFact("🩺", "Segurança e saúde", facts.safety.primary, facts.safety.detail)}
+      ${DecisionFact("🎈", "Entretenimento", facts.entertainment.primary, facts.entertainment.detail)}
+    </div>
+  `;
+}
+
+function DecisionFact(icon, label, primary, detail) {
+  return `
+    <div class="decision-fact">
+      <span aria-hidden="true">${icon}</span>
+      <b>${escapeHtml(label)}</b>
+      <strong>${escapeHtml(primary)}</strong>
+      <small>${escapeHtml(detail)}</small>
+    </div>
+  `;
+}
+
+function destinationDecisionFacts(recommendation, liveSummary, experience, googleCoverage) {
+  const bestHotel = recommendation.bestHotel || {};
+  const hotels = recommendation.hotels || [];
+  const oneWayKm = estimateOneWayKm(recommendation, bestHotel, googleCoverage);
+  const driveMinutes = Number(liveSummary?.sp_drive_minutes || bestHotel.driveTimeFromSaoPaulo || 0);
+  const isRoadTrip = Boolean(bestHotel.driveTimeFromSaoPaulo || (oneWayKm > 0 && oneWayKm <= 360));
+  const tollRoundTrip = isRoadTrip ? tollRoundTripEstimate(recommendation, bestHotel) : 0;
+  const fuelRoundTrip = isRoadTrip ? Math.round((oneWayKm * 2 / SUV_KM_PER_LITER) * GASOLINE_BRL_PER_LITER) : 0;
+  const nightlyAverage = Math.round(hotels.reduce((sum, hotel) => sum + nightlyEstimateForHotel(hotel), 0) / Math.max(1, hotels.length));
+  const nights = tripNights(state.answers.trip_duration);
+  const familyPeople = familySize(state.intake || {});
+  const foodDaily = foodDailyEstimate(bestHotel, familyPeople);
+  const lodgingTotal = nightlyAverage * Math.max(1, nights || 1);
+  const foodTotal = foodDaily * Math.max(1, nights || 1);
+  const roadTotal = isRoadTrip ? tollRoundTrip + fuelRoundTrip : 0;
+  const tripTotal = lodgingTotal + foodTotal + roadTotal;
+  const restaurants = experience?.restaurants?.length || 0;
+  const attractions = experience?.attractions?.length || 0;
+  const googleRating = averageGoogleHotelRating(hotels);
+  return {
+    logistics: {
+      primary: isRoadTrip
+        ? `${oneWayKm} km · ${formatMinutesLabel(driveMinutes || estimateDriveMinutes(oneWayKm))}`
+        : `voo + traslado ${bestHotel.transferMinutes || "?"} min`,
+      detail: isRoadTrip
+        ? `Centro de SP como referência; pedágio ~${formatCurrency(tollRoundTrip)} ida e volta`
+        : `Saída: ${bestHotel.recommendedAirport || "aeroporto a definir"}`
+    },
+    cost: {
+      primary: isRoadTrip
+        ? `${formatCurrency(tripTotal)} est.`
+        : `${priceTierLabel(bestHotel.priceTier)} + aéreo`,
+      detail: isRoadTrip
+        ? `SUV: combustível ~${formatCurrency(fuelRoundTrip)}; diária média ~${formatCurrency(nightlyAverage)}`
+        : `diária média ~${formatCurrency(nightlyAverage)}; aéreo varia por data`
+    },
+    food: {
+      primary: mealPlanLabel(bestHotel),
+      detail: foodDaily
+        ? `alimentação extra ~${formatCurrency(foodDaily)}/dia para a família`
+        : "sem custo extra relevante de refeição no hotel"
+    },
+    safety: {
+      primary: googleRating ? `Google ${numberLabel(googleRating, 1)}` : "base validada",
+      detail: bestHotel.copaBaby || bestHotel.copaBaby24h
+        ? "tem apoio claro para bebê na curadoria"
+        : "confirmar berço, farmácia e atendimento antes da reserva"
+    },
+    entertainment: {
+      primary: `${attractions || "3+"} atrações · ${restaurants || "3+"} restaurantes`,
+      detail: bestHotel.worksOnRainyDay
+        ? "tem plano B para chuva/rotina dentro do hotel"
+        : "depende mais de agenda externa e clima"
+    }
+  };
 }
 
 function FamilyDecisionSummary(score) {
@@ -2534,6 +2619,117 @@ function calculateTravelEffort(answers, intake) {
   if (answers.displacement_limit === "Até 4h de carro") return { label: "Moderado", detail: "funciona com pausas e saída bem planejada", risk: "medium" };
   if (answers.displacement_limit === "Voo direto e traslado até 1h") return { label: "Moderado", detail: "voo ajuda, mas horário de chegada importa muito", risk: "medium" };
   return { label: "Alto", detail: "só vale se o destino compensar e a família tolerar logística", risk: "high" };
+}
+
+function estimateOneWayKm(recommendation, bestHotel, googleCoverage) {
+  const manual = {
+    "campinas-sp": 99,
+    "atibaia-sp": 67,
+    "mogi-das-cruzes-sp": 62,
+    "cesario-lange-sp": 150,
+    "sao-roque-sp": 63,
+    "guaruja-sp": 95,
+    "dourado-sp": 290,
+    "campos-do-jordao-sp": 180,
+    "olimpia-sp": 440
+  };
+  const key = recommendation.key || cityKeyForHotel(bestHotel);
+  if (manual[key]) return manual[key];
+  if (googleCoverage?.latitude && googleCoverage?.longitude) {
+    const straightKm = haversineKm(SAO_PAULO_CENTER, googleCoverage);
+    return Math.round(straightKm * (straightKm > 180 ? 1.22 : 1.34));
+  }
+  if (bestHotel.driveTimeFromSaoPaulo) return Math.round((bestHotel.driveTimeFromSaoPaulo / 60) * 68);
+  return 0;
+}
+
+function estimateDriveMinutes(oneWayKm) {
+  if (!oneWayKm) return 0;
+  const speed = oneWayKm <= 90 ? 55 : oneWayKm <= 180 ? 68 : 74;
+  return Math.round((oneWayKm / speed) * 60);
+}
+
+function tollRoundTripEstimate(recommendation, bestHotel) {
+  const tollOneWay = {
+    "campinas-sp": 26,
+    "atibaia-sp": 6,
+    "mogi-das-cruzes-sp": 0,
+    "cesario-lange-sp": 42,
+    "sao-roque-sp": 18,
+    "guaruja-sp": 38,
+    "dourado-sp": 58,
+    "campos-do-jordao-sp": 24,
+    "olimpia-sp": 78,
+    "resort-interior-sp": 18,
+    "hotel-fazenda-sp": 58,
+    "litoral-norte-sp": 38
+  };
+  const key = recommendation.key || cityKeyForHotel(bestHotel);
+  return (tollOneWay[key] || 0) * 2;
+}
+
+function nightlyEstimateForHotel(hotel) {
+  const base = {
+    budget: 520,
+    mid: 780,
+    upscale: 1250,
+    luxury: 1900
+  }[hotel.priceTier] || 980;
+  const mealMultiplier = hotel.allInclusive ? 1.28 : mealPlanForHotel(hotel) === "fullBoard" ? 1.14 : 1;
+  return Math.round(base * mealMultiplier);
+}
+
+function foodDailyEstimate(hotel, familyPeople) {
+  if (hotel.allInclusive || mealPlanForHotel(hotel) === "fullBoard") return 0;
+  if (hotel.hasKitchenette) return Math.round(familyPeople * 65);
+  return Math.round(familyPeople * 115);
+}
+
+function mealPlanForHotel(hotel) {
+  if (hotel.allInclusive) return "allInclusive";
+  const text = [hotel.mainStrength, hotel.verdict, hotel.sourceHighlights?.join(" ")].join(" ");
+  if (/pens[aã]o completa|refei[cç][oõ]es inclu/i.test(removeAccents(text))) return "fullBoard";
+  if (hotel.hasKitchenette) return "kitchenette";
+  return "breakfastOnly";
+}
+
+function mealPlanLabel(hotel) {
+  const plan = mealPlanForHotel(hotel);
+  if (plan === "allInclusive") return "all inclusive";
+  if (plan === "fullBoard") return "pensão completa";
+  if (plan === "kitchenette") return "cozinha de apoio";
+  return "refeições à parte";
+}
+
+function averageGoogleHotelRating(hotels) {
+  const ratings = hotels
+    .map(hotel => Number(googleCoverageForHotel(hotel)?.rating || 0))
+    .filter(Boolean);
+  if (!ratings.length) return 0;
+  return ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
+}
+
+function haversineKm(from, to) {
+  const radius = 6371;
+  const dLat = degreesToRadians(Number(to.latitude) - Number(from.latitude));
+  const dLng = degreesToRadians(Number(to.longitude) - Number(from.longitude));
+  const lat1 = degreesToRadians(Number(from.latitude));
+  const lat2 = degreesToRadians(Number(to.latitude));
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function degreesToRadians(value) {
+  return value * Math.PI / 180;
+}
+
+function formatMinutesLabel(minutes) {
+  const numeric = Number(minutes);
+  if (!numeric) return "tempo a validar";
+  const hours = Math.floor(numeric / 60);
+  const mins = numeric % 60;
+  if (!hours) return `${mins} min`;
+  return mins ? `${hours}h${String(mins).padStart(2, "0")}` : `${hours}h`;
 }
 
 function estimateTripCost(answers, intake) {
