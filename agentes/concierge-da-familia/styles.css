@@ -198,6 +198,20 @@ a {
   margin-top: 12px;
 }
 
+.privacy-note,
+.question-help {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.question-help {
+  margin: -2px 0 12px;
+  color: var(--terra);
+  font-weight: 850;
+}
+
 .intent-note {
   margin: -4px 0 2px;
   border-radius: 12px;
@@ -426,6 +440,10 @@ p {
   gap: 12px;
 }
 
+.diagnostic-home .hero-actions {
+  margin: 4px 0 2px;
+}
+
 .button {
   min-height: 46px;
   display: inline-flex;
@@ -577,6 +595,50 @@ p {
 .result-card p,
 .travel-card p {
   margin-bottom: 0;
+}
+
+.how-it-works {
+  padding-top: 20px;
+  padding-bottom: 34px;
+}
+
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.how-card {
+  display: grid;
+  gap: 8px;
+  min-height: 188px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 15px;
+  background: rgba(255, 255, 255, .86);
+  box-shadow: 0 10px 28px rgba(0, 53, 128, .07);
+}
+
+.how-card span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--blue);
+  font-weight: 950;
+}
+
+.how-card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.how-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .split {
@@ -2033,6 +2095,12 @@ summary {
   text-align: center;
 }
 
+@media (min-width: 760px) and (max-width: 1079px) {
+  .how-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 759px) {
   .diagnostic-home {
     min-height: calc(100vh - 62px);
@@ -2050,6 +2118,16 @@ summary {
   .diagnostic-home .hero-copy {
     gap: 8px;
     padding-bottom: 0;
+  }
+
+  .diagnostic-home .hero-actions {
+    gap: 8px;
+  }
+
+  .diagnostic-home .hero-actions .button {
+    min-height: 38px;
+    padding: 9px 12px;
+    font-size: 12px;
   }
 
   .diagnostic-home .hero-copy > p,
@@ -2109,6 +2187,29 @@ summary {
     margin-bottom: 2px;
     padding: 8px;
     font-size: 12px;
+  }
+
+  .privacy-note,
+  .question-help {
+    font-size: 12px;
+  }
+
+  .how-it-works {
+    padding-top: 18px;
+  }
+
+  .how-grid {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .how-card {
+    flex: 0 0 min(78vw, 280px);
+    min-height: 168px;
+    scroll-snap-align: start;
   }
 
   .popular-destinations {

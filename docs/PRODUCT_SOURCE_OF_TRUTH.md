@@ -2,7 +2,7 @@
 
 > **Status:** documento normativo. É a **fonte única da verdade** do produto.
 > Em caso de divergência entre código, banco e qualquer outra doc, **este documento decide** — ou é atualizado de propósito antes da mudança.
-> **Última revisão:** 06/06/2026 · **Código:** `origin/main @ 0c7c9c4` · **Banco:** Supabase `roojvzpicxnnqjrrdpdx`
+> **Última revisão:** 06/06/2026 · **Código:** `origin/main` · **Banco:** Supabase `roojvzpicxnnqjrrdpdx`
 
 ---
 
@@ -20,13 +20,13 @@ Concierge da Família é uma ferramenta de **curadoria inteligente de viagens pa
 
 Funcionalidades que fazem parte do produto e são mantidas:
 
-- **Diagnóstico familiar (quiz)** — coleta o perfil da família (idades, preferências) e gera recomendações.
+- **Diagnóstico familiar em 2 minutos** — coleta o essencial primeiro, sem exigir contato antes do resultado; depois usa 7 perguntas de decisão para gerar recomendações.
 - **Destinos em alta** — vitrine de destinos em destaque.
 - **Ranking / score de destinos** — ordenação por adequação familiar (`destination_scores`, `destination_family_fit`).
 - **Cards de destino com galerias reais** — imagens e conteúdo turístico curado.
 - **Explorador de hotéis** — hotéis por destino, com estrelas, nota de hóspedes e fotos.
 - **Calendário familiar** — feriados nacionais e janelas de férias escolares.
-- **Captura de lead** — formulário de contato/interesse.
+- **Captura de lead pós-resultado** — formulário de contato/interesse aparece depois que a família já recebeu valor.
 - **Tracking de comportamento** — eventos, leads e cliques em hotéis via Supabase REST com publishable key pública e RLS.
 - **Camada de dados reais no banco (backend oficial):**
   - Nota e avaliações do Google (Places).
@@ -147,10 +147,10 @@ O produto é um **site estático (GitHub Pages)** com uma SPA de página única 
 
 ## 8. Fluxos principais
 
-1. **Diagnóstico → recomendação.** Visitante responde o quiz (`#diagnostico`) → gera perfil → recebe destinos recomendados (`#recomendacoes`, `#ranking`, `#score`).
-2. **Exploração de destino.** Visitante navega pelos cards (`#destinos`) com galerias, e — quando integrado — nota do Google, tempo de carro de SP e nível de movimento.
-3. **Hospedagem.** Visitante vê hotéis com disponibilidade (`#hoteis`); cliques são rastreados (`concierge_hotel_clicks`).
-4. **Conversão.** Visitante deixa contato (`#lead` → `concierge_leads`).
+1. **Perfil rápido → diagnóstico.** Visitante informa quem vai viajar, idades, quartos, pet e janela de viagem sem deixar contato (`#diagnostico`) → responde 7 perguntas estratégicas.
+2. **Diagnóstico → 3 cidades.** Site gera perfil → mostra somente as 3 melhores cidades primeiro (`#recomendacoes`), com orçamento, sazonalidade, gastronomia, atrações familiares e galerias reais.
+3. **Cidade → hospedagem.** Visitante escolhe uma cidade → abre hotéis qualificados e links de disponibilidade (`#ranking`, `#hoteis`); cliques são rastreados (`concierge_hotel_clicks`).
+4. **Conversão.** Visitante deixa contato apenas se quiser ajuda curada (`#lead` → `concierge_leads`, estágio `lead_requested`).
 5. **Compartilhamento.** Resultado do diagnóstico compartilhável (`#resultado`, `#compartilhar`).
 6. **Atualização de dados (backend).** Sincronização semanal re-popula nota Google, hotéis, tempo de carro e movimento via funções de sync (ver Pendências: agendamento aguarda aprovação na tela).
 

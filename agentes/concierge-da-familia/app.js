@@ -1,11 +1,11 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=live-supabase-v9-20260606";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=live-supabase-v9-20260606";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=live-supabase-v9-20260606";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=live-supabase-v9-20260606";
-import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=live-supabase-v9-20260606";
-import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=live-supabase-v9-20260606";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=live-supabase-v9-20260606";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=live-supabase-v9-20260606";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=ux-consultor-v1-20260606";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=ux-consultor-v1-20260606";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=ux-consultor-v1-20260606";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=ux-consultor-v1-20260606";
+import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=ux-consultor-v1-20260606";
+import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=ux-consultor-v1-20260606";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=ux-consultor-v1-20260606";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=ux-consultor-v1-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -77,6 +77,7 @@ function defaultHotelFilters() {
 function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
+    ${!state.result ? ConciergeHowItWorksSection() : ""}
     ${!state.result ? PopularFamilyDestinationsSection() : ""}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
     ${state.result ? ShareableResultSection(state.result) : ""}
@@ -144,17 +145,48 @@ function ConciergeHeroSection() {
   return `
     <section class="hero section minimal-hero diagnostic-home" id="diagnostico">
       <div class="hero-copy">
-        <span class="badge">Teste das Férias Sem Perrengue</span>
-        <h1>Descubra qual viagem combina com a sua família.</h1>
-        <p>Um teste gratuito para entender crianças, ritmo dos pais, orçamento e destinos com menor chance de perrengue. O Booking mostra onde ficar. A gente ajuda a descobrir onde sua família vai ficar bem.</p>
+        <span class="badge">Family Trip Intelligence</span>
+        <h1>Viagens de família sem perrengue</h1>
+        <p>Em poucos minutos, eu cruzo idade das crianças, ritmo dos pais, orçamento, sazonalidade e logística saindo de São Paulo para indicar destinos que fazem sentido de verdade.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#diagnostico">Encontrar minha viagem ideal</a>
+          <a class="button secondary" href="#como-funciona">Ver como funciona</a>
+        </div>
         <div class="family-cues" aria-label="Critérios de curadoria familiar">
-          <span>WhatsApp e email</span>
-          <span>Quem vai viajar</span>
-          <span>Orçamento sem susto</span>
+          <span>Resultado antes do contato</span>
+          <span>7 perguntas essenciais</span>
+          <span>Hotéis aprovados</span>
         </div>
       </div>
       <div class="diagnostic-panel">
         ${state.result ? ConciergeDiagnosisDonePanel() : state.intakeComplete ? ConciergeDiagnosisQuiz() : ConciergeQuickIntakeForm()}
+      </div>
+    </section>
+  `;
+}
+
+function ConciergeHowItWorksSection() {
+  const steps = [
+    ["1", "Perfil da família", "Quem vai, idades, quartos, pet e janela de viagem, sem pedir WhatsApp antes do resultado."],
+    ["2", "Diagnóstico guiado", "Sete perguntas simples sobre ritmo, orçamento, deslocamento, sazonalidade e riscos que você quer evitar."],
+    ["3", "3 destinos melhores", "Primeiro vem a cidade certa. Cada opção explica por que vale visitar, onde comer e o que fazer com crianças."],
+    ["4", "Hotéis e disponibilidade", "Depois que você escolhe o destino, abrimos hotéis qualificados e links rastreados para checar disponibilidade."]
+  ];
+  return `
+    <section class="section how-it-works" id="como-funciona">
+      <div class="section-title compact-title">
+        <span class="badge subtle">Como uma consultora pensaria</span>
+        <h2>Primeiro reduzimos risco. Depois comparamos hotel.</h2>
+        <p>A experiência foi desenhada para pais decidirem rápido, com clareza e sem cair em hotel bonito na foto que não funciona para a rotina da família.</p>
+      </div>
+      <div class="how-grid">
+        ${steps.map(([number, title, text]) => `
+          <article class="how-card">
+            <span>${number}</span>
+            <h3>${escapeHtml(title)}</h3>
+            <p>${escapeHtml(text)}</p>
+          </article>
+        `).join("")}
       </div>
     </section>
   `;
@@ -242,15 +274,13 @@ function ConciergeQuickIntakeForm() {
   return `
     <form id="intakeForm" class="quiz-card intake-card">
       <div class="quiz-top">
-        <span>Cadastro rápido</span>
-        <div class="progress"><i style="width:14%"></i></div>
+        <span>Etapa 1 de 2</span>
+        <div class="progress"><i style="width:22%"></i></div>
       </div>
-      <h3>Antes do diagnóstico, conte quem vai viajar.</h3>
+      <h3>Vamos entender o essencial, sem cadastro.</h3>
+      <p class="micro">Você recebe as 3 melhores cidades antes de deixar WhatsApp ou email.</p>
       ${state.intakeDraft.destinationInterestName ? `<p class="intent-note">Vamos testar se ${escapeHtml(state.intakeDraft.destinationInterestName)} combina mesmo com sua família.</p>` : ""}
       <div class="intake-grid">
-        <label>Nome<input name="name" required autocomplete="name" placeholder="Seu nome"></label>
-        <label>WhatsApp<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="11999999999"></label>
-        <label>Email<input name="email" required type="email" autocomplete="email" placeholder="voce@email.com"></label>
         <label>Adultos
           <select name="adultsCount">
             <option value="1">1 adulto</option>
@@ -312,7 +342,8 @@ function ConciergeQuickIntakeForm() {
           </div>
         </div>
       </div>
-      <button class="button primary" type="submit">Começar diagnóstico</button>
+      <button class="button primary" type="submit">Encontrar minha viagem ideal</button>
+      <p class="privacy-note">Dados usados para personalizar a recomendação. Contato só no fim, se você quiser ajuda.</p>
     </form>
   `;
 }
@@ -403,13 +434,15 @@ function ConciergeDifferentiationSection() {
 function ConciergeDiagnosisQuiz() {
   const question = conciergeQuizQuestions[state.quizIndex];
   const progress = Math.round(((state.quizIndex + 1) / conciergeQuizQuestions.length) * 100);
+  const remaining = conciergeQuizQuestions.length - state.quizIndex - 1;
   return `
       <div class="quiz-card compact-quiz">
         <div class="quiz-top">
-          <span>Pergunta ${state.quizIndex + 1} de ${conciergeQuizQuestions.length}</span>
+          <span>Pergunta ${state.quizIndex + 1} de ${conciergeQuizQuestions.length}${remaining ? ` · faltam ${remaining}` : " · última"}</span>
           <div class="progress"><i style="width:${progress}%"></i></div>
         </div>
         <h3>${escapeHtml(question.question)}</h3>
+        ${question.help ? `<p class="question-help">${escapeHtml(question.help)}</p>` : ""}
         <div class="chips ${question.type === "multi" ? "multi" : ""}">
           ${question.options.map(option => QuizOption(question, option)).join("")}
         </div>
@@ -527,8 +560,8 @@ function DestinationRecommendationsSection() {
     <section class="section destination-recommendations" id="recomendacoes">
       <div class="section-title">
         <span class="badge subtle">Decisão de mãe: primeiro o destino</span>
-        <h2>Eu começaria por estas 3 cidades.</h2>
-        <p>Antes de entrar em hotel, escolha o lugar que mais combina com rotina, orçamento e época da viagem. Depois você compara os resorts daquele destino.</p>
+        <h2>Encontramos as melhores viagens para sua família.</h2>
+        <p>Mostro só as 3 opções que eu avaliaria primeiro, equilibrando prazer da viagem, orçamento, sazonalidade e logística. Se quiser investigar mais, você abre a lista completa.</p>
       </div>
       <div class="recommendation-grid">
         ${visibleRecommendations.map((recommendation, index) => DestinationRecommendationCard(recommendation, index)).join("")}
@@ -557,7 +590,7 @@ function DestinationRecommendationCard(recommendation, index) {
         <h3>${escapeHtml(recommendation.name)}</h3>
         <p>${escapeHtml(recommendation.reason)}</p>
         <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
-          ${active ? "Hotéis e disponibilidade abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
+          ${active ? "Hotéis e disponibilidade abertos abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
         </button>
         ${liveSummary ? LiveDestinationSignals(liveSummary) : ""}
         <div class="decision-lens">
@@ -643,8 +676,8 @@ function RankedHotelsSection() {
     <section class="section ranking-section" id="ranking">
       <div class="section-title">
         <span class="badge subtle">Agora sim: hotéis</span>
-        <h2>Hotéis em ${escapeHtml(selectedRecommendation?.name || "destino escolhido")}</h2>
-        <p>Agora que o destino foi escolhido, compare estrutura infantil, faixa de preço e disponibilidade. Eu manteria a lista curta e olharia primeiro os melhores encaixes.</p>
+        <h2>Hotéis aprovados para famílias em ${escapeHtml(selectedRecommendation?.name || "destino escolhido")}</h2>
+        <p>Agora que a cidade faz sentido, compare estrutura infantil, faixa de preço e links de disponibilidade. A lista prioriza opções que eu teria coragem de colocar na mesa de uma família.</p>
       </div>
       ${ranked.length ? ConciergeMap(ranked) : ""}
       <button class="button secondary compact-button back-destination-button" data-action="back-to-destinations">Trocar destino</button>
@@ -666,8 +699,8 @@ function LiveHotelCards(recommendation) {
       <div class="live-panel-title">
         <span class="badge subtle">LiteAPI</span>
         <div>
-          <h3>Hotéis reais encontrados para ${escapeHtml(recommendation.shortName)}</h3>
-          <p>Inventário vindo da camada viva do Supabase. Use como sinal de mercado; a curadoria familiar continua nos cards aprovados abaixo.</p>
+          <h3>Disponibilidade real encontrada para ${escapeHtml(recommendation.shortName)}</h3>
+          <p>Inventário vindo da camada viva do Supabase. Estes links são rastreados para sabermos quais reservas estamos ajudando a gerar.</p>
         </div>
       </div>
       <div class="live-hotel-grid">
@@ -692,7 +725,7 @@ function LiveHotelCard(hotel, recommendation) {
           <span>${escapeHtml(reviewCount)}</span>
           <span>${escapeHtml(stars)}</span>
         </div>
-        <a class="button secondary compact-button" href="${escapeAttr(bookingSearchUrl({ name: hotel.hotel_name, destination: recommendation.name }))}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="liteapi_booking_search" data-hotel-id="${escapeAttr(hotel.liteapi_id || "")}" data-hotel-name="${escapeAttr(hotel.hotel_name)}" data-destination="${escapeAttr(recommendation.name)}">Buscar disponibilidade</a>
+        <a class="button secondary compact-button" href="${escapeAttr(bookingSearchUrl({ name: hotel.hotel_name, destination: recommendation.name }))}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="liteapi_booking_search" data-hotel-id="${escapeAttr(hotel.liteapi_id || "")}" data-hotel-name="${escapeAttr(hotel.hotel_name)}" data-destination="${escapeAttr(recommendation.name)}">Ver disponibilidade</a>
       </div>
     </article>
   `;
@@ -1543,8 +1576,8 @@ function ConciergeLeadCaptureForm() {
       <div class="lead-box">
         <div>
           <span class="badge subtle">Próximo passo</span>
-          <h2>Quer receber opções curadas para sua família saindo de São Paulo?</h2>
-          <p>Sem spam. A ideia é te ajudar a escolher uma viagem que funcione para sua família.</p>
+          <h2>Quer que eu transforme este diagnóstico em opções curadas?</h2>
+          <p>Agora sim, se fizer sentido para você, deixe o contato para receber ajuda no WhatsApp. Sem spam.</p>
         </div>
         <form id="leadForm" class="lead-form">
           <label>Nome<input name="name" required placeholder="Seu nome" value="${escapeAttr(state.intake.name || "")}"></label>
@@ -1597,7 +1630,7 @@ function handleClick(event) {
     render();
     setTimeout(() => {
       document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      document.querySelector("#intakeForm [name='name']")?.focus({ preventScroll: true });
+      document.querySelector("#intakeForm [name='adultsCount']")?.focus({ preventScroll: true });
     }, 40);
     return;
   }
@@ -1724,7 +1757,6 @@ function activateFamilyAlert(button) {
     `Custo estimado: ${state.result.costEstimate.headline}`,
     `Destinos preferidos: ${destinations}`,
     `Quando querem ir: ${state.intake.travelPeriod || "data flexível"}`,
-    `Duração: ${state.answers.trip_duration || "a definir"}`,
     `Orçamento confortável: ${state.answers.budget_total || "a definir"}`
   ].join("\n");
   trackEvent("family_alert_requested", analyticsResultPayload());
@@ -1735,7 +1767,7 @@ function activateFamilyAlert(button) {
 function shareResultText(result) {
   const destinations = buildDestinationRecommendations().slice(0, 3).map((item, index) => `${index + 1}. ${item.name}`).join("\n");
   return [
-    "Fiz o Teste das Férias Sem Perrengue.",
+    "Fiz o diagnóstico Viagens de família sem perrengue.",
     `Meu perfil de viagem em família: ${result.profileName}`,
     `Índice Sem Perrengue: ${result.semPerrengue.score}/100 (${result.semPerrengue.label})`,
     `Fit financeiro: ${result.financialFit.label}`,
@@ -1985,9 +2017,9 @@ document.addEventListener("submit", event => {
       .filter((_, index) => index < childrenCount);
     const travelTimingMode = form.get("travelTimingMode") || "unknown";
     state.intake = {
-      name: form.get("name") || "",
-      whatsapp: form.get("whatsapp") || "",
-      email: form.get("email") || "",
+      name: "",
+      whatsapp: "",
+      email: "",
       adultsCount: Number.parseInt(form.get("adultsCount"), 10) || 2,
       childrenCount,
       roomsCount: Number.parseInt(form.get("roomsCount"), 10) || 1,
@@ -2026,13 +2058,19 @@ document.addEventListener("submit", event => {
       interestDestinationKey: state.intake.interestDestinationKey,
       interestDestinationName: state.intake.interestDestinationName
     });
-    persistLeadIntake("intake_completed");
+    persistLeadIntake("profile_started");
     render();
     return;
   }
   if (event.target.id !== "leadForm") return;
   event.preventDefault();
   const form = new FormData(event.target);
+  state.intake = {
+    ...state.intake,
+    name: form.get("name") || state.intake.name || "",
+    whatsapp: form.get("phone") || state.intake.whatsapp || "",
+    email: form.get("email") || state.intake.email || ""
+  };
   const text = [
     "Oi! Quero receber opções curadas do Concierge da Família.",
     `Nome: ${form.get("name") || state.intake.name || ""}`,
@@ -2049,6 +2087,7 @@ document.addEventListener("submit", event => {
     `Tipo de viagem: ${form.get("trip") || ""}`
   ].join("\n");
   trackEvent("lead_whatsapp_requested", analyticsResultPayload());
+  persistLeadIntake("lead_requested");
   window.open(leadWhatsAppUrl(text), "_blank", "noopener");
 });
 
