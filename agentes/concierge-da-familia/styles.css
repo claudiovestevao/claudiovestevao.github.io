@@ -1063,6 +1063,30 @@ p {
   font-size: 13px;
 }
 
+.result-next-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  border-radius: 16px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.result-next-step strong {
+  color: var(--blue);
+  font-size: 15px;
+}
+
+.result-next-step span {
+  flex: 1;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .share-section {
   padding-top: 16px;
   padding-bottom: 22px;
@@ -2614,6 +2638,14 @@ summary {
   .cost-grid,
   .share-layout {
     grid-template-columns: 1fr;
+  }
+
+  .result-next-step {
+    display: grid;
+  }
+
+  .result-next-step .button {
+    width: 100%;
   }
 
   .metric-card {

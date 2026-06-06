@@ -550,16 +550,10 @@ function ConciergeDiagnosisResult(result) {
             <span><b>Conforto</b>${escapeHtml(result.costEstimate.comfort)}</span>
           </div>
         </div>
-        <p class="micro">Este índice é uma estimativa criada a partir das suas respostas para ajudar na decisão. Não representa garantia de experiência ou preço.</p>
-        <div class="quick-insights">
-          <div>
-          <h3>Eu priorizaria</h3>
-            ${BulletList(result.prioritize.slice(0, 3))}
-          </div>
-          <div>
-          <h3>Eu evitaria por enquanto</h3>
-            ${BulletList(result.avoid.slice(0, 2))}
-          </div>
+        <div class="result-next-step">
+          <strong>Agora escolha uma cidade.</strong>
+          <span>Separei as 3 opções mais fortes para comparar hotel e disponibilidade sem abrir mil abas.</span>
+          <a class="button primary compact-button" href="#recomendacoes">Ver minhas 3 cidades</a>
         </div>
       </div>
     </section>
