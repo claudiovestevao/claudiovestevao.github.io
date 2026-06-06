@@ -6,6 +6,7 @@ import { conciergeDestinationExperience } from "./src/data/conciergeDestinationE
 import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=family-score-v1-20260606";
 import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=family-score-v1-20260606";
 import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=family-score-v1-20260606";
+import { conciergeGooglePlacesCoverage } from "./src/data/conciergeGooglePlacesCoverage.js?v=google-coverage-v1-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -38,6 +39,8 @@ const state = {
 
 const destinationImagesByKey = new Map(conciergeDestinationImages.map(image => [image.key, image]));
 const destinationExperienceByKey = new Map(conciergeDestinationExperience.map(item => [item.key, item]));
+const googleCoverageDestinationsById = new Map(conciergeGooglePlacesCoverage.destinations.map(place => [place.id, place]));
+const googleCoverageHotelsById = new Map(conciergeGooglePlacesCoverage.hotels.map(place => [place.id, place]));
 const destinationGalleriesByKey = new Map();
 conciergeDestinationGalleries.forEach(gallery => {
   destinationGalleriesByKey.set(gallery.key, gallery);
@@ -195,7 +198,7 @@ function ConciergeHowItWorksSection() {
 function ConciergeLiveDataSection() {
   const summaries = [...liveConciergeData.summariesBySlug.values()];
   const routeCount = summaries.filter(item => item.sp_drive_minutes).length;
-  const googleCount = summaries.filter(item => item.google_rating).length;
+  const googleCount = conciergeGooglePlacesCoverage.covered;
   const hotelCount = summaries.reduce((sum, item) => sum + (Number(item.bookable_hotels) || 0), 0);
   const calmCount = summaries.filter(item => item.movimento_level === "tranquilo").length;
   const status = liveConciergeData.loading
@@ -212,7 +215,7 @@ function ConciergeLiveDataSection() {
           <p>${escapeHtml(status)}${liveConciergeData.error ? ` · algumas fontes estão pendentes sem bloquear a experiência` : ""}</p>
         </div>
         <div class="live-data-metrics" aria-label="Cobertura de dados vivos">
-          ${LiveDataMetric("Google", googleCount, "notas e avaliações")}
+          ${LiveDataMetric("Google", googleCount, "destinos e hoteis validados")}
           ${LiveDataMetric("Rotas", routeCount, "tempo saindo de SP")}
           ${LiveDataMetric("Hotéis", hotelCount, "opções bookable")}
           ${LiveDataMetric("Movimento", calmCount, "destinos tranquilos")}
@@ -619,6 +622,7 @@ function DestinationRecommendationCard(recommendation, index) {
   const experience = experienceForRecommendation(recommendation);
   const liveSummary = liveSummaryForRecommendation(recommendation);
   const familyScore = destinationFamilyScore(recommendation, liveSummary, experience);
+  const googleCoverage = googleCoverageForRecommendation(recommendation);
   return `
     <article class="recommendation-card ${active ? "active" : ""}">
       <div class="recommendation-rank">
@@ -639,6 +643,7 @@ function DestinationRecommendationCard(recommendation, index) {
         </button>
         ${FamilyDecisionSummary(familyScore)}
         ${liveSummary ? LiveDestinationSignals(liveSummary) : ""}
+        ${googleCoverage ? GoogleDestinationSignals(googleCoverage) : ""}
         ${FamilyInfrastructurePanel(recommendation, liveSummary, experience)}
         <div class="decision-lens">
           <div>
@@ -717,6 +722,45 @@ function LiveDestinationSignals(summary) {
       <div><b>Movimento</b><span>${escapeHtml(movementLabel)}</span></div>
       <div><b>Hospedagem</b><span>${escapeHtml(hotelLabel)}</span></div>
       ${summary.family_summary ? `<p>${escapeHtml(summary.family_summary)}</p>` : ""}
+    </div>
+  `;
+}
+
+function GoogleDestinationSignals(place) {
+  const photoLabel = place.photos?.length
+    ? `${place.photos.length} fotos Google Places`
+    : "fotos ainda sem retorno";
+  const locationLabel = place.latitude && place.longitude
+    ? `${numberLabel(place.latitude, 3)}, ${numberLabel(place.longitude, 3)}`
+    : "coordenadas em validacao";
+  return `
+    <div class="google-trust-panel" aria-label="Validacao Google Places do destino">
+      <span class="badge subtle">Google Places</span>
+      <div><b>Localidade validada</b><span>${escapeHtml(place.googleName || place.name)}</span></div>
+      <div><b>Endereco-base</b><span>${escapeHtml(place.formattedAddress || "endereco em validacao")}</span></div>
+      <div><b>Coordenadas</b><span>${escapeHtml(locationLabel)}</span></div>
+      <div><b>Fotos reais</b><span>${escapeHtml(photoLabel)}</span></div>
+    </div>
+  `;
+}
+
+function GoogleHotelSignals(place) {
+  const ratingLabel = place.rating
+    ? `${numberLabel(place.rating, 1)} Google`
+    : "nota em validacao";
+  const reviewsLabel = place.userRatingCount
+    ? `${numberLabel(place.userRatingCount, 0)} avaliacoes`
+    : "volume em validacao";
+  const photosLabel = place.photos?.length
+    ? `${place.photos.length} fotos do Google Place Photos`
+    : "foto Google indisponivel";
+  return `
+    <div class="google-trust-panel hotel-google-panel" aria-label="Dados Google Places do hotel">
+      <span class="badge subtle">Google verificado</span>
+      <div><b>Nota publica</b><span>${escapeHtml(ratingLabel)} / ${escapeHtml(reviewsLabel)}</span></div>
+      <div><b>Endereco</b><span>${escapeHtml(place.formattedAddress || "endereco em validacao")}</span></div>
+      <div><b>Contato</b><span>${escapeHtml(place.phoneNumber || "telefone nao retornado")}</span></div>
+      <div><b>Fotos reais</b><span>${escapeHtml(photosLabel)}</span></div>
     </div>
   `;
 }
@@ -989,6 +1033,8 @@ function hotelMapPosition(id) {
 
 function RankedHotelCard(hotel, index) {
   const approval = hotel.familyApproval || familyApprovalForHotel(hotel);
+  const googleCoverage = googleCoverageForHotel(hotel);
+  const officialAvailabilityUrl = hotel.officialSiteUrl || googleCoverage?.websiteUri || hotel.sourceUrl;
   return `
     <article class="ranking-row">
       <span class="rank-number">${index + 1}</span>
@@ -1014,9 +1060,10 @@ function RankedHotelCard(hotel, index) {
           ${hotel.worksOnRainyDay ? "<span>plano B chuva</span>" : ""}
         </div>
         ${HotelApprovalExplanation(approval)}
+        ${googleCoverage ? GoogleHotelSignals(googleCoverage) : ""}
         ${hotel.rankingNotes.length ? `<small>${escapeHtml(hotel.rankingNotes.join(" · "))}</small>` : ""}
         <div class="availability-actions">
-          <a class="button primary compact-button" href="${escapeAttr(hotel.officialSiteUrl || hotel.sourceUrl)}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="official" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Ver disponibilidade</a>
+          <a class="button primary compact-button" href="${escapeAttr(officialAvailabilityUrl)}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="official" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Ver disponibilidade</a>
           <a class="button secondary compact-button" href="${escapeAttr(hotel.bookingUrl || bookingSearchUrl(hotel))}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="booking" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Ver disponibilidade na Booking</a>
           ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener" data-track="hotel_source_click" data-source="curation" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Fonte da curadoria</a>` : ""}
         </div>
@@ -1186,6 +1233,9 @@ function familyApprovalForHotel(hotel) {
   const must = arrayAnswer(answers.comfort_needs);
   const concerns = arrayAnswer(answers.avoid_risks);
   const childAges = state.intake?.childAges || [];
+  const googleCoverage = googleCoverageForHotel(hotel);
+  const googleRating = Number(googleCoverage?.rating || 0);
+  const googleReviewCount = Number(googleCoverage?.userRatingCount || 0);
   const hasBaby = childAges.some(age => /0 a 12 meses|1 a 2 anos/i.test(age)) || state.intake?.childAge === "0 a 12 meses";
   const failures = [];
   const hasFamilyStructure = Boolean(
@@ -1193,6 +1243,8 @@ function familyApprovalForHotel(hotel) {
     hotel.allInclusive || hotel.worksOnRainyDay || hotel.hasKitchenette || hotel.recreation
   );
   if ((hotel.adjustedScore || hotel.score || 0) < 7.2) failures.push("score familiar baixo");
+  if (!googleCoverage?.placeId) failures.push("sem validacao Google Places");
+  if (googleRating && googleRating < 4 && googleReviewCount >= 20) failures.push("avaliacao Google abaixo do minimo");
   if (!hasFamilyStructure) failures.push("sem estrutura familiar mínima validada");
   if (must.includes("Copa baby") && !hotel.copaBaby && !hotel.copaBaby24h) failures.push("não atende copa baby");
   if (must.includes("Copa baby 24h") && !hotel.copaBaby24h) failures.push("não atende copa baby 24h");
@@ -1207,14 +1259,18 @@ function familyApprovalForHotel(hotel) {
     + (hotel.heatedPool ? 7 : 0)
     + (hotel.worksOnRainyDay ? 10 : 0)
     + (hotel.allInclusive || hotel.hasKitchenette ? 8 : 0)
-    + (hotel.copaBaby || hotel.copaBaby24h ? 10 : 0)));
+    + (hotel.copaBaby || hotel.copaBaby24h ? 10 : 0)
+    + (googleRating >= 4.6 && googleReviewCount >= 100 ? 4 : 0)));
   const babyComfort = Math.max(0, Math.min(100, 42
     + (hotel.copaBaby ? 18 : 0)
     + (hotel.copaBaby24h ? 14 : 0)
     + (hotel.hasKitchenette ? 12 : 0)
     + (hotel.heatedPool ? 8 : 0)
     + (travelBurden(hotel) <= 120 ? 10 : travelBurden(hotel) > 240 ? -12 : 2)));
-  const score = Math.max(0, Math.min(100, Math.round((base * 0.5) + (infrastructure * 0.3) + (babyComfort * 0.2))));
+  const googleTrust = googleCoverage?.placeId
+    ? Math.max(0, Math.min(100, 58 + (googleRating >= 4.6 ? 18 : googleRating >= 4.3 ? 10 : googleRating ? -10 : 0) + Math.min(18, googleReviewCount / 120)))
+    : 0;
+  const score = Math.max(0, Math.min(100, Math.round((base * 0.45) + (infrastructure * 0.28) + (babyComfort * 0.2) + (googleTrust * 0.07))));
   const medal = failures.length ? "not-recommended" : score >= 86 ? "gold" : score >= 74 ? "silver" : "bronze";
   return {
     minimumPassed: failures.length === 0 && score >= 58,
@@ -1222,6 +1278,7 @@ function familyApprovalForHotel(hotel) {
     score,
     infrastructure,
     babyComfort,
+    googleTrust,
     medal,
     label: medal === "gold" ? "Padrão Ouro" : medal === "silver" ? "Padrão Prata" : medal === "bronze" ? "Padrão Bronze" : "Reprovado",
     verdict: medal === "gold" ? "excelente para famílias" : medal === "silver" ? "bom, com poucos alertas" : medal === "bronze" ? "viável, exige planejamento" : "não atende o Padrão Família"
@@ -1301,6 +1358,22 @@ function experienceForRecommendation(recommendation) {
 
 function liveSummaryForRecommendation(recommendation) {
   return firstLiveMatch(recommendation, liveConciergeData.summariesBySlug);
+}
+
+function googleCoverageForRecommendation(recommendation) {
+  const candidates = [
+    recommendation.key,
+    recommendation.imageKey,
+    recommendation.bestHotel?.destinationSlug,
+    recommendation.bestHotel?.destinationKey,
+    slugifyText(recommendation.name || ""),
+    removeStateSuffix(slugifyText(recommendation.name || ""))
+  ];
+  return candidates.map(key => googleCoverageDestinationsById.get(key)).find(Boolean) || null;
+}
+
+function googleCoverageForHotel(hotel) {
+  return googleCoverageHotelsById.get(hotel.id) || null;
 }
 
 function liveHotelsForRecommendation(recommendation) {

@@ -1692,6 +1692,45 @@ p {
   line-height: 1.42;
 }
 
+.google-trust-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(0, 108, 228, .18);
+  border-radius: 16px;
+  background: #f7fbff;
+}
+
+.google-trust-panel .badge {
+  grid-column: 1 / -1;
+  width: fit-content;
+}
+
+.google-trust-panel div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.google-trust-panel b {
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.google-trust-panel span:not(.badge) {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.hotel-google-panel {
+  margin-top: 6px;
+}
+
 .eyebrow {
   color: var(--terra);
   font-size: 12px;
@@ -2555,6 +2594,10 @@ summary {
 
   .live-signals {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .google-trust-panel {
+    grid-template-columns: 1fr;
   }
 
   .live-hotel-grid {

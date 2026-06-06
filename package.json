@@ -1,5 +1,6 @@
 {
+  "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test agentes/concierge-da-familia/tests/*.test.mjs"
   }
 }

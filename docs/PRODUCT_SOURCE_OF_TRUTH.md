@@ -27,6 +27,7 @@ Funcionalidades que fazem parte do produto e são mantidas:
 - **Family Trip Score visível no front** — destinos mostram score 0–100, selo Ouro/Prata/Bronze, risco de perrengue e Family Infrastructure Score.
 - **Explorador de hotéis** — hotéis por destino, com estrelas, nota de hóspedes e fotos.
 - **Padrão Família para hotéis** — a lista de hotéis bloqueia opções que falham requisitos mínimos do perfil e exibe Stay Score, Baby Comfort e Infrastructure.
+- **Cobertura Google Places no site** — 32/32 destinos/cidades front-facing e 21/21 hotéis curados possuem `place_id`, nome Google, endereço, coordenadas e referências de fotos; hotéis também entram no bloqueio por nota/reviews Google.
 - **Calendário familiar** — feriados nacionais e janelas de férias escolares.
 - **Captura de lead pós-resultado** — formulário de contato/interesse aparece depois que a família já recebeu valor.
 - **Tracking de comportamento** — eventos, leads e cliques em hotéis via Supabase REST com publishable key pública e RLS.
@@ -77,11 +78,11 @@ O produto é um **site estático (GitHub Pages)** com uma SPA de página única 
 - `app.js` — SPA principal (renderização, quiz, ranking, cards, tracking).
 - `index.html` — shell da aplicação.
 - `styles.css` — estilos.
-- `src/data/*.js` (8 módulos oficiais, todos importados pelo `app.js`):
-  `conciergeFamilyDestinations`, `conciergeFamilyHotels`, `conciergeFamilyHotelAdditions`, `conciergeDestinationImages`, `conciergeDestinationExperience`, `conciergeDestinationGalleries`, `conciergeFamilyQuiz`, `conciergeFamilyCalendar`.
+- `src/data/*.js` (9 módulos oficiais, todos importados pelo `app.js`):
+  `conciergeFamilyDestinations`, `conciergeFamilyHotels`, `conciergeFamilyHotelAdditions`, `conciergeDestinationImages`, `conciergeDestinationExperience`, `conciergeDestinationGalleries`, `conciergeFamilyQuiz`, `conciergeFamilyCalendar`, `conciergeGooglePlacesCoverage`.
 
 **Tooling (dev, não-runtime):**
-`scripts/fetchDestinationImages.mjs`, `scripts/auditDestinationGalleries.mjs`, `supabase/queries/*` — auxiliares de manutenção, não fazem parte do bundle servido.
+`scripts/fetchDestinationImages.mjs`, `scripts/auditDestinationGalleries.mjs`, `scripts/syncGooglePlacesCoverage.mjs`, `supabase/queries/*` — auxiliares de manutenção, não fazem parte do bundle servido.
 
 **Banco (views oficiais para consumo de front):**
 `destination_stay_summary`, `destination_map_points`, `destination_primary_rating`, `destination_hotel_cards`.

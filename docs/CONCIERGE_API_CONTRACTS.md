@@ -81,6 +81,17 @@ CONCIERGE_API_MOCKS=1
 - Se Google não tiver foto de um hotel, o site não deve substituir por foto genérica. Deve mostrar fallback honesto ou foto manual verificada.
 - Toda foto Pexels precisa salvar `photographer`, `photographer_url`, `photo_url`, `src_original`, `src_large` e `attribution_text`.
 
+## Cobertura Google Places Publicada
+
+Enquanto a migration `0029_concierge_api_contracts.sql` e a Edge Function não estiverem aplicadas no Supabase vivo, o site usa uma camada estática gerada server-side por `agentes/concierge-da-familia/scripts/syncGooglePlacesCoverage.mjs`.
+
+- Entrada: 15 destinos editoriais, 17 cidades exibidas no quiz e 21 hotéis curados.
+- Saída versionada: `agentes/concierge-da-familia/src/data/conciergeGooglePlacesCoverage.js`.
+- Chave: `GOOGLE_MAPS_API_KEY` somente em variável de ambiente local/servidor; nunca no frontend.
+- Contrato mínimo por destino/hotel: `placeId`, `googleName`, `formattedAddress`, `latitude`, `longitude`, categorias e pelo menos 3 referências de foto.
+- Contrato adicional por hotel: `rating`, `userRatingCount`, `websiteUri` e `phoneNumber`.
+- Teste: `node --test agentes/concierge-da-familia/tests/*.test.mjs`.
+
 ## Contratos de Recomendação
 
 - `recommend` recebe candidatos reais da base/API.
