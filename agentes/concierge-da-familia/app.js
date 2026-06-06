@@ -4,6 +4,7 @@ import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAddition
 import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=family-score-v1-20260606";
 import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=family-score-v1-20260606";
 import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=family-score-v1-20260606";
+import { conciergeFamilyItineraries } from "./src/data/conciergeFamilyItineraries.js?v=multi-destino-v1-20260606";
 import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=family-score-v1-20260606";
 import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=family-score-v1-20260606";
 import { conciergeGooglePlacesCoverage } from "./src/data/conciergeGooglePlacesCoverage.js?v=google-coverage-v1-20260606";
@@ -267,6 +268,13 @@ function popularFamilyDestinations() {
       reason: "resort, montanha e primeira viagem sem aeroporto"
     },
     {
+      key: "aguas-de-lindoia-sp",
+      name: "Aguas de Lindoia",
+      imageKey: "aguas-de-lindoia",
+      eyebrow: "Circuito das Aguas",
+      reason: "resort tematico, pensao completa e extensao leve para Socorro"
+    },
+    {
       key: "praia-do-forte-ba",
       name: "Praia do Forte",
       imageKey: "praia-do-forte",
@@ -372,6 +380,15 @@ function ConciergeQuickIntakeForm() {
             <option value="2">2 quartos</option>
             <option value="3">3 quartos</option>
             <option value="4">4+ quartos</option>
+          </select>
+        </label>
+        <label>Noites
+          <select name="tripDuration">
+            <option>1 noite</option>
+            <option>2 noites</option>
+            <option selected>3 noites</option>
+            <option>4 a 5 noites</option>
+            <option>6+ noites</option>
           </select>
         </label>
         ${ChildAgeFields(childrenCount)}
@@ -754,6 +771,7 @@ function DestinationRecommendationCard(recommendation, index) {
         <p>${escapeHtml(recommendation.reason)}</p>
         ${DestinationFactModules(recommendation, liveSummary, experience, googleCoverage)}
         ${DestinationRouteSketch(recommendation, liveSummary, googleCoverage)}
+        ${FamilyItinerarySuggestion(recommendation)}
         <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
           ${active ? "Hotéis e disponibilidade abertos abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
         </button>
@@ -842,6 +860,54 @@ function googleMapsDirectionsUrl(destinationName) {
   url.searchParams.set("origin", "Sao Paulo, SP");
   url.searchParams.set("destination", destinationName);
   return url.toString();
+}
+
+function FamilyItinerarySuggestion(recommendation) {
+  const itinerary = itineraryForRecommendation(recommendation);
+  if (!itinerary) return "";
+  const nights = tripNights(state.answers.trip_duration);
+  const plan = itineraryPlanForNights(itinerary, nights);
+  const canCombine = nights >= itinerary.minNights;
+  const stops = itinerary.stops.slice(0, 3);
+  return `
+    <div class="family-itinerary-card ${canCombine ? "can-combine" : "single-base"}">
+      <div class="itinerary-head">
+        <span class="badge subtle">${canCombine ? "Roteiro combinavel" : "Melhor base unica"}</span>
+        <strong>${escapeHtml(itinerary.title)}</strong>
+      </div>
+      <p>${escapeHtml(plan.recommendation)}</p>
+      <div class="itinerary-route-facts">
+        ${itinerary.routeFacts.slice(0, 2).map(fact => `
+          <span><b>${escapeHtml(fact.label)}</b>${escapeHtml(fact.value)}</span>
+        `).join("")}
+      </div>
+      <div class="itinerary-stops">
+        ${stops.map(stop => `
+          <span>
+            <b>${escapeHtml(stop.name)}</b>
+            <small>${escapeHtml(stop.role)} · ${escapeHtml(stop.familyReason)}</small>
+          </span>
+        `).join("")}
+      </div>
+      <small>${escapeHtml(canCombine ? itinerary.baseStrategy : itinerary.avoidWhen)}</small>
+    </div>
+  `;
+}
+
+function itineraryForRecommendation(recommendation) {
+  const keys = new Set(liveSlugCandidates(recommendation));
+  keys.add(recommendation.key);
+  keys.add(recommendation.imageKey);
+  keys.add(recommendation.bestHotel?.destinationSlug);
+  return conciergeFamilyItineraries.find(itinerary =>
+    itinerary.primaryDestinationKeys.some(key => keys.has(key))
+  );
+}
+
+function itineraryPlanForNights(itinerary, nights) {
+  if (nights <= 2) return itinerary.dayPlans.find(plan => plan.nights.includes("1 a 2")) || itinerary.dayPlans[0];
+  if (nights <= 4) return itinerary.dayPlans.find(plan => plan.nights.includes("3 a 4") || plan.nights.includes("4 a 5")) || itinerary.dayPlans[1] || itinerary.dayPlans[0];
+  return itinerary.dayPlans.find(plan => plan.nights.includes("5+") || plan.nights.includes("6+")) || itinerary.dayPlans[itinerary.dayPlans.length - 1];
 }
 
 function routeStressLevel({ isRoadTrip, oneWayKm, driveMinutes, transferMinutes }) {
@@ -2844,6 +2910,7 @@ document.addEventListener("submit", event => {
       adultsCount: Number.parseInt(form.get("adultsCount"), 10) || 2,
       childrenCount,
       roomsCount: Number.parseInt(form.get("roomsCount"), 10) || 1,
+      tripDuration: form.get("tripDuration") || "3 noites",
       childAges,
       adults: `${Number.parseInt(form.get("adultsCount"), 10) || 2} adulto(s)`,
       children: `${childrenCount} criança(s)`,
@@ -2866,6 +2933,7 @@ document.addEventListener("submit", event => {
     state.answers.child_age = state.intake.childAge;
     state.answers.travel_period = state.intake.travelPeriod;
     state.answers.destination_interest = state.intake.interestDestinationName;
+    state.answers.trip_duration = state.intake.tripDuration;
     state.intakeComplete = true;
     trackEvent("diagnosis_intake_completed", {
       travelPeriod: state.intake.travelPeriod,
@@ -2874,6 +2942,7 @@ document.addEventListener("submit", event => {
       adults: state.intake.adultsCount,
       children: state.intake.childrenCount,
       rooms: state.intake.roomsCount,
+      tripDuration: state.intake.tripDuration,
       childAges: state.intake.childAges,
       lastTrip: state.intake.lastTrip,
       hasContact: Boolean(state.intake.whatsapp || state.intake.email),
@@ -3496,6 +3565,7 @@ function imageKeyForHotelDestination(hotel) {
   const destination = removeAccents(String(hotel.destination || "").toLowerCase());
   if (destination.includes("campinas")) return "resort-interior-sp";
   if (destination.includes("atibaia")) return "atibaia";
+  if (destination.includes("aguas de lindoia") || destination.includes("lindoia")) return "aguas-de-lindoia";
   if (destination.includes("mogi")) return "mogi-das-cruzes";
   if (destination.includes("cesario")) return "cesario-lange";
   if (destination.includes("dourado")) return "hotel-fazenda-sp";

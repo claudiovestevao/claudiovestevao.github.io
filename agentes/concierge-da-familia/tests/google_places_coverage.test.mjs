@@ -4,11 +4,11 @@ import { conciergeGooglePlacesCoverage } from "../src/data/conciergeGooglePlaces
 
 test("Google Places coverage is complete for concierge destinations and curated hotels", () => {
   const coverage = conciergeGooglePlacesCoverage;
-  assert.equal(coverage.total, 53);
+  assert.equal(coverage.total, 55);
   assert.equal(coverage.covered, coverage.total);
   assert.equal(coverage.missing, 0);
-  assert.equal(coverage.destinations.length, 32);
-  assert.equal(coverage.hotels.length, 21);
+  assert.equal(coverage.destinations.length, 33);
+  assert.equal(coverage.hotels.length, 22);
 
   for (const place of [...coverage.destinations, ...coverage.hotels]) {
     assert.equal(place.coverageStatus, "covered", `${place.id} is not covered`);

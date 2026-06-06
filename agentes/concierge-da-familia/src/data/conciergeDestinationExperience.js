@@ -56,6 +56,21 @@ export const conciergeDestinationExperience = [
     ]
   },
   {
+    key: "aguas-de-lindoia-sp",
+    name: "Aguas de Lindoia, SP",
+    whyVisit: "Aguas de Lindoia e uma decisao esperta para familia que quer resort no interior, clima de estancia e um roteiro regional sem trocar de mala todo dia. Com 3+ noites, Socorro entra como extensao natural do Circuito das Aguas.",
+    restaurants: [
+      restaurant("Bendito Cacao Family Resort restaurante", "Aguas de Lindoia SP", "priorizar pensao completa do resort quando a rotina da crianca pedir previsibilidade"),
+      restaurant("Chic Chopp III", "Aguas de Lindoia SP", "opcao central e pratica para refeicao fora do hotel"),
+      restaurant("Cafe Bistro e Restaurante Marrocos", "Aguas de Lindoia SP", "candidato para passeio gastronomico leve no centro")
+    ],
+    attractions: [
+      attraction("Praca Adhemar de Barros", "Aguas de Lindoia SP", "cartao-postal com lago, area aberta e passeio simples"),
+      attraction("Balneario Municipal de Aguas de Lindoia", "Aguas de Lindoia SP", "experiencia classica de estancia, validar horarios e idade"),
+      attraction("Socorro turismo de aventura leve", "Socorro SP", "extensao regional a cerca de 37 minutos, boa para criancas maiores")
+    ]
+  },
+  {
     key: "mogi-das-cruzes-sp",
     name: "Mogi das Cruzes, SP",
     whyVisit: "Mogi combina resort próximo, clima de interior e programas leves como parques, cultura japonesa e natureza, sem exigir uma viagem longa.",

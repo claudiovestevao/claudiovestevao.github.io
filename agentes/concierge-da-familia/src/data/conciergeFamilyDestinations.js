@@ -114,6 +114,25 @@ export const conciergeDestinations = [
     attentionPoints: ["estrada longa para beb?", "calor e sol", "planejar pausas"]
   },
   {
+    id: "aguas-de-lindoia",
+    name: "Aguas de Lindoia",
+    region: "Sao Paulo, Brasil",
+    originFocus: "Capital de Sao Paulo",
+    idealAge: "2+ anos, especialmente familias que querem resort e passeio regional leve",
+    bestSeason: "Ano todo; melhor fora de feriados muito cheios",
+    bestDepartureMode: "carro",
+    recommendedAirport: null,
+    flightFromSP: null,
+    transferTime: null,
+    driveTimeFromSaoPaulo: "aprox. 2h30",
+    needsCar: true,
+    score: 8.2,
+    tags: ["circuito das aguas", "resort", "chocolate", "carro", "multi-destino"],
+    verdict: "Forte para familias que querem uma base de resort no Circuito das Aguas e possibilidade de combinar Socorro sem trocar de hotel.",
+    strengths: ["resort tematico familiar", "passeios regionais curtos", "boa para 3 a 5 noites", "permite roteiro Aguas + Socorro"],
+    attentionPoints: ["confirmar pensao e programacao infantil", "evitar colocar Socorro em roteiro curto demais", "planejar estrada de ida e volta fora do pico"]
+  },
+  {
     id: "litoral-norte-sp",
     name: "Litoral Norte de SP",
     region: "S?o Paulo, Brasil",

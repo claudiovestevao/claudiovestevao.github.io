@@ -1,8 +1,8 @@
 export const conciergeGooglePlacesCoverage = {
-  "generatedAt": "2026-06-06T14:25:34.289Z",
+  "generatedAt": "2026-06-06T16:25:10.0672723Z",
   "source": "google_places_api",
-  "total": 53,
-  "covered": 53,
+  "total": 55,
+  "covered": 55,
   "missing": 0,
   "destinations": [
     {
@@ -1683,6 +1683,49 @@ export const conciergeGooglePlacesCoverage = {
         }
       ],
       "syncedAt": "2026-06-06T14:25:34.148Z"
+    },
+    {
+      "entityType": "destination",
+      "id": "aguas-de-lindoia",
+      "name": "Aguas de Lindoia",
+      "destination": null,
+      "query": "Aguas de Lindoia SP Brasil",
+      "coverageType": "city",
+      "includedType": "locality",
+      "coverageStatus": "covered",
+      "placeId": "ChIJ0wvIzKwRyZQRsLPA3ANSDs8",
+      "googleResourceName": "places/ChIJ0wvIzKwRyZQRsLPA3ANSDs8",
+      "googleName": "Águas de Lindóia",
+      "formattedAddress": "Águas de Lindóia, SP, 13940-000",
+      "rating": null,
+      "userRatingCount": null,
+      "categories": [
+        "locality",
+        "political"
+      ],
+      "latitude": -22.4803601,
+      "longitude": -46.633882,
+      "websiteUri": null,
+      "phoneNumber": null,
+      "photos": [
+        {
+          "name": "places/ChIJ0wvIzKwRyZQRsLPA3ANSDs8/photos/AaVGc3nLxvJf_uZGiq_hYt271SF-Gz09XIwr16yYssyZdEOCWwIodtXfdzr5WadoNIrEvwNUAierfU0r3oPq3VS2CCmkEfITiL7tW5MFMO57FGzBvtcqxpzMcaeK7z5KgFP76W3Hq2J8ofiCHCE4vdrsWiOIjDgBxrOhGkY9UgOEElXMNNq1WhQ6zJb-vWdiObL1G5Vn9GLNz1SLDtHpNXroOdSPilqmJUmaG05sSf4Hq2OnQbOUERJ_ZJBltTt7dQVeVbXuoB1Mkblb6FxEovTjOKUfBHkxuVyVDAcDUri2zhc5qypA86mHa4kntXsJ7mU-FwN7DFgK8sxxOHoDhmq7ykNZS8vS1p1BEjst3o0LajBeJK7OjFiqM3rtSzRaKmyREBhOHuX4chqJZDy8pt14l7-kK7pMzTUFlgYGa03bqTGODw",
+          "width": 1000,
+          "height": 667
+        },
+        {
+          "name": "places/ChIJ0wvIzKwRyZQRsLPA3ANSDs8/photos/AaVGc3l_00SrNSnMoPlbUp_cm8mypGeH0GI-sI65j2iCIJUBvrTiqoPRQnspPyRG6mHxnUNH2Skd7pjOyuVjC7yT9tQ-e4J82Lo7saEh7Y7oBSkaxLmncdNXJgz-RK4qSqGBiDA4kB4JbVOCzIWaV0lx-ZKwN-hVxq3X6vtNeDgLg5wMi1F2zTsautYpkKT2X0mKSWzAQFEGWwEfWOmxkVd17LN3sqZMey3xC6l--0FCtuIgpBegpgr6nMrPNzuEnaGsNb1cc1BtyD7hFn00xsd89MH5u1TpbNVeGx9hxQl73YzhomT63-9QT10WDxj9HSSJfHpDrmPQxEbukUcEAoRyuajC4POMDZNkS-XHtfP3irF-y4XYzbWnFA4bbKX0apAz6yBercg8kb2u8aeLcOHTSVV7ysiymIGRQldT8S56pcS7iiw",
+          "width": 3000,
+          "height": 4000
+        },
+        {
+          "name": "places/ChIJ0wvIzKwRyZQRsLPA3ANSDs8/photos/AaVGc3l1QseIfPnIBGLZjKCmsWpahEDAWa4ObV9w-bgGFJWE6pxF3EXVJKnxTz6Y2phybC3r9M9bUHkWX8Y4NAcwVjWQtp_oymf1x1NOG9fMLQGardkO6zQMUNs6AUqkdRvnWnIqZL2lonxpUy1GDklpsAmIXxCN--qaODgE20NV6B1HC3yelnNwgL3yGLCokWQj4SnDVnwtB6ifAm-LwNHSnRBXjXLlHGZGUCS0nfqj1O0Zf6t9nvKxDcrTPXYioj0kycBYGsNvKNiQ21ajJm3Bd14_J9iWBghQKvaRXQB9VwgYxGDZe7o6gopY0l2DVIug4p-ae2T1su7zXki2-hw7B9mfmRfxiukFT0tGkjLCyiAJCCnYhREsIhJViKG3Vjx28-yvxGURGovoKqMERR5tMjoVOjvdBAZ87wyyZmjutzN8qA",
+          "width": 600,
+          "height": 338
+        }
+      ],
+      "syncedAt": "2026-06-06T16:25:10.0256805Z",
+      "cached": true
     }
   ],
   "hotels": [
@@ -2866,6 +2909,52 @@ export const conciergeGooglePlacesCoverage = {
         }
       ],
       "syncedAt": "2026-06-06T14:10:46.254Z",
+      "cached": true
+    },
+    {
+      "entityType": "hotel",
+      "id": "bendito-cacao-family-resort",
+      "name": "Bendito Cacao Family Resort",
+      "destination": "Aguas de Lindoia, SP",
+      "query": "Bendito Cacao Family Resort Aguas de Lindoia, SP",
+      "coverageType": "establishment",
+      "includedType": "lodging",
+      "coverageStatus": "covered",
+      "placeId": "ChIJKVe4vusRyZQReZog9WvvuFs",
+      "googleResourceName": "places/ChIJKVe4vusRyZQReZog9WvvuFs",
+      "googleName": "Bendito Cacao Family Resort",
+      "formattedAddress": "Av. das Nações Unidas, 1374 - Moreiras, Águas de Lindóia - SP, 13940-000",
+      "rating": 4.6,
+      "userRatingCount": 2880,
+      "categories": [
+        "resort_hotel",
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "latitude": -22.4824545,
+      "longitude": -46.6385764,
+      "websiteUri": "https://benditocacaoresort.com.br/bendito-lindoia",
+      "phoneNumber": "(19) 3460-0777",
+      "photos": [
+        {
+          "name": "places/ChIJKVe4vusRyZQReZog9WvvuFs/photos/AaVGc3lcxYrA3syHCnjV6t3PZ0-52INipDSM4hn5ZR9HHpoOgGb9s7vNyo8nAjRX6ZOZlLR7CnoKvIvr-jxfN_OO-V6IE23ky63hixTl3CD2DFmDc7hpJrJcprz6zzARGeoSvH2wydAWFYcLw8IQJeNJTR4sr8RP3DY4gPktUKP6D2_17bVDEMyPlRvIrocsykK6Jq4ls78QUdFJiVH9D3a0JzDv3sSAqu-V4UzPlnZadvhfuZBWpkUrkHSPkaNb1Hf84KPOXhxxft9wvJvR6_h3EQny9CLMbsCUVomvQmB6OlN2rOSc9IbMpYOWFcRJHf9JIsGQbnSjjswVY2zjdf1FCppRjBlrkQy--zWwtm0BCKv-yq_xC5bRhHz9oLLLCdICTwILaNkOBFSo0L2yJQkY4LHDXhLihVlUPnOC7qze8HS-axUj8FxhzeOIkf35d8Bu",
+          "width": 3200,
+          "height": 4800
+        },
+        {
+          "name": "places/ChIJKVe4vusRyZQReZog9WvvuFs/photos/AaVGc3kKFza39TPT-6YvqW3F9WxQbCQz8F8HU1-8zO52djkOfGe8rD9-amhQ3bMIVkcp33R8oTTExXqTqNBtxVToplY9ZNueFjvBDALFJRYLMC-1KbFiieYN1P8lfbW-n47fKzcnU4zty5Wxa8zUKDO25w-hBJFgG4uTP1ymmdKf6JENZnBJ96CsZNTd56G0x5qQzRAcW955ev9wA5uFJbmc557i21ESV-OBuVB_Y13pd0rXXZ6siP3q7-sMpV_wJqFqsSt3vlZvHayMfJfh9eSsKS7-7p4mitQC1_ou7r345DGEhGG9sh1uDwz-KxLN16__ggaMYOcGjohXLchfLUbn1qCkPoK0N-VPCk4Jr96TDuJdtD9cyEYIFN0GxBlIDC7_Hnk43G-1EZjn2eQIG8Y8k7EGaFweeu9MIqpubqItQ2h7w88UH2Ol8LXqq7117hsg",
+          "width": 3472,
+          "height": 4624
+        },
+        {
+          "name": "places/ChIJKVe4vusRyZQReZog9WvvuFs/photos/AaVGc3nVfza5uUxxpGUmAsmI0z2rouhmU2v0V44OcpxcLjkWrPd_APqz7af8fWTu3otxKB337C9BYqyegj7feHEVB0xYWpyQVVfoI12xMiH_7M77vLjxYgU_cqWDoU499BPm101QvHISxF-8VbQ-8Cl-35AH2hUUMmcHBpUOMBV0l31Lgvmc-iOt2XF3zpvIDy4UZB7Sj9U9hnAam-oLu_eiOuBHXi9b1kRusD2IN0Cg77TokDF0Lluao2_ph9tCilp7gP9EtWNLXgUZRtg7PqUW8licZgBGW-D7F1pbl59wxXWfcxWm7cIfP11oT7aIR5Lt6kVUT2JliiwtZRbpOBApuZXgROSaiqeDFtob6nFImvcauQTGYvF2ja9hL2v3etV04MmULqOH8X6ItKulb9uwF5L46Hfv77b3R6jiGmrlcGhPDZ7_Yno9fN8KKdNjY99E",
+          "width": 4000,
+          "height": 1848
+        }
+      ],
+      "syncedAt": "2026-06-06T16:25:10.0289221Z",
       "cached": true
     }
   ]

@@ -103,6 +103,16 @@ export const conciergeDestinationGalleries = [
     ]
   },
   {
+    key: "aguas-de-lindoia",
+    aliases: ["aguas-de-lindoia-sp"],
+    destinationName: "Aguas de Lindoia, SP",
+    photos: [
+      officialPhoto("Bendito Cacao Family Resort - piscina", "Piscina e fachada do Bendito Cacao Family Resort em Aguas de Lindoia", 1920, 1080, "https://lirp.cdn-website.com/63940162/dms3rep/multi/opt/bendito-aguas-banner-01-1920w.webp", "https://www.benditocacaoresort.com.br/bendito-lindoia", "Bendito Cacao Family Resort"),
+      officialPhoto("Bendito Cacao Family Resort - acomodacoes", "Area de acomodacoes do Bendito Cacao Family Resort em Aguas de Lindoia", 1920, 1280, "https://lirp.cdn-website.com/63940162/dms3rep/multi/opt/bendito-aguas-acomodacoes-1920w.jpg", "https://www.benditocacaoresort.com.br/bendito-lindoia", "Bendito Cacao Family Resort"),
+      officialPhoto("Bendito Cacao Family Resort - lazer", "Area de lazer do Bendito Cacao Family Resort em Aguas de Lindoia", 1920, 1280, "https://lirp.cdn-website.com/63940162/dms3rep/multi/opt/5H9A5178-d0b40575-1920w.jpg", "https://www.benditocacaoresort.com.br/bendito-lindoia", "Bendito Cacao Family Resort")
+    ]
+  },
+  {
     key: "olimpia",
     aliases: ["olimpia-sp"],
     destinationName: "Olímpia, SP",
