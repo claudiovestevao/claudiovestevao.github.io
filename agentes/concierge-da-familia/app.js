@@ -24,6 +24,7 @@ const state = {
   result: null,
   selectedDestinationKey: null,
   showMoreDestinations: false,
+  hotelRecommendationSent: false,
   selectedCalendar: "julho",
   hotelFilter: "all",
   hotelFilters: {
@@ -90,6 +91,7 @@ function render() {
     ${state.result ? DestinationRecommendationsSection() : ""}
     ${state.result && state.selectedDestinationKey ? RankedHotelsSection() : ""}
     ${state.result ? ShareableResultSection(state.result) : ""}
+    ${HotelRecommendationSection()}
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
   syncDynamicIntakeFields();
@@ -2016,6 +2018,39 @@ function CommercialTransparencySection() {
   `;
 }
 
+function HotelRecommendationSection() {
+  return `
+    <section class="section hotel-recommendation-section" id="indicar-hotel">
+      <div class="hotel-recommendation-box">
+        <div class="hotel-recommendation-copy">
+          <span class="badge subtle">Ajude a curadoria</span>
+          <h2>Conhece um hotel bom para famílias?</h2>
+          <p>Indique uma hospedagem que merece entrar na análise. A recomendação não entra automaticamente no ranking: primeiro validamos dados reais, estrutura familiar, avaliações, fotos, localização e requisitos mínimos.</p>
+          ${state.hotelRecommendationSent ? `<p class="form-success">Indicação recebida. Vamos avaliar antes de incluir na base curada.</p>` : ""}
+        </div>
+        <form id="hotelRecommendationForm" class="hotel-recommendation-form">
+          <label>Nome do hotel
+            <input name="hotelName" required placeholder="Ex: Resort Família Feliz">
+          </label>
+          <label>Site do hotel
+            <input name="hotelWebsite" required inputmode="url" placeholder="https://www.hotel.com.br">
+          </label>
+          <div class="location-grid">
+            <label>Cidade<input name="city" required placeholder="Ex: Atibaia"></label>
+            <label>Estado<input name="state" required placeholder="Ex: SP"></label>
+            <label>País<input name="country" required placeholder="Ex: Brasil"></label>
+          </div>
+          <label>Por que você está indicando?
+            <textarea name="recommendationReason" required rows="4" maxlength="700" placeholder="Conte rapidamente o que funcionou para família: alimentação, copa baby, piscina, recreação, atendimento, localização..."></textarea>
+          </label>
+          <button class="button primary compact-button" type="submit">${state.hotelRecommendationSent ? "Indicar outro hotel" : "Enviar indicação"}</button>
+          <p class="privacy-note">Usaremos esta indicação apenas para revisar a curadoria. Não publicamos seu texto como avaliação sem validação.</p>
+        </form>
+      </div>
+    </section>
+  `;
+}
+
 function ConciergeLeadCaptureForm() {
   return `
     <section class="section lead-section" id="lead">
@@ -2208,6 +2243,50 @@ function activateFamilyAlert(button) {
   trackEvent("family_alert_requested", analyticsResultPayload());
   markTemporaryButton(button, "Abrindo WhatsApp");
   window.open(leadWhatsAppUrl(text), "_blank", "noopener");
+}
+
+async function submitHotelRecommendation(formElement) {
+  const form = new FormData(formElement);
+  const payload = {
+    session_id: sessionId,
+    hotel_name: String(form.get("hotelName") || "").trim(),
+    hotel_website: normalizeWebsiteUrl(form.get("hotelWebsite") || ""),
+    city: String(form.get("city") || "").trim(),
+    state: String(form.get("state") || "").trim(),
+    country: String(form.get("country") || "").trim(),
+    recommendation_reason: String(form.get("recommendationReason") || "").trim().slice(0, 700),
+    lead_name: state.intake.name || null,
+    lead_email: state.intake.email || null,
+    lead_whatsapp: state.intake.whatsapp || null,
+    source_page: window.location.href,
+    status: "pending_review",
+    created_at: new Date().toISOString()
+  };
+  if (!payload.hotel_name || !payload.hotel_website || !payload.city || !payload.state || !payload.country || !payload.recommendation_reason) return;
+  trackEvent("hotel_recommendation_submitted", {
+    hotelName: payload.hotel_name,
+    city: payload.city,
+    state: payload.state,
+    country: payload.country,
+    hasLead: Boolean(payload.lead_email || payload.lead_whatsapp)
+  });
+  persistLocalHotelRecommendation(payload);
+  await persistSupabase("concierge_hotel_recommendations", payload);
+  state.hotelRecommendationSent = true;
+  formElement.reset();
+  render();
+  setTimeout(() => document.getElementById("indicar-hotel")?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
+}
+
+function persistLocalHotelRecommendation(payload) {
+  try {
+    const key = "conciergeHotelRecommendations";
+    const current = JSON.parse(window.localStorage.getItem(key) || "[]");
+    current.push(payload);
+    window.localStorage.setItem(key, JSON.stringify(current.slice(-40)));
+  } catch (error) {
+    window.__conciergeHotelRecommendations = [...(window.__conciergeHotelRecommendations || []), payload].slice(-40);
+  }
 }
 
 function shareResultText(result) {
@@ -2510,6 +2589,10 @@ document.addEventListener("submit", event => {
     persistLeadIntake("pre_diagnosis_started");
     render();
     return;
+  }
+  if (event.target.id === "hotelRecommendationForm") {
+    event.preventDefault();
+    return submitHotelRecommendation(event.target);
   }
   if (event.target.id !== "leadForm") return;
   event.preventDefault();
@@ -3136,6 +3219,12 @@ function leadWhatsAppUrl(message) {
 
 function normalizePhone(value) {
   return String(value || "").replace(/\D+/g, "");
+}
+
+function normalizeWebsiteUrl(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /^https?:\/\//i.test(text) ? text : `https://${text}`;
 }
 
 function normalizeHotel(hotel) {
