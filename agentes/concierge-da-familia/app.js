@@ -799,6 +799,7 @@ function DestinationFactModules(recommendation, liveSummary, experience, googleC
   return `
     <div class="destination-fact-modules" aria-label="Dados objetivos para escolher ${escapeAttr(recommendation.name)}">
       ${DecisionFact("Cal", "Epoca", facts.timing.primary, facts.timing.detail)}
+      ${DecisionFact("Fluxo", "Lotacao", facts.crowd.primary, facts.crowd.detail)}
       ${DecisionFact("🛣️", "Logística", facts.logistics.primary, facts.logistics.detail)}
       ${DecisionFact("💰", "Custo total", facts.cost.primary, facts.cost.detail)}
       ${DecisionFact("🍽️", "Alimentação", facts.food.primary, facts.food.detail)}
@@ -839,6 +840,7 @@ function destinationDecisionFacts(recommendation, liveSummary, experience, googl
   const attractions = experience?.attractions?.length || 0;
   const googleRating = averageGoogleHotelRating(hotels);
   const timing = destinationTimingInsight(recommendation, bestHotel, liveSummary);
+  const crowd = destinationCrowdInsight(liveSummary);
   return {
     logistics: {
       primary: isRoadTrip
@@ -851,6 +853,10 @@ function destinationDecisionFacts(recommendation, liveSummary, experience, googl
     timing: {
       primary: timing.primary,
       detail: timing.detail
+    },
+    crowd: {
+      primary: crowd.primary,
+      detail: crowd.detail
     },
     cost: {
       primary: isRoadTrip
@@ -933,6 +939,42 @@ function LiveDestinationSignals(summary) {
       ${summary.family_summary ? `<p>${escapeHtml(summary.family_summary)}</p>` : ""}
     </div>
   `;
+}
+
+function destinationCrowdInsight(summary) {
+  const events = Number(summary?.event_count || 0);
+  const attendance = Number(summary?.total_predicted_attendance || 0);
+  const level = String(summary?.movimento_level || "").toLowerCase();
+  const hasHoliday = Array.isArray(summary?.holiday_windows) && summary.holiday_windows.length > 0;
+  const topEvent = Array.isArray(summary?.top_events) ? summary.top_events[0] : null;
+  if (level === "movimentado" || events >= 50 || attendance >= 10000) {
+    const title = topEvent?.title ? String(topEvent.title) : "";
+    const shortTitle = title.length > 34 ? `${title.slice(0, 31)}...` : title;
+    return {
+      status: "busy",
+      primary: "Cidade cheia",
+      detail: `${events || "muitos"} eventos mapeados${shortTitle ? `; checar ${shortTitle}` : "; reserve horarios"}`
+    };
+  }
+  if (events >= 12 || attendance >= 2500 || hasHoliday) {
+    return {
+      status: "attention",
+      primary: "Atencao a movimento",
+      detail: `${events || "alguns"} eventos/janelas no radar; evite chegar tarde`
+    };
+  }
+  if (level === "tranquilo" || events <= 6) {
+    return {
+      status: "normal",
+      primary: "Dentro da normalidade",
+      detail: events ? `${events} eventos mapeados, sem sinal forte de lotacao` : "sem evento forte na base viva"
+    };
+  }
+  return {
+    status: "unknown",
+    primary: "Movimento a validar",
+    detail: "sem leitura suficiente de eventos para esta janela"
+  };
 }
 
 function GoogleDestinationSignals(place) {
