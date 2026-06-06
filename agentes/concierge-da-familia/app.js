@@ -50,6 +50,19 @@ const state = {
     fit: "all",
     budget: "comfort",
     selectedKey: ""
+  },
+  routePreview: {
+    destinationKey: "",
+    status: "idle",
+    progress: 0,
+    speed: 1,
+    showStops: false,
+    source: "fallback",
+    message: "Escolha um destino e simule o caminho da familia.",
+    points: [],
+    stops: [],
+    summary: null,
+    error: ""
   }
 };
 
@@ -78,6 +91,8 @@ const liveConciergeData = {
 };
 const app = document.getElementById("app");
 let searchRenderTimer;
+let routeAnimationFrame = null;
+let routeLastTick = 0;
 
 document.addEventListener("click", handleClick);
 document.addEventListener("input", handleInput);
@@ -529,6 +544,7 @@ function LegacyConciergeMapExplorerSection() {
         </div>
         ${selected ? MapHotspotDetail(selected) : ""}
       </div>
+      ${selected ? TravelRoutePreview(selected) : ""}
     </section>
   `;
 }
@@ -773,6 +789,7 @@ function ConciergeMapExplorerSection() {
         </div>
         ${selected ? MapHotspotDetail(selected) : ""}
       </div>
+      ${selected ? TravelRoutePreview(selected) : ""}
     </section>
   `;
 }
@@ -845,6 +862,7 @@ function MapHotspotDetail(hotspot) {
         </div>
       ` : ""}
       <div class="map-detail-actions">
+        <button class="button primary compact-button" type="button" data-action="route-preview-start" data-hotspot-key="${escapeAttr(hotspot.key)}">Simular rota da familia</button>
         <button class="button primary compact-button" type="button" data-action="map-start-diagnosis" data-hotspot-key="${escapeAttr(hotspot.key)}">Ver por que combina com minha familia</button>
         <button class="button secondary compact-button" type="button" data-action="map-build-route" data-hotspot-key="${escapeAttr(hotspot.key)}">Montar roteiro familiar</button>
         <button class="button ghost compact-button" type="button" data-action="map-compare">Comparar com outro destino</button>
@@ -856,6 +874,340 @@ function MapHotspotDetail(hotspot) {
 
 function MapMiniList(items) {
   return `<ul>${items.slice(0, 3).map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
+function TravelRoutePreview(hotspot) {
+  const preview = routePreviewForHotspot(hotspot);
+  const active = state.routePreview.destinationKey === hotspot.key;
+  const status = active ? state.routePreview.status : "idle";
+  const progress = active ? state.routePreview.progress : 0;
+  const vehicle = pointAtRouteProgress(preview.svgPoints, progress);
+  const length = Math.max(1, routeSvgLength(preview.svgPoints));
+  const visibleStops = active ? state.routePreview.showStops : false;
+  const summary = active && state.routePreview.summary ? state.routePreview.summary : preview.summary;
+  const message = active ? routePreviewMessage(preview, progress) : "Veja a estrada antes de decidir. A ideia e sentir o esforco da viagem, nao so olhar quilometragem.";
+  return `
+    <section class="travel-route-preview" id="previa-rota" aria-label="Previa da Viagem no Mapa">
+      <div class="route-preview-copy">
+        <span class="badge subtle">Previa da Viagem no Mapa</span>
+        <h3>${escapeHtml(hotspot.name)} antes da mala sair do armario.</h3>
+        <p>${escapeHtml(message)}</p>
+      </div>
+      <div class="route-preview-shell route-status-${escapeAttr(status)}">
+        <div class="route-preview-map" style="--route-length:${length};--route-offset:${length * (1 - progress)}">
+          <svg viewBox="0 0 100 100" role="img" aria-label="Rota animada de Sao Paulo ate ${escapeAttr(hotspot.name)}">
+            <defs>
+              <linearGradient id="familyRouteGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#006ce4"></stop>
+                <stop offset="100%" stop-color="#1b8049"></stop>
+              </linearGradient>
+            </defs>
+            <polyline class="route-preview-shadow" points="${escapeAttr(svgPointsAttribute(preview.svgPoints))}"></polyline>
+            <polyline class="route-preview-path" points="${escapeAttr(svgPointsAttribute(preview.svgPoints))}"></polyline>
+            ${preview.stops.map((stop, index) => RouteStopMarker(stop, index, progress, visibleStops)).join("")}
+            <circle class="route-city origin-city" cx="${preview.svgPoints[0].x}" cy="${preview.svgPoints[0].y}" r="3"></circle>
+            <circle class="route-city destination-city" cx="${preview.svgPoints[preview.svgPoints.length - 1].x}" cy="${preview.svgPoints[preview.svgPoints.length - 1].y}" r="3"></circle>
+            <g class="route-vehicle" transform="translate(${vehicle.x} ${vehicle.y})">
+              <circle r="4.1"></circle>
+              <path d="M-2.8 0.6h5.6l-.7-2.2h-4.2zM-2.1 1.5a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8zm4.2 0a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8z"></path>
+            </g>
+          </svg>
+          <span class="route-map-label origin">SP</span>
+          <span class="route-map-label destination">${escapeHtml(hotspot.shortName)}</span>
+          <span class="route-preview-status">${escapeHtml(routePreviewStatusLabel(status))}</span>
+        </div>
+        <div class="route-progress-bar"><i style="width:${Math.round(progress * 100)}%"></i></div>
+        <div class="route-preview-controls">
+          <button class="button primary compact-button" type="button" data-action="route-preview-start" data-hotspot-key="${escapeAttr(hotspot.key)}">${status === "done" ? "Simular de novo" : "Simular rota da familia"}</button>
+          <button class="button secondary compact-button" type="button" data-action="route-preview-pause" ${status === "idle" || status === "loading" ? "disabled" : ""}>${status === "paused" ? "Continuar" : "Pausar"}</button>
+          <button class="button ghost compact-button" type="button" data-action="route-preview-speed">${escapeHtml(routeSpeedLabel())}</button>
+          <button class="button secondary compact-button" type="button" data-action="route-preview-stops">${visibleStops ? "Ocultar paradas" : "Ver paradas recomendadas"}</button>
+          <button class="button primary compact-button" type="button" data-action="map-build-route" data-hotspot-key="${escapeAttr(hotspot.key)}">Montar roteiro com base nessa rota</button>
+        </div>
+        <div class="route-preview-summary">
+          ${RouteSummaryItem("Tempo estimado", summary.timeLabel)}
+          ${RouteSummaryItem("Distancia", summary.distanceLabel)}
+          ${RouteSummaryItem("Paradas", summary.stopLabel)}
+          ${RouteSummaryItem("Esforco familiar", summary.effortLabel)}
+          ${RouteSummaryItem("Melhor saida", summary.bestDeparture)}
+          ${RouteSummaryItem("Alerta", summary.alert)}
+        </div>
+        <div class="route-stop-list ${visibleStops ? "open" : ""}">
+          ${preview.stops.map(stop => `
+            <article>
+              <b>${escapeHtml(stop.label)}</b>
+              <span>${escapeHtml(stop.message)}</span>
+              <small>${escapeHtml(stop.kindLabel)}</small>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function RouteStopMarker(stop, index, progress, visibleStops) {
+  const reached = progress + 0.02 >= stop.progress;
+  return `
+    <g class="route-poi ${reached ? "reached" : ""} ${visibleStops ? "visible" : ""}" transform="translate(${stop.svg.x} ${stop.svg.y})">
+      <circle r="2.7"></circle>
+      <text y="-4.2">${escapeHtml(routeStopIcon(stop.kind))}</text>
+      <title>${escapeHtml(`${index + 1}. ${stop.label}`)}</title>
+    </g>
+  `;
+}
+
+function RouteSummaryItem(label, value) {
+  return `<span><b>${escapeHtml(label)}</b>${escapeHtml(value)}</span>`;
+}
+
+function routePreviewForHotspot(hotspot) {
+  const active = state.routePreview.destinationKey === hotspot.key && state.routePreview.points.length;
+  const geoPoints = active ? state.routePreview.points : fallbackRouteGeoPoints(hotspot);
+  const svgPoints = projectRoutePoints(geoPoints);
+  const stops = active && state.routePreview.stops.length ? state.routePreview.stops : buildRouteStops(hotspot, geoPoints, svgPoints);
+  return {
+    hotspot,
+    geoPoints,
+    svgPoints,
+    stops,
+    summary: buildRoutePreviewSummary(hotspot)
+  };
+}
+
+function routeDestinationCoordinates(recommendation, bestHotel, googleCoverage) {
+  const livePoint = firstLiveMatch(recommendation, liveConciergeData.mapPointsBySlug);
+  if (livePoint?.latitude && livePoint?.longitude) return { latitude: Number(livePoint.latitude), longitude: Number(livePoint.longitude) };
+  if (googleCoverage?.latitude && googleCoverage?.longitude) return { latitude: Number(googleCoverage.latitude), longitude: Number(googleCoverage.longitude) };
+  const hotelCoverage = googleCoverageForHotel(bestHotel);
+  if (hotelCoverage?.latitude && hotelCoverage?.longitude) return { latitude: Number(hotelCoverage.latitude), longitude: Number(hotelCoverage.longitude) };
+  return approximateDestinationCoordinates(bestHotel);
+}
+
+function approximateDestinationCoordinates(bestHotel) {
+  const bySlug = {
+    "campinas-sp": { latitude: -22.9051, longitude: -47.0613 },
+    "atibaia-sp": { latitude: -23.116, longitude: -46.553 },
+    "aguas-de-lindoia": { latitude: -22.473, longitude: -46.632 },
+    "mogi-das-cruzes": { latitude: -23.5217, longitude: -46.186 },
+    "cesario-lange": { latitude: -23.2247, longitude: -47.9546 },
+    olimpia: { latitude: -20.7372, longitude: -48.9111 },
+    "campos-do-jordao": { latitude: -22.7408, longitude: -45.5944 },
+    "praia-do-forte": { latitude: -12.5746, longitude: -38.005 },
+    "porto-de-galinhas": { latitude: -8.5065, longitude: -35.006 },
+    maragogi: { latitude: -9.0127, longitude: -35.2214 },
+    "foz-do-iguacu": { latitude: -25.5165, longitude: -54.5854 },
+    gramado: { latitude: -29.3746, longitude: -50.8764 },
+    "beto-carrero-penha": { latitude: -26.7744, longitude: -48.6437 },
+    "buenos-aires": { latitude: -34.6037, longitude: -58.3821 },
+    orlando: { latitude: 28.5384, longitude: -81.3789 }
+  };
+  return bySlug[bestHotel.destinationSlug] || bySlug[imageKeyForHotelDestination(bestHotel)] || { latitude: -23.116, longitude: -46.553 };
+}
+
+function fallbackRouteGeoPoints(hotspot) {
+  const start = SAO_PAULO_CENTER;
+  const end = hotspot.coordinates || approximateDestinationCoordinates(hotspot.bestHotel);
+  const distance = haversineKm(start, end);
+  const steps = distance > 600 ? 9 : 7;
+  const curve = end.longitude > start.longitude ? -0.18 : 0.18;
+  return Array.from({ length: steps }, (_, index) => {
+    const t = index / (steps - 1);
+    const bend = Math.sin(Math.PI * t) * curve;
+    return {
+      latitude: start.latitude + (end.latitude - start.latitude) * t + bend,
+      longitude: start.longitude + (end.longitude - start.longitude) * t - bend * .6
+    };
+  });
+}
+
+function projectRoutePoints(points) {
+  const lats = points.map(point => Number(point.latitude));
+  const lngs = points.map(point => Number(point.longitude));
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const latRange = Math.max(.01, maxLat - minLat);
+  const lngRange = Math.max(.01, maxLng - minLng);
+  return points.map(point => ({
+    x: 10 + ((Number(point.longitude) - minLng) / lngRange) * 80,
+    y: 88 - ((Number(point.latitude) - minLat) / latRange) * 76
+  }));
+}
+
+function buildRouteStops(hotspot, geoPoints, svgPoints) {
+  const summary = buildRoutePreviewSummary(hotspot);
+  const stopCount = Math.max(1, Number.parseInt(summary.stopLabel, 10) || 1);
+  const templates = routeStopTemplates(hotspot, stopCount);
+  return templates.map(template => ({
+    ...template,
+    svg: pointAtRouteProgress(svgPoints, template.progress),
+    geo: pointAtRouteProgress(projectGeoLikePoints(geoPoints), template.progress)
+  }));
+}
+
+function projectGeoLikePoints(points) {
+  return points.map(point => ({ x: Number(point.longitude), y: Number(point.latitude) }));
+}
+
+function routeStopTemplates(hotspot, stopCount) {
+  const routeMinutes = travelBurden(hotspot.bestHotel);
+  const highSeason = hotspot.bestHotel.destinationSlug === "litoral-norte-sp" || hotspot.bestHotel.destinationSlug === "olimpia";
+  const stops = [
+    {
+      kind: "bathroom",
+      kindLabel: "banheiro e alongamento",
+      label: "Pausa curta planejada",
+      message: "Bom ponto para banheiro, troca e agua antes de a crianca cansar.",
+      progress: routeMinutes <= 90 ? .46 : .28
+    },
+    {
+      kind: "fuel",
+      kindLabel: "posto de gasolina",
+      label: "Abastecer sem pressa",
+      message: "Melhor resolver combustivel e lanchinho antes do trecho mais longo.",
+      progress: .42
+    },
+    {
+      kind: "restaurant",
+      kindLabel: "restaurante kids-friendly",
+      label: "Comida facil no caminho",
+      message: "Procure parada com refeicao simples, fraldario ou area aberta.",
+      progress: routeMinutes > 140 ? .58 : .72
+    },
+    {
+      kind: "toll",
+      kindLabel: "pedagio",
+      label: "Pedagio e ritmo da estrada",
+      message: highSeason ? "Em feriados, esse trecho pode ter transito." : "Trecho bom para manter previsibilidade e evitar paradas improvisadas.",
+      progress: .68
+    },
+    {
+      kind: "health",
+      kindLabel: "farmacia/hospital",
+      label: "Chegada com apoio por perto",
+      message: "Chegada proxima: veja restaurantes e farmacias por perto.",
+      progress: .88
+    }
+  ];
+  if (routeMinutes <= 90) return [stops[0], stops[4]];
+  if (stopCount <= 2) return [stops[0], stops[3], stops[4]];
+  return stops;
+}
+
+function buildRoutePreviewSummary(hotspot) {
+  const route = mapRouteStats(
+    { key: hotspot.key, hotels: hotspot.hotels, bestHotel: hotspot.bestHotel, imageKey: imageKeyForHotelDestination(hotspot.bestHotel) },
+    hotspot.bestHotel,
+    googleCoverageForRecommendation({ key: hotspot.key, bestHotel: hotspot.bestHotel, imageKey: imageKeyForHotelDestination(hotspot.bestHotel), name: hotspot.name }),
+    liveSummaryForRecommendation({ key: hotspot.key, bestHotel: hotspot.bestHotel, imageKey: imageKeyForHotelDestination(hotspot.bestHotel), name: hotspot.name })
+  );
+  const minutes = route.driveMinutes || travelBurden(hotspot.bestHotel);
+  const stops = recommendedRouteStopCount(minutes, state.mapFilters.childAges);
+  const stress = routeStressLevel({
+    isRoadTrip: route.isRoadTrip,
+    oneWayKm: route.oneWayKm || 0,
+    driveMinutes: minutes,
+    transferMinutes: hotspot.bestHotel.transferMinutes
+  });
+  return {
+    timeLabel: route.timeLabel,
+    distanceLabel: route.distanceLabel,
+    stopLabel: `${stops} ${stops === 1 ? "parada" : "paradas"}`,
+    effortLabel: familyRouteEffortLabel(stress.level, minutes),
+    bestDeparture: bestFamilyDepartureTime(minutes),
+    alert: routeHolidayAlert(hotspot, minutes)
+  };
+}
+
+function recommendedRouteStopCount(minutes, childAges = []) {
+  const hasBaby = childAges.some(age => /0 a 12 meses|1 a 2 anos/i.test(age));
+  if (minutes <= 80) return hasBaby ? 1 : 0;
+  if (minutes <= 150) return hasBaby ? 2 : 1;
+  if (minutes <= 240) return hasBaby ? 3 : 2;
+  return hasBaby ? 4 : 3;
+}
+
+function familyRouteEffortLabel(level, minutes) {
+  if (level === "easy") return "leve, bom para primeira viagem";
+  if (level === "medium" || level === "moderate") return minutes > 150 ? "moderado, exige pausa real" : "moderado e previsivel";
+  return "alto, planeje sono e paradas";
+}
+
+function bestFamilyDepartureTime(minutes) {
+  if (minutes <= 90) return "apos cafe, sem correr";
+  if (minutes <= 180) return "entre 7h e 8h30";
+  return "bem cedo, com primeira pausa combinada";
+}
+
+function routeHolidayAlert(hotspot, minutes) {
+  const sensitive = ["litoral-norte-sp", "guaruja-sp", "olimpia", "gramado", "campos-do-jordao"].includes(hotspot.bestHotel.destinationSlug);
+  if (sensitive) return "em feriados, esse trecho pode ter transito";
+  if (minutes > 180) return "trecho mais cansativo para criancas pequenas";
+  return "normalidade, ainda assim evite saida no pico";
+}
+
+function routeStopIcon(kind) {
+  return {
+    bathroom: "WC",
+    restaurant: "R",
+    fuel: "P",
+    toll: "$",
+    health: "+"
+  }[kind] || "i";
+}
+
+function routePreviewStatusLabel(status) {
+  if (status === "loading") return "calculando rota segura";
+  if (status === "playing") return "rota em movimento";
+  if (status === "paused") return "pausado";
+  if (status === "done") return "chegada prevista";
+  if (status === "error") return "usando rota estimada";
+  return "pronto para simular";
+}
+
+function routePreviewMessage(preview, progress) {
+  if (state.routePreview.status === "loading") return "Buscando a rota sem expor chave de API no navegador.";
+  if (progress < .18) return "Saida de Sao Paulo: o segredo e evitar pressa e pico.";
+  if (progress < .42) return "Bom ponto para uma pausa rapida antes de a crianca perder a paciencia.";
+  if (progress < .7) return "Trecho mais cansativo para criancas pequenas: vale ter agua, lanche e plano de sono.";
+  if (progress < .9) return "Em feriados, confirme transito e deixe margem para check-in.";
+  return "Chegada proxima: veja restaurantes e farmacias por perto.";
+}
+
+function routeSpeedLabel() {
+  return state.routePreview.speed >= 2 ? "Velocidade 2x" : state.routePreview.speed > 1 ? "Velocidade 1.5x" : "Velocidade 1x";
+}
+
+function svgPointsAttribute(points) {
+  return points.map(point => `${numberLabel(point.x, 2)},${numberLabel(point.y, 2)}`).join(" ");
+}
+
+function routeSvgLength(points) {
+  return points.slice(1).reduce((sum, point, index) => {
+    const previous = points[index];
+    return sum + Math.hypot(point.x - previous.x, point.y - previous.y);
+  }, 0);
+}
+
+function pointAtRouteProgress(points, progress) {
+  const target = routeSvgLength(points) * Math.max(0, Math.min(1, progress));
+  let walked = 0;
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1];
+    const current = points[index];
+    const segment = Math.hypot(current.x - previous.x, current.y - previous.y);
+    if (walked + segment >= target) {
+      const t = segment ? (target - walked) / segment : 0;
+      return {
+        x: previous.x + (current.x - previous.x) * t,
+        y: previous.y + (current.y - previous.y) * t
+      };
+    }
+    walked += segment;
+  }
+  return points[points.length - 1] || { x: 10, y: 88 };
 }
 
 function EmptyMapHotspotState() {
@@ -909,6 +1261,7 @@ function buildMapHotspots() {
       familyScore,
       itinerary,
       mapPosition: mapPositionForDestination(bestHotel),
+      coordinates: routeDestinationCoordinates(recommendation, bestHotel, googleCoverage),
       routeLabel: route.routeLabel,
       distanceLabel: route.distanceLabel,
       timeLabel: route.timeLabel,
@@ -3115,6 +3468,7 @@ function handleClick(event) {
   }
   if (action === "map-hotspot") {
     state.mapFilters.selectedKey = target.dataset.hotspotKey || "";
+    if (state.routePreview.destinationKey !== state.mapFilters.selectedKey) stopRouteAnimation();
     const hotspot = buildMapHotspots().find(item => item.key === state.mapFilters.selectedKey);
     trackEvent("map_hotspot_selected", {
       destinationKey: state.mapFilters.selectedKey,
@@ -3123,6 +3477,26 @@ function handleClick(event) {
     });
     render();
     setTimeout(() => document.getElementById("mapa")?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
+    return;
+  }
+  if (action === "route-preview-start") {
+    const hotspot = buildMapHotspots().find(item => item.key === target.dataset.hotspotKey) || filteredMapHotspots()[0];
+    if (!hotspot) return;
+    startRoutePreview(hotspot);
+    return;
+  }
+  if (action === "route-preview-pause") {
+    toggleRoutePreviewPause();
+    return;
+  }
+  if (action === "route-preview-speed") {
+    cycleRoutePreviewSpeed();
+    return;
+  }
+  if (action === "route-preview-stops") {
+    state.routePreview.showStops = !state.routePreview.showStops;
+    trackEvent("route_preview_stops_toggled", { open: state.routePreview.showStops });
+    render();
     return;
   }
   if (action === "map-start-diagnosis") {
@@ -3631,6 +4005,211 @@ function syncTravelModeFields(mode) {
       input.disabled = !enabled;
     });
   });
+}
+
+function startRoutePreview(hotspot) {
+  state.mapFilters.selectedKey = hotspot.key;
+  state.routePreview = {
+    ...state.routePreview,
+    destinationKey: hotspot.key,
+    status: "loading",
+    progress: 0,
+    showStops: false,
+    source: "server",
+    message: "Calculando a rota da familia...",
+    points: [],
+    stops: [],
+    summary: buildRoutePreviewSummary(hotspot),
+    error: ""
+  };
+  trackEvent("route_preview_started", {
+    destinationKey: hotspot.key,
+    destinationName: hotspot.name,
+    bestHotel: hotspot.bestHotel?.name || ""
+  });
+  render();
+  setTimeout(() => document.getElementById("previa-rota")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+  loadRoutePreviewData(hotspot);
+}
+
+async function loadRoutePreviewData(hotspot) {
+  const fallbackPoints = fallbackRouteGeoPoints(hotspot);
+  let routeData = null;
+  try {
+    routeData = await fetchRoutePreviewFromApi(hotspot);
+  } catch (error) {
+    state.routePreview.error = error?.message || "rota_api_unavailable";
+  }
+  const decoded = routeData?.encodedPolyline ? decodeEncodedPolyline(routeData.encodedPolyline) : [];
+  const points = decoded.length >= 2 ? decoded : fallbackPoints;
+  const svgPoints = projectRoutePoints(points);
+  state.routePreview.points = points;
+  state.routePreview.stops = buildRouteStops(hotspot, points, svgPoints);
+  state.routePreview.summary = routeSummaryFromApiOrFallback(hotspot, routeData);
+  state.routePreview.source = decoded.length >= 2 ? "google_routes" : "fallback";
+  state.routePreview.status = "playing";
+  state.routePreview.message = decoded.length >= 2 ? "Rota real carregada pela camada segura." : "Rota estimada com coordenadas verificadas enquanto a polilinha real nao chega.";
+  render();
+  requestAnimationFrame(() => startRouteAnimation());
+}
+
+async function fetchRoutePreviewFromApi(hotspot) {
+  if (!supabaseConfig.url || !supabaseConfig.anonKey) return null;
+  const destination = hotspot.coordinates || approximateDestinationCoordinates(hotspot.bestHotel);
+  const response = await fetch(`${supabaseConfig.url.replace(/\/$/, "")}/functions/v1/concierge-api`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseConfig.anonKey,
+      authorization: `Bearer ${supabaseConfig.anonKey}`,
+      "x-concierge-session": sessionId
+    },
+    body: JSON.stringify({
+      action: "route",
+      payload: {
+        origin: SAO_PAULO_CENTER,
+        destination,
+        travelMode: "DRIVE",
+        childAges: state.mapFilters.childAges || []
+      }
+    })
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok || json.ok === false) throw new Error(json.message || `route_api_${response.status}`);
+  return json.data || null;
+}
+
+function routeSummaryFromApiOrFallback(hotspot, routeData) {
+  const fallback = buildRoutePreviewSummary(hotspot);
+  if (!routeData) return fallback;
+  const minutes = Math.round(Number(routeData.durationSeconds || 0) / 60);
+  const km = Math.round(Number(routeData.distanceMeters || 0) / 1000);
+  const stops = recommendedRouteStopCount(minutes || travelBurden(hotspot.bestHotel), state.mapFilters.childAges);
+  const difficulty = routeData.difficulty || {};
+  return {
+    ...fallback,
+    timeLabel: minutes ? formatMinutesLabel(minutes) : fallback.timeLabel,
+    distanceLabel: km ? `${km} km` : fallback.distanceLabel,
+    stopLabel: `${stops} ${stops === 1 ? "parada" : "paradas"}`,
+    effortLabel: difficulty.label ? String(difficulty.label).toLowerCase() : fallback.effortLabel
+  };
+}
+
+function startRouteAnimation() {
+  stopRouteAnimation(false);
+  routeLastTick = 0;
+  const tick = timestamp => {
+    if (state.routePreview.status !== "playing") return;
+    if (!routeLastTick) routeLastTick = timestamp;
+    const delta = timestamp - routeLastTick;
+    routeLastTick = timestamp;
+    const duration = 10500 / Math.max(.75, state.routePreview.speed || 1);
+    state.routePreview.progress = Math.min(1, state.routePreview.progress + (delta / duration));
+    updateRoutePreviewDom();
+    if (state.routePreview.progress >= 1) {
+      state.routePreview.status = "done";
+      routeAnimationFrame = null;
+      updateRoutePreviewDom();
+      render();
+      return;
+    }
+    routeAnimationFrame = requestAnimationFrame(tick);
+  };
+  routeAnimationFrame = requestAnimationFrame(tick);
+}
+
+function stopRouteAnimation(resetStatus = true) {
+  if (routeAnimationFrame) cancelAnimationFrame(routeAnimationFrame);
+  routeAnimationFrame = null;
+  routeLastTick = 0;
+  if (resetStatus && state.routePreview.status === "playing") state.routePreview.status = "paused";
+}
+
+function toggleRoutePreviewPause() {
+  if (state.routePreview.status === "playing") {
+    state.routePreview.status = "paused";
+    stopRouteAnimation(false);
+    render();
+    return;
+  }
+  if (["paused", "done"].includes(state.routePreview.status)) {
+    if (state.routePreview.status === "done") state.routePreview.progress = 0;
+    state.routePreview.status = "playing";
+    render();
+    requestAnimationFrame(() => startRouteAnimation());
+  }
+}
+
+function cycleRoutePreviewSpeed() {
+  state.routePreview.speed = state.routePreview.speed >= 2 ? 1 : state.routePreview.speed >= 1.5 ? 2 : 1.5;
+  trackEvent("route_preview_speed_changed", { speed: state.routePreview.speed });
+  render();
+  if (state.routePreview.status === "playing") requestAnimationFrame(() => startRouteAnimation());
+}
+
+function updateRoutePreviewDom() {
+  const hotspot = buildMapHotspots().find(item => item.key === state.routePreview.destinationKey);
+  if (!hotspot) return;
+  const preview = routePreviewForHotspot(hotspot);
+  const progress = Math.max(0, Math.min(1, state.routePreview.progress));
+  const length = routeSvgLength(preview.svgPoints);
+  const vehicle = pointAtRouteProgress(preview.svgPoints, progress);
+  const path = document.querySelector(".route-preview-path");
+  if (path) path.style.strokeDashoffset = String(length * (1 - progress));
+  const marker = document.querySelector(".route-vehicle");
+  if (marker) marker.setAttribute("transform", `translate(${vehicle.x} ${vehicle.y})`);
+  const svg = document.querySelector(".route-preview-map svg");
+  if (svg) svg.style.transform = routeCameraTransform(progress);
+  const bar = document.querySelector(".route-progress-bar i");
+  if (bar) bar.style.width = `${Math.round(progress * 100)}%`;
+  const status = document.querySelector(".route-preview-status");
+  if (status) status.textContent = routePreviewStatusLabel(state.routePreview.status);
+  const copy = document.querySelector(".route-preview-copy p");
+  if (copy) copy.textContent = routePreviewMessage(preview, progress);
+  document.querySelectorAll(".route-poi").forEach((node, index) => {
+    const stop = preview.stops[index];
+    if (stop) node.classList.toggle("reached", progress + 0.02 >= stop.progress);
+  });
+}
+
+function routeCameraTransform(progress) {
+  if (progress < .18) return "scale(1.18) translate(3%, -2%)";
+  if (progress > .82) return "scale(1.14) translate(-3%, 2%)";
+  return "scale(1.03)";
+}
+
+function decodeEncodedPolyline(encoded = "") {
+  const points = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+  while (index < encoded.length) {
+    const latitude = decodePolylineValue(encoded, index);
+    index = latitude.index;
+    lat += latitude.value;
+    const longitude = decodePolylineValue(encoded, index);
+    index = longitude.index;
+    lng += longitude.value;
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+  return points;
+}
+
+function decodePolylineValue(encoded, startIndex) {
+  let result = 0;
+  let shift = 0;
+  let index = startIndex;
+  let byte = 0;
+  do {
+    byte = encoded.charCodeAt(index) - 63;
+    index += 1;
+    result |= (byte & 0x1f) << shift;
+    shift += 5;
+  } while (byte >= 0x20 && index < encoded.length);
+  return {
+    value: result & 1 ? ~(result >> 1) : result >> 1,
+    index
+  };
 }
 
 function travelPeriodLabel({ mode, date, month, flexibleWindow }) {

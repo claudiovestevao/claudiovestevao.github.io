@@ -185,7 +185,7 @@ async function computeRoute(payload: Json) {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": env("GOOGLE_MAPS_API_KEY"),
-      "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.travelAdvisory"
+      "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.travelAdvisory,routes.viewport"
     },
     body: JSON.stringify({
       origin: routeWaypoint(payload.origin),
@@ -204,7 +204,15 @@ async function computeRoute(payload: Json) {
     durationSeconds,
     childAges: payload.childAges || []
   });
-  return { distanceMeters: route.distanceMeters || 0, durationSeconds, difficulty, raw: route };
+  return {
+    distanceMeters: route.distanceMeters || 0,
+    durationSeconds,
+    encodedPolyline: route.polyline?.encodedPolyline || "",
+    viewport: route.viewport || null,
+    travelAdvisory: route.travelAdvisory || null,
+    difficulty,
+    raw: route
+  };
 }
 
 async function recommend(payload: Json, sessionId: string, requestId: string) {
@@ -559,7 +567,12 @@ async function mockResponse(action: string, payload: Json) {
     return { places: [place] };
   }
   if (action === ACTIONS.PEXELS_SEARCH) return { query: payload.query, photos: [normalizePexelsPhoto({ id: 1, photographer: "Mock", photographer_url: "https://pexels.com", url: "https://pexels.com/photo/mock", src: { original: "https://images.pexels.com/mock-original.jpg", large: "https://images.pexels.com/mock-large.jpg" }, width: 1600, height: 1000 }, String(payload.query))] };
-  if (action === ACTIONS.ROUTE) return { distanceMeters: 120000, durationSeconds: 5400, difficulty: classifyTravelDifficulty({ distanceMeters: 120000, durationSeconds: 5400, childAges: payload.childAges || [] }) };
+  if (action === ACTIONS.ROUTE) return {
+    distanceMeters: 120000,
+    durationSeconds: 5400,
+    encodedPolyline: "p~iF~ps|U_ulLnnqC_mqNvxq`@",
+    difficulty: classifyTravelDifficulty({ distanceMeters: 120000, durationSeconds: 5400, childAges: payload.childAges || [] })
+  };
   if (action === ACTIONS.GEOCODE) return { formattedAddress: payload.originText || payload.address, latitude: -23.55, longitude: -46.63, placeId: "mock-geocode" };
   if (action === ACTIONS.BOOKING_LINK) {
     const url = buildBookingAffiliateUrl({ ...payload, affiliateId: String(payload.affiliateId || ""), trackingCode: String(payload.trackingCode || "mock") });
