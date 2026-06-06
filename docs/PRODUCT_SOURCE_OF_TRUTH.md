@@ -28,12 +28,14 @@ Funcionalidades que fazem parte do produto e são mantidas:
 - **Calendário familiar** — feriados nacionais e janelas de férias escolares.
 - **Captura de lead pós-resultado** — formulário de contato/interesse aparece depois que a família já recebeu valor.
 - **Tracking de comportamento** — eventos, leads e cliques em hotéis via Supabase REST com publishable key pública e RLS.
+- **Camada server-side de integrações** — Edge Function `concierge-api`, cache, rate limit, logs e mocks locais para APIs externas.
 - **Camada de dados reais no banco (backend oficial):**
   - Nota e avaliações do Google (Places).
   - Tempo de carro real de SP (Distance Matrix).
   - Inventário real de hotéis (LiteAPI).
   - Movimento/eventos previstos (PredictHQ).
   - Normais climáticas (Open-Meteo) e feriados (Nager.Date).
+- **Contratos complementares:** Google Place Photos, Pexels editorial, Geocoding, Google Routes/Distance Matrix, Booking afiliados, OpenAI para explicação com dados reais, e-mail transacional e WhatsApp futuro.
 - **Mapa interativo de destinos (Mapbox)** — *oficial como objetivo de produto*, porém **ainda não integrado ao site**. O token público deve ser injetado apenas quando o componente Mapbox entrar, para evitar bloqueios de secret scanning.
 
 ---
@@ -98,8 +100,13 @@ O produto é um **site estático (GitHub Pages)** com uma SPA de página única 
 | **Mapbox** | Mapa interativo | token público `pk.*` no front |
 | **Open-Meteo** | Normais climáticas | grátis, sem chave |
 | **Nager.Date** | Feriados nacionais | grátis, sem chave |
+| **Pexels** | Imagens editoriais/inspiracionais de destinos | Edge Function `concierge-api` |
+| **OpenAI** | Interpretação e explicação humanizada com dados reais | Edge Function `concierge-api` |
+| **Booking afiliados** | Links rastreáveis MVP; Demand API futura | Edge Function `concierge-api` / `affiliate_links` |
+| **Resend/e-mail transacional** | Roteiro, checklist e resumo | Edge Function `concierge-api` |
+| **WhatsApp Cloud API** | Preparado para envio futuro | Edge Function `concierge-api` |
 
-**Princípio de segurança:** chaves secretas nunca no front. Ficam dentro de funções `SECURITY DEFINER` com `EXECUTE` revogado de `public/anon/authenticated`. Apenas tokens públicos por design (`pk.*` Mapbox, `sb_publishable_*` Supabase) podem aparecer no cliente.
+**Princípio de segurança:** chaves secretas nunca no front. Ficam dentro de funções `SECURITY DEFINER` no banco ou da Edge Function `concierge-api`. Apenas tokens públicos por design (`pk.*` Mapbox, `sb_publishable_*` Supabase) podem aparecer no cliente.
 
 ---
 
@@ -135,6 +142,11 @@ O produto é um **site estático (GitHub Pages)** com uma SPA de página única 
 | `destination_climate_normals` | 648 | Open-Meteo |
 | `br_public_holidays` | 30 | Nager.Date |
 
+**Tabelas/contratos server-side oficiais (`0029_concierge_api_contracts.sql`):**
+`places`, `destinations`, `accommodations`, `attractions`, `photos`, `family_scores`, `search_requests`, `user_preferences`, `affiliate_links`, `api_cache`, `api_error_logs`, `api_rate_limits`.
+
+Essas tabelas separam dados de API (`api_data`/`raw_api_data`), curadoria humana (`curated_data`) e dados calculados por IA/regras (`ai_calculated_data`).
+
 **Views oficiais (consumo de front):**
 `destination_stay_summary` (1 linha/destino: nota, resumo, tempo de carro, movimento, top hotéis) · `destination_map_points` (pontos do mapa) · `destination_primary_rating` · `destination_hotel_cards`.
 
@@ -160,6 +172,7 @@ O produto é um **site estático (GitHub Pages)** com uma SPA de página única 
 
 - **Expandir a integração das views vivas.** O site já consome `destination_stay_summary`, `destination_map_points` e `destination_hotel_cards` como enriquecimento. Falta migrar ranking/scoring principal para o banco e reduzir dependência dos módulos estáticos.
 - **Monitorar tracking no Supabase.** A config pública foi injetada no HTML; validar em produção se `concierge_events`, `concierge_leads` e `concierge_hotel_clicks` recebem inserts com as policies atuais.
+- **Deploy da Edge Function `concierge-api`.** O contrato está versionado no repo; aplicar migration `0029`, configurar env vars e publicar função no Supabase.
 - **Reconciliar as migrations.** Rodar `supabase db pull` numa pasta limpa, renumerar para uma trilha única e **arquivar** `supabase/migrations/0012–0020` (legado).
 - **Definir camada de dados única** (estática `src/data` vs. views do banco) e remover a duplicidade.
 - **Secrets das Edge Functions** `PREDICTHQ_TOKEN` e `MAPBOX_TOKEN` no painel.
