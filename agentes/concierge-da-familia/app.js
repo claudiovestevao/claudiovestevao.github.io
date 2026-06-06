@@ -320,9 +320,31 @@ function ConciergeQuickIntakeForm() {
         <span>Etapa 1 de 2</span>
         <div class="progress"><i style="width:22%"></i></div>
       </div>
-      <h3>Vamos entender o essencial, sem cadastro.</h3>
-      <p class="micro">Você recebe as 3 melhores cidades antes de deixar WhatsApp ou email.</p>
+      <h3>Crie seu Passaporte Família.</h3>
+      <p class="micro">Eu salvo seu diagnóstico e preparo conteúdos úteis da sua viagem. Quando o WhatsApp oficial estiver liberado, a gente valida o envio do roteiro por lá.</p>
       ${state.intakeDraft.destinationInterestName ? `<p class="intent-note">Vamos testar se ${escapeHtml(state.intakeDraft.destinationInterestName)} combina mesmo com sua família.</p>` : ""}
+      <div class="intake-contact-card">
+        <div>
+          <span class="badge subtle">Passaporte Família</span>
+          <strong>Seu roteiro fica pronto para continuar depois.</strong>
+          <p>Resumo, checklist e alertas úteis. Sem grupo, sem corrente, sem mensagem aleatória.</p>
+        </div>
+        <div class="contact-grid">
+          <label>Seu nome
+            <input name="leadName" required autocomplete="name" placeholder="Como posso te chamar?">
+          </label>
+          <label>WhatsApp
+            <input name="leadWhatsapp" required inputmode="tel" autocomplete="tel" placeholder="11999999999">
+          </label>
+          <label>Email
+            <input name="leadEmail" required type="email" autocomplete="email" placeholder="voce@email.com">
+          </label>
+        </div>
+        <label class="consent-check">
+          <input name="consentContact" type="checkbox" required>
+          <span>Aceito receber meu resumo personalizado, checklist e conteúdos úteis sobre esta viagem. Posso pedir remoção quando quiser.</span>
+        </label>
+      </div>
       <div class="intake-grid">
         <label>Adultos
           <select name="adultsCount">
@@ -386,7 +408,7 @@ function ConciergeQuickIntakeForm() {
         </div>
       </div>
       <button class="button primary" type="submit">Encontrar minha viagem ideal</button>
-      <p class="privacy-note">Dados usados para personalizar a recomendação. Contato só no fim, se você quiser ajuda.</p>
+      <p class="privacy-note">O diagnóstico aparece na hora. Seus dados ficam vinculados a esta sessão para personalização e acompanhamento, com opção de exclusão.</p>
     </form>
   `;
 }
@@ -1854,8 +1876,8 @@ function ConciergeLeadCaptureForm() {
       <div class="lead-box">
         <div>
           <span class="badge subtle">Próximo passo</span>
-          <h2>Quer que eu transforme este diagnóstico em opções curadas?</h2>
-          <p>Agora sim, se fizer sentido para você, deixe o contato para receber ajuda no WhatsApp. Sem spam.</p>
+          <h2>Quer receber o dossiê da viagem com próximos passos?</h2>
+          <p>Se fizer sentido, confirme seus dados e eu preparo um resumo com cidades, hotéis, checklist e pontos de atenção para continuar depois. Sem grupo, sem spam.</p>
         </div>
         <form id="leadForm" class="lead-form">
           <label>Nome<input name="name" required placeholder="Seu nome" value="${escapeAttr(state.intake.name || "")}"></label>
@@ -1865,7 +1887,7 @@ function ConciergeLeadCaptureForm() {
           <label>Idade da criança<input name="age" placeholder="Ex: 1 ano e 8 meses" value="${escapeAttr(state.intake.childAge || "")}"></label>
           <label>Mês provável da viagem<input name="month" placeholder="Ex: julho" value="${escapeAttr(state.intake.travelPeriod || "")}"></label>
           <label>Tipo de viagem desejada<input name="trip" placeholder="Ex: resort com copa baby"></label>
-          <button class="button primary" type="submit">Receber opções curadas no WhatsApp</button>
+          <button class="button primary" type="submit">Receber dossiê da viagem no WhatsApp</button>
         </form>
       </div>
     </section>
@@ -2295,9 +2317,10 @@ document.addEventListener("submit", event => {
       .filter((_, index) => index < childrenCount);
     const travelTimingMode = form.get("travelTimingMode") || "unknown";
     state.intake = {
-      name: "",
-      whatsapp: "",
-      email: "",
+      name: String(form.get("leadName") || "").trim(),
+      whatsapp: normalizePhone(form.get("leadWhatsapp") || ""),
+      email: String(form.get("leadEmail") || "").trim(),
+      consentContact: form.get("consentContact") === "on",
       adultsCount: Number.parseInt(form.get("adultsCount"), 10) || 2,
       childrenCount,
       roomsCount: Number.parseInt(form.get("roomsCount"), 10) || 1,
@@ -2333,10 +2356,12 @@ document.addEventListener("submit", event => {
       rooms: state.intake.roomsCount,
       childAges: state.intake.childAges,
       lastTrip: state.intake.lastTrip,
+      hasContact: Boolean(state.intake.whatsapp || state.intake.email),
+      consentContact: state.intake.consentContact,
       interestDestinationKey: state.intake.interestDestinationKey,
       interestDestinationName: state.intake.interestDestinationName
     });
-    persistLeadIntake("profile_started");
+    persistLeadIntake("pre_diagnosis_started");
     render();
     return;
   }
@@ -2645,6 +2670,10 @@ function priceTierLabel(tier) {
 
 function leadWhatsAppUrl(message) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+function normalizePhone(value) {
+  return String(value || "").replace(/\D+/g, "");
 }
 
 function normalizeHotel(hotel) {
