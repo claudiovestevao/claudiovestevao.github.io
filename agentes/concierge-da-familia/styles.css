@@ -980,28 +980,29 @@ p {
 }
 
 .compact-result {
-  padding-top: 20px;
-  padding-bottom: 20px;
+  padding-top: 12px;
+  padding-bottom: 10px;
 }
 
 .compact-result .result-card {
   max-width: none;
+  padding: 14px;
 }
 
 .viral-score-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin: 16px 0;
+  gap: 8px;
+  margin: 10px 0;
 }
 
 .metric-card {
   display: grid;
-  gap: 7px;
-  min-height: 126px;
+  gap: 4px;
+  min-height: 88px;
   border: 1px solid rgba(0, 108, 228, .18);
   border-radius: 16px;
-  padding: 13px;
+  padding: 10px;
   background: rgba(255, 255, 255, .76);
 }
 
@@ -1013,25 +1014,25 @@ p {
 
 .metric-card strong {
   color: var(--blue);
-  font-size: clamp(22px, 3vw, 34px);
+  font-size: clamp(20px, 2.4vw, 28px);
   line-height: 1;
 }
 
 .metric-card p {
   margin-bottom: 0;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 12px;
+  line-height: 1.25;
 }
 
 .cost-estimate {
   display: grid;
-  grid-template-columns: minmax(0, .86fr) minmax(260px, 1fr);
-  gap: 14px;
-  align-items: start;
-  margin: 14px 0;
-  border-top: 1px solid rgba(0, 108, 228, .18);
-  border-bottom: 1px solid rgba(0, 108, 228, .18);
-  padding: 16px 0;
+  grid-template-columns: minmax(0, .92fr) minmax(330px, 1.08fr);
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+  border-top: 1px solid rgba(0, 108, 228, .14);
+  border-bottom: 1px solid rgba(0, 108, 228, .14);
+  padding: 10px 0;
 }
 
 .cost-estimate h3,
@@ -1047,10 +1048,10 @@ p {
 
 .cost-grid span {
   display: grid;
-  gap: 5px;
-  min-height: 78px;
+  gap: 3px;
+  min-height: 58px;
   border-radius: 14px;
-  padding: 10px;
+  padding: 8px;
   color: var(--muted);
   background: #fff;
   border: 1px solid var(--line);
@@ -1068,9 +1069,9 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 8px;
   border-radius: 16px;
-  padding: 12px;
+  padding: 10px;
   background: #fff;
   border: 1px solid var(--line);
 }
@@ -1418,21 +1419,38 @@ p {
 
 .destination-recommendations {
   scroll-margin-top: 70px;
+  padding-top: 12px;
+  padding-bottom: 18px;
+}
+
+.destination-recommendations .section-title {
+  margin-bottom: 14px;
+}
+
+.destination-recommendations .section-title h2 {
+  font-size: clamp(28px, 4vw, 42px);
+  margin-bottom: 8px;
+}
+
+.destination-recommendations .section-title p {
+  max-width: 760px;
+  margin-bottom: 0;
+  font-size: 14px;
 }
 
 .recommendation-grid {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .recommendation-card {
   display: grid;
-  grid-template-columns: auto minmax(260px, .52fr) minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: auto minmax(210px, .42fr) minmax(0, 1fr);
+  gap: 10px;
   align-items: stretch;
   border: 1px solid var(--line);
-  border-radius: 22px;
-  padding: 14px;
+  border-radius: 18px;
+  padding: 10px;
   background:
     linear-gradient(135deg, rgba(255, 248, 223, .36), transparent 42%),
     rgba(255, 255, 255, .94);
@@ -1445,7 +1463,7 @@ p {
 }
 
 .recommendation-rank {
-  min-width: 66px;
+  min-width: 52px;
   display: grid;
   align-content: start;
   gap: 8px;
@@ -1460,19 +1478,19 @@ p {
 }
 
 .recommendation-rank span {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   color: var(--blue);
   background: var(--gold);
 }
 
 .recommendation-rank strong {
-  width: 66px;
-  min-height: 54px;
+  width: 52px;
+  min-height: 44px;
   color: #fff;
   background: linear-gradient(135deg, var(--blue), #002b70);
   border-top: 4px solid var(--gold);
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .recommendation-rank small {
@@ -1488,15 +1506,15 @@ p {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .family-medal {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
+  min-height: 26px;
   border-radius: 999px;
-  padding: 7px 11px;
+  padding: 5px 9px;
   color: var(--blue);
   background: #fff;
   border: 1px solid var(--line);
@@ -1529,16 +1547,16 @@ p {
 .family-score-summary,
 .family-infra-panel {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid rgba(0, 108, 228, .18);
-  border-radius: 16px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 8px;
   background: rgba(234, 243, 255, .72);
 }
 
 .family-score-summary {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 12px 0;
+  margin: 8px 0;
 }
 
 .family-score-summary div,
@@ -1557,12 +1575,12 @@ p {
 .family-infra-panel p {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 12px;
+  line-height: 1.28;
 }
 
 .family-infra-panel {
-  margin: 12px 0;
+  margin: 8px 0;
   background: rgba(231, 248, 239, .66);
 }
 
@@ -1573,7 +1591,7 @@ p {
 
 .family-infra-panel strong {
   color: var(--blue);
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .infra-grid {
@@ -1587,7 +1605,7 @@ p {
   gap: 2px;
   border: 1px solid rgba(0, 108, 228, .14);
   border-radius: 12px;
-  padding: 8px;
+  padding: 6px;
   color: var(--muted);
   background: rgba(255, 255, 255, .72);
   font-size: 11px;
@@ -1607,9 +1625,9 @@ p {
 .destination-photo-gallery {
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  min-height: 270px;
+  min-height: 190px;
 }
 
 .gallery-topline {
@@ -1635,9 +1653,9 @@ p {
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(160px, 1fr) minmax(96px, .58fr);
+  grid-template-rows: minmax(110px, 1fr) minmax(70px, .58fr);
   gap: 6px;
-  min-height: 250px;
+  min-height: 174px;
 }
 
 .gallery-photo {
@@ -1720,7 +1738,7 @@ p {
 .recommendation-copy {
   display: grid;
   align-content: start;
-  gap: 10px;
+  gap: 7px;
   min-width: 0;
 }
 
@@ -1732,14 +1750,14 @@ p {
 .hotel-availability-cta {
   width: fit-content;
   border-radius: 14px;
-  padding-inline: 18px;
+  padding-inline: 14px;
 }
 
 .live-signals {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
   border: 1px solid rgba(0, 53, 128, .12);
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(238, 247, 255, .94), rgba(255, 255, 255, .92));
@@ -1758,32 +1776,32 @@ p {
 
 .live-signals b {
   color: var(--blue);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 950;
   text-transform: uppercase;
 }
 
 .live-signals span {
   color: var(--ink);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 850;
   line-height: 1.3;
 }
 
 .live-signals p {
-  max-height: 4.25em;
+  max-height: 2.8em;
   overflow: hidden;
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.42;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .google-trust-panel {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
   border: 1px solid rgba(0, 108, 228, .18);
   border-radius: 16px;
   background: #f7fbff;
@@ -1802,15 +1820,15 @@ p {
 
 .google-trust-panel b {
   color: var(--blue);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 950;
   text-transform: uppercase;
 }
 
 .google-trust-panel span:not(.badge) {
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 11px;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 
@@ -1828,36 +1846,48 @@ p {
 .decision-lens {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .decision-lens div {
   display: grid;
   gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 10px;
+  border-radius: 12px;
+  padding: 7px;
   background: #fff;
 }
 
 .decision-lens b {
   color: var(--blue);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .decision-lens span {
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 11px;
+  line-height: 1.25;
   font-weight: 750;
 }
 
 .destination-experience {
   display: grid;
-  gap: 10px;
+  gap: 7px;
   border-top: 1px solid rgba(0, 108, 228, .16);
   border-bottom: 1px solid rgba(0, 108, 228, .16);
-  padding: 10px 0;
+  padding: 7px 0;
+}
+
+.recommendation-card .family-infra-panel,
+.recommendation-card .google-trust-panel,
+.recommendation-card .destination-experience {
+  display: none;
+}
+
+.recommendation-card.active .family-infra-panel,
+.recommendation-card.active .google-trust-panel,
+.recommendation-card.active .destination-experience {
+  display: grid;
 }
 
 .experience-pitch {

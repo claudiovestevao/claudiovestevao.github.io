@@ -84,9 +84,9 @@ function render() {
     ${!state.result ? ConciergeHowItWorksSection() : ""}
     ${!state.result ? PopularFamilyDestinationsSection() : ""}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
-    ${state.result ? ShareableResultSection(state.result) : ""}
     ${state.result ? DestinationRecommendationsSection() : ""}
     ${state.result && state.selectedDestinationKey ? RankedHotelsSection() : ""}
+    ${state.result ? ShareableResultSection(state.result) : ""}
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
   syncDynamicIntakeFields();
