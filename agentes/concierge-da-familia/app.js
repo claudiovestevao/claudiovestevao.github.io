@@ -753,6 +753,7 @@ function DestinationRecommendationCard(recommendation, index) {
         <h3>${escapeHtml(recommendation.name)}</h3>
         <p>${escapeHtml(recommendation.reason)}</p>
         ${DestinationFactModules(recommendation, liveSummary, experience, googleCoverage)}
+        ${DestinationRouteSketch(recommendation, liveSummary, googleCoverage)}
         <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
           ${active ? "Hotéis e disponibilidade abertos abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
         </button>
@@ -807,6 +808,52 @@ function DestinationFactModules(recommendation, liveSummary, experience, googleC
       ${DecisionFact("🎈", "Entretenimento", facts.entertainment.primary, facts.entertainment.detail)}
     </div>
   `;
+}
+
+function DestinationRouteSketch(recommendation, liveSummary, googleCoverage) {
+  const bestHotel = recommendation.bestHotel || {};
+  const oneWayKm = estimateOneWayKm(recommendation, bestHotel, googleCoverage);
+  const driveMinutes = Number(liveSummary?.sp_drive_minutes || bestHotel.driveTimeFromSaoPaulo || estimateDriveMinutes(oneWayKm) || 0);
+  const isRoadTrip = Boolean(bestHotel.driveTimeFromSaoPaulo || (oneWayKm > 0 && oneWayKm <= 360));
+  const stress = routeStressLevel({ isRoadTrip, oneWayKm, driveMinutes, transferMinutes: bestHotel.transferMinutes });
+  const distanceWidth = isRoadTrip ? Math.max(18, Math.min(92, Math.round((oneWayKm / 450) * 100))) : 72;
+  const modeLabel = isRoadTrip ? "carro saindo de SP" : `voo + traslado ${bestHotel.transferMinutes || "?"} min`;
+  const timeLabel = isRoadTrip ? formatMinutesLabel(driveMinutes) : bestHotel.recommendedAirport || "aeroporto a definir";
+  return `
+    <div class="route-sketch route-${escapeAttr(stress.level)}" aria-label="Mapa esquematico do deslocamento para ${escapeAttr(recommendation.name)}">
+      <div class="route-sketch-map">
+        <span class="route-node origin">SP</span>
+        <span class="route-line" style="--route-width:${distanceWidth}%"><i></i></span>
+        <span class="route-node destination">${escapeHtml(recommendation.shortName.slice(0, 3).toUpperCase())}</span>
+      </div>
+      <div class="route-sketch-copy">
+        <strong>${escapeHtml(stress.label)}</strong>
+        <span>${escapeHtml(isRoadTrip ? `${oneWayKm} km · ${timeLabel}` : modeLabel)}</span>
+        <small>${escapeHtml(stress.detail)}</small>
+        <a href="${escapeAttr(googleMapsDirectionsUrl(recommendation.name))}" target="_blank" rel="noopener" data-track="route_map_clicked" data-source="destination_result" data-destination="${escapeAttr(recommendation.name)}">Abrir rota no Maps</a>
+      </div>
+    </div>
+  `;
+}
+
+function googleMapsDirectionsUrl(destinationName) {
+  const url = new URL("https://www.google.com/maps/dir/");
+  url.searchParams.set("api", "1");
+  url.searchParams.set("origin", "Sao Paulo, SP");
+  url.searchParams.set("destination", destinationName);
+  return url.toString();
+}
+
+function routeStressLevel({ isRoadTrip, oneWayKm, driveMinutes, transferMinutes }) {
+  if (!isRoadTrip) {
+    const transfer = Number(transferMinutes || 0);
+    if (transfer && transfer <= 60) return { level: "easy", label: "Voo simples", detail: "traslado curto ajuda a preservar rotina" };
+    if (transfer && transfer <= 100) return { level: "medium", label: "Voo com atencao", detail: "controle horario de chegada e transfer" };
+    return { level: "hard", label: "Logistica sensivel", detail: "voo e traslado pedem margem real" };
+  }
+  if (oneWayKm <= 90 || driveMinutes <= 90) return { level: "easy", label: "Rota leve", detail: "boa para primeira viagem ou fim de semana" };
+  if (oneWayKm <= 180 || driveMinutes <= 180) return { level: "medium", label: "Rota moderada", detail: "planeje saida fora do pico e uma parada" };
+  return { level: "hard", label: "Rota longa", detail: "exige paradas reais e chegada sem pressa" };
 }
 
 function DecisionFact(icon, label, primary, detail) {
@@ -1240,6 +1287,27 @@ function ConciergeMap(rankedHotels) {
         <span class="map-origin">São Paulo</span>
         ${rankedHotels.map((hotel, index) => MapPin(hotel, index)).join("")}
       </div>
+      <div class="route-summary-grid">
+        ${rankedHotels.slice(0, 3).map((hotel, index) => MapRouteSummary(hotel, index)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function MapRouteSummary(hotel, index) {
+  const isRoadTrip = Boolean(hotel.driveTimeFromSaoPaulo);
+  const distance = isRoadTrip ? Math.round((hotel.driveTimeFromSaoPaulo / 60) * 68) : null;
+  const stress = routeStressLevel({
+    isRoadTrip,
+    oneWayKm: distance || 0,
+    driveMinutes: hotel.driveTimeFromSaoPaulo || 0,
+    transferMinutes: hotel.transferMinutes
+  });
+  return `
+    <div class="route-summary-card route-${escapeAttr(stress.level)}">
+      <b>${index + 1}. ${escapeHtml(shortCityName(hotel.destination))}</b>
+      <span>${escapeHtml(isRoadTrip ? `${distance} km · ${formatHotelTime(hotel)}` : `voo + traslado ${hotel.transferMinutes || "?"} min`)}</span>
+      <small>${escapeHtml(stress.label)}</small>
     </div>
   `;
 }

@@ -1903,6 +1903,127 @@ p {
   line-height: 1.25;
 }
 
+.route-sketch {
+  display: grid;
+  grid-template-columns: minmax(160px, .95fr) 1.05fr;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(0, 108, 228, .16);
+  border-radius: 16px;
+  padding: 9px;
+  background: linear-gradient(135deg, rgba(238, 247, 255, .92), rgba(255, 255, 255, .92));
+}
+
+.route-sketch-map {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+}
+
+.route-node {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--blue);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.route-node.destination {
+  background: var(--terra);
+}
+
+.route-line {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(0, 108, 228, .12);
+}
+
+.route-line i {
+  display: block;
+  width: var(--route-width);
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gold);
+}
+
+.route-line::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--route-width) - 6px);
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: var(--blue);
+  box-shadow: 0 0 0 5px rgba(0, 108, 228, .12);
+}
+
+.route-sketch-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.route-sketch-copy strong {
+  color: var(--blue);
+  font-size: 13px;
+}
+
+.route-sketch-copy span {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-sketch-copy small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.route-sketch-copy a {
+  width: fit-content;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 950;
+  text-decoration: none;
+}
+
+.route-sketch-copy a:hover,
+.route-sketch-copy a:focus-visible {
+  text-decoration: underline;
+}
+
+.route-hard {
+  border-color: rgba(168, 85, 0, .3);
+  background: #fff8df;
+}
+
+.route-hard .route-line i {
+  background: #d97706;
+}
+
+.route-medium .route-line i {
+  background: #febb02;
+}
+
+.route-easy .route-line i {
+  background: #1b8049;
+}
+
 .live-signals {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2211,6 +2332,44 @@ p {
   font-weight: 950;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.route-summary-grid {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.route-summary-card {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(0, 108, 228, .14);
+  border-radius: 14px;
+  padding: 8px;
+  background: #fff;
+}
+
+.route-summary-card b {
+  overflow: hidden;
+  color: var(--blue);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-summary-card span {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-summary-card small {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .ranking-list {
@@ -2788,6 +2947,10 @@ summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .route-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .travel-timing-result {
     grid-template-columns: 1fr;
   }
@@ -3067,6 +3230,11 @@ summary {
 
   .decision-fact {
     min-height: 86px;
+  }
+
+  .route-sketch,
+  .route-summary-grid {
+    grid-template-columns: 1fr;
   }
 
   .criteria-grid {
