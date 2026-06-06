@@ -118,15 +118,13 @@ function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
     ${!state.result ? ConciergeMapExplorerSection() : ""}
-    ${!state.result ? ConciergeLiveDataSection() : ""}
-    ${!state.result ? ConciergeHowItWorksSection() : ""}
     ${!state.result ? PopularFamilyDestinationsSection() : ""}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
     ${state.result ? DestinationRecommendationsSection() : ""}
     ${state.result && state.selectedDestinationKey ? RankedHotelsSection() : ""}
     ${state.result ? ShareableResultSection(state.result) : ""}
-    ${FriendReferralSection()}
-    ${HotelRecommendationSection()}
+    ${state.result ? FriendReferralSection() : ""}
+    ${state.result ? HotelRecommendationSection() : ""}
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
   syncDynamicIntakeFields();
@@ -279,15 +277,15 @@ function ConciergeHeroSection() {
       <div class="hero-copy">
         <span class="badge">Family Trip Intelligence</span>
         <h1>Viagens de família sem perrengue</h1>
-        <p>Explore o mapa de destinos curados saindo de São Paulo e, quando quiser afunilar, o assistente cruza idade das crianças, orçamento, sazonalidade e logística.</p>
+        <p>Mapa, diagnóstico rápido e destinos que respeitam a rotina da família.</p>
         <div class="hero-actions">
           <a class="button primary" href="#mapa">Explorar mapa</a>
           <a class="button secondary" href="#diagnostico">Falar com assistente</a>
         </div>
         <div class="family-cues" aria-label="Critérios de curadoria familiar">
-          <span>Resultado antes do contato</span>
-          <span>7 perguntas essenciais</span>
-          <span>Hotéis aprovados</span>
+          <span>Mapa primeiro</span>
+          <span>2 minutos</span>
+          <span>Hotel só depois</span>
         </div>
       </div>
       <div class="diagnostic-panel">
@@ -370,8 +368,8 @@ function PopularFamilyDestinationsSection() {
     <section class="section popular-destinations" id="destinos-em-alta">
       <div class="section-title compact-title">
         <span class="badge subtle">Curadoria em alta para famílias de São Paulo</span>
-        <h2>Destinos que eu olharia antes de reservar qualquer hotel.</h2>
-        <p>Este bloco inspira a escolha sem substituir o diagnóstico: por enquanto é uma vitrine editorial baseada na curadoria familiar. Com mais cliques e diagnósticos no Supabase, ele pode virar ranking real de procura.</p>
+        <h2>Destinos para começar a explorar.</h2>
+        <p>Uma vitrine curta para inspirar. O diagnóstico decide com mais precisão.</p>
       </div>
       <div class="popular-destination-grid" aria-label="Destinos em alta para famílias de São Paulo">
         ${destinations.map((destination, index) => PopularDestinationCard(destination, index)).join("")}
@@ -812,8 +810,8 @@ function ConciergeMapExplorerSection() {
     <section class="section map-explorer-section map-discovery" id="mapa">
       <div class="section-title compact-title map-hero-title">
         <span class="badge subtle">Concierge da Familia Explore</span>
-        <h2>Descubra no mapa o melhor destino para viajar com sua familia</h2>
-        <p>Comece com poucos dados, veja destinos no mapa e refine depois com IA. O foco aqui e esforco real da familia: estrada, custo, seguranca, comida, lazer e idade das criancas.</p>
+        <h2>Escolha pelo mapa. Refine depois.</h2>
+        <p>Origem, filhos, tempo de deslocamento e orçamento. O resto entra quando fizer sentido.</p>
       </div>
       <div class="map-quick-panel" aria-label="Filtros rapidos do mapa">
         <label class="map-field wide">
@@ -862,8 +860,8 @@ function ConciergeMapExplorerSection() {
             ${MapFilterButton("fit", "multi", "Multi-destino")}
           </div>
           <div class="map-ai-note">
-            <strong>Depois a IA afina.</strong>
-            <span>Compara datas, clima, lotacao, eventos e hoteis sem prometer preco ou disponibilidade que ainda nao foram consultados.</span>
+            <strong>Sem chute.</strong>
+            <span>Preço e disponibilidade só quando houver fonte real.</span>
           </div>
         </div>
         <div class="interactive-map-card">
@@ -879,7 +877,7 @@ function ConciergeMapExplorerSection() {
             </div>
             <div class="map-real-caption">
               <strong>Mapa real de Sao Paulo</strong>
-              <span>Arraste, aproxime e toque nas cidades para comparar.</span>
+              <span>Arraste e toque nas cidades.</span>
             </div>
           </div>
           <div class="map-hotspot-list">
@@ -934,14 +932,12 @@ function MapHotspotDetail(hotspot) {
         <small>${escapeHtml(hotspot.familyScore.score)}/100</small>
       </div>
       <h3>${escapeHtml(hotspot.name)}</h3>
-      <p>${escapeHtml(hotspot.reason)}</p>
+      <p>${escapeHtml(shortSentence(hotspot.reason))}</p>
       <div class="map-detail-grid">
         <span><b>Distancia</b>${escapeHtml(hotspot.distanceLabel)}</span>
         <span><b>Tempo</b>${escapeHtml(hotspot.timeLabel)}</span>
         <span><b>Custo estimado</b>${escapeHtml(hotspot.costRange.label)}</span>
         <span><b>Melhor epoca</b>${escapeHtml(hotspot.bestSeason)}</span>
-        <span><b>Idade ideal</b>${escapeHtml(hotspot.idealAge)}</span>
-        <span><b>Base segura</b>${escapeHtml(hotspot.bestHotel.name)}</span>
       </div>
       <div class="map-cost-note">${escapeHtml(hotspot.costRange.detail)}</div>
       <div class="map-mini-columns">
@@ -962,10 +958,8 @@ function MapHotspotDetail(hotspot) {
       ` : ""}
       <div class="map-detail-actions">
         <button class="button primary compact-button" type="button" data-action="route-preview-start" data-hotspot-key="${escapeAttr(hotspot.key)}">Simular rota da familia</button>
-        <button class="button primary compact-button" type="button" data-action="map-start-diagnosis" data-hotspot-key="${escapeAttr(hotspot.key)}">Ver por que combina com minha familia</button>
-        <button class="button secondary compact-button" type="button" data-action="map-build-route" data-hotspot-key="${escapeAttr(hotspot.key)}">Montar roteiro familiar</button>
-        <button class="button ghost compact-button" type="button" data-action="map-compare">Comparar com outro destino</button>
-        <a class="map-route-link" href="${escapeAttr(googleMapsDirectionsUrl(hotspot.name))}" target="_blank" rel="noopener" data-track="map_explorer_route_clicked" data-source="map_explorer" data-destination="${escapeAttr(hotspot.name)}">Abrir rota no Google Maps</a>
+        <button class="button primary compact-button" type="button" data-action="map-start-diagnosis" data-hotspot-key="${escapeAttr(hotspot.key)}">Diagnosticar</button>
+        <button class="button secondary compact-button" type="button" data-action="map-build-route" data-hotspot-key="${escapeAttr(hotspot.key)}">Montar roteiro</button>
       </div>
     </aside>
   `;
@@ -1711,7 +1705,7 @@ function ConciergeDiagnosisResult(result) {
       <div class="result-card good">
         <span class="badge">Seu resultado</span>
         <h2>${escapeHtml(result.profileName)}</h2>
-        <p>${escapeHtml(result.profile)}</p>
+        <p>${escapeHtml(shortResultProfile(result.profile))}</p>
         <div class="viral-score-grid">
           ${MetricCard("Índice Sem Perrengue", `${result.semPerrengue.score}/100`, result.semPerrengue.label)}
           ${MetricCard("Fit Financeiro", result.financialFit.label, result.financialFit.detail)}
@@ -1731,8 +1725,8 @@ function ConciergeDiagnosisResult(result) {
           </div>
         </div>
         <div class="result-next-step">
-          <strong>Agora escolha uma cidade.</strong>
-          <span>Separei as 3 opções mais fortes para comparar hotel e disponibilidade sem abrir mil abas.</span>
+          <strong>Próximo passo: escolha a cidade.</strong>
+          <span>Trago só as 3 melhores. Hotel vem depois.</span>
           <a class="button primary compact-button" href="#recomendacoes">Ver minhas 3 cidades</a>
         </div>
         ${ExcellenceCriteriaPanel()}
@@ -1749,6 +1743,10 @@ function MetricCard(label, value, detail) {
       <p>${escapeHtml(detail)}</p>
     </div>
   `;
+}
+
+function shortResultProfile(text) {
+  return String(text || "").split(".").filter(Boolean).slice(0, 1).join(".").trim() || text || "";
 }
 
 function TravelTimingResultPanel() {
@@ -1773,23 +1771,22 @@ function TravelTimingResultPanel() {
 
 function ExcellenceCriteriaPanel() {
   return `
-    <div class="criteria-transparency" aria-label="Critérios de curadoria de excelência">
+    <details class="criteria-transparency" aria-label="Critérios de curadoria de excelência">
+      <summary>Como calculamos os selos de curadoria</summary>
       <div class="criteria-title">
-        <span class="badge subtle">Curadoria de excelência</span>
-        <h3>Como os selos são calculados</h3>
-        <p>O selo não é publicidade e não garante preço, disponibilidade ou experiência perfeita. Ele é uma leitura da plataforma para reduzir risco familiar antes da reserva.</p>
+        <p>Selo não é publicidade: é uma leitura de risco familiar com dados reais, curadoria e IA.</p>
       </div>
       <div class="criteria-grid">
-        ${CriteriaItem("Ouro", "Experiência Família Excelente", "Score alto, baixa fricção logística, boa estrutura infantil, dados públicos fortes e poucos alertas sazonais.")}
-        ${CriteriaItem("Prata", "Muito bom para Famílias", "Boa escolha para a maioria das famílias, com alguns pontos que devem ser confirmados antes de reservar.")}
-        ${CriteriaItem("Bronze", "Muito bom para famílias", "Pode funcionar bem, mas exige mais planejamento de horário, alimentação, deslocamento ou rotina da criança.")}
+        ${CriteriaItem("Ouro", "Experiência Família Excelente", "baixa fricção, boa estrutura infantil e poucos alertas.")}
+        ${CriteriaItem("Prata", "Muito bom para Famílias", "boa escolha, com pontos simples para confirmar.")}
+        ${CriteriaItem("Bronze", "Muito bom para famílias", "funciona, mas pede mais planejamento.")}
       </div>
       <div class="criteria-factors">
-        <span><b>Dados usados</b> Google Places, rotas, hotéis curados, fotos reais, avaliações públicas e base Supabase.</span>
-        <span><b>Pesos principais</b> idade das crianças, distância, tempo, alimentação, estrutura infantil, clima, eventos, custo e risco de perrengue.</span>
-        <span><b>Bloqueios</b> hotel sem requisito mínimo familiar não entra como recomendado, mesmo que pareça bom comercialmente.</span>
+        <span><b>Dados</b> Google Places, rotas, hotéis curados, fotos, avaliações e Supabase.</span>
+        <span><b>Pesos</b> idade, distância, alimentação, estrutura infantil, clima, eventos e custo.</span>
+        <span><b>Bloqueio</b> hotel sem mínimo familiar não vira recomendado.</span>
       </div>
-    </div>
+    </details>
   `;
 }
 
@@ -1890,8 +1887,8 @@ function DestinationRecommendationsSection() {
     <section class="section destination-recommendations" id="recomendacoes">
       <div class="section-title">
         <span class="badge subtle">Decisão de mãe: primeiro o destino</span>
-        <h2>Encontramos as melhores viagens para sua família.</h2>
-        <p>Mostro só as 3 opções que eu avaliaria primeiro, equilibrando prazer da viagem, orçamento, sazonalidade e logística. Se quiser investigar mais, você abre a lista completa.</p>
+        <h2>As 3 cidades que eu avaliaria primeiro.</h2>
+        <p>Direto ao ponto: prazer da viagem, custo, época e logística.</p>
       </div>
       <div class="recommendation-grid">
         ${visibleRecommendations.map((recommendation, index) => DestinationRecommendationCard(recommendation, index)).join("")}
@@ -1927,32 +1924,11 @@ function DestinationRecommendationCard(recommendation, index) {
         <p>${escapeHtml(recommendation.reason)}</p>
         ${DestinationFactModules(recommendation, liveSummary, experience, googleCoverage)}
         ${DestinationRouteSketch(recommendation, liveSummary, googleCoverage)}
-        ${FamilyItinerarySuggestion(recommendation)}
         <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
           ${active ? "Hotéis e disponibilidade abertos abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
         </button>
-        ${FamilyDecisionSummary(familyScore)}
-        ${liveSummary ? LiveDestinationSignals(liveSummary) : ""}
-        ${googleCoverage ? GoogleDestinationSignals(googleCoverage) : ""}
-        ${FamilyInfrastructurePanel(recommendation, liveSummary, experience)}
-        <div class="decision-lens">
-          <div>
-            <b>Orçamento</b>
-            <span>${escapeHtml(recommendation.budgetNote)}</span>
-          </div>
-          <div>
-            <b>Sazonalidade</b>
-            <span>${escapeHtml(recommendation.seasonNote)}</span>
-          </div>
-          <div>
-            <b>Meu cuidado</b>
-            <span>${escapeHtml(recommendation.momCheck)}</span>
-          </div>
-        </div>
+        ${FamilyItinerarySuggestion(recommendation)}
         ${experience ? DestinationExperiencePreview(experience) : ""}
-        <div class="tags compact-tags">
-          ${recommendation.tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}
-        </div>
       </div>
     </article>
   `;
@@ -1977,9 +1953,6 @@ function DestinationFactModules(recommendation, liveSummary, experience, googleC
       ${DecisionFact("Fluxo", "Lotacao", facts.crowd.primary, facts.crowd.detail)}
       ${DecisionFact("🛣️", "Logística", facts.logistics.primary, facts.logistics.detail)}
       ${DecisionFact("💰", "Custo total", facts.cost.primary, facts.cost.detail)}
-      ${DecisionFact("🍽️", "Alimentação", facts.food.primary, facts.food.detail)}
-      ${DecisionFact("🩺", "Segurança e saúde", facts.safety.primary, facts.safety.detail)}
-      ${DecisionFact("🎈", "Entretenimento", facts.entertainment.primary, facts.entertainment.detail)}
     </div>
   `;
 }
@@ -2343,8 +2316,8 @@ function DestinationExperiencePreview(experience) {
   return `
     <div class="destination-experience">
       <div class="experience-pitch">
-        <b>Por que considerar</b>
-        <span>${escapeHtml(experience.whyVisit)}</span>
+        <b>Vale pelo quê</b>
+        <span>${escapeHtml(shortSentence(experience.whyVisit))}</span>
       </div>
       <div class="experience-columns">
         ${ExperienceColumn("Gastronomia família", experience.restaurants, "restaurant")}
@@ -2358,7 +2331,7 @@ function ExperienceColumn(title, items, type) {
   return `
     <div class="experience-column">
       <strong>${escapeHtml(title)}</strong>
-      ${items.slice(0, 3).map(item => `
+      ${items.slice(0, 2).map(item => `
         <a href="${escapeAttr(item.sourceUrl || item.googleMapsUrl || "#")}" target="_blank" rel="noopener" data-track="${type === "restaurant" ? "destination_restaurant_click" : "destination_attraction_click"}" data-source="${escapeAttr(item.source || "curation")}" data-destination="${escapeAttr(item.destination || "")}" data-hotel-id="" data-hotel-name="${escapeAttr(item.name)}">
           <span>${escapeHtml(item.name)}</span>
           <small>${escapeHtml(item.ratingLabel || item.familyNote || "curadoria local")}</small>
@@ -2366,6 +2339,10 @@ function ExperienceColumn(title, items, type) {
       `).join("")}
     </div>
   `;
+}
+
+function shortSentence(text) {
+  return String(text || "").split(".").filter(Boolean).slice(0, 1).join(".").trim() || text || "";
 }
 
 function RankedHotelsSection() {
@@ -2376,8 +2353,8 @@ function RankedHotelsSection() {
     <section class="section ranking-section" id="ranking">
       <div class="section-title">
         <span class="badge subtle">Agora sim: hotéis</span>
-        <h2>Hotéis aprovados para famílias em ${escapeHtml(selectedRecommendation?.name || "destino escolhido")}</h2>
-        <p>Agora que a cidade faz sentido, compare estrutura infantil, faixa de preço e links de disponibilidade. A lista prioriza opções que eu teria coragem de colocar na mesa de uma família.</p>
+        <h2>Hotéis aprovados em ${escapeHtml(selectedRecommendation?.name || "destino escolhido")}</h2>
+        <p>Compare estrutura infantil, faixa de preço e disponibilidade sem perder o foco.</p>
       </div>
       ${ranked.length ? ConciergeMap(ranked) : ""}
       <button class="button secondary compact-button back-destination-button" data-action="back-to-destinations">Trocar destino</button>
@@ -2400,7 +2377,7 @@ function LiveHotelCards(recommendation) {
         <span class="badge subtle">LiteAPI</span>
         <div>
           <h3>Disponibilidade real encontrada para ${escapeHtml(recommendation.shortName)}</h3>
-          <p>Inventário vindo da camada viva do Supabase. Estes links são rastreados para sabermos quais reservas estamos ajudando a gerar.</p>
+          <p>Links rastreados. Preço final só na consulta real.</p>
         </div>
       </div>
       <div class="live-hotel-grid">
@@ -3505,7 +3482,7 @@ function HotelRecommendationSection() {
         <div class="hotel-recommendation-copy">
           <span class="badge subtle">Ajude a curadoria</span>
           <h2>Conhece um hotel bom para famílias?</h2>
-          <p>Indique uma hospedagem que merece entrar na análise. A recomendação não entra automaticamente no ranking: primeiro validamos dados reais, estrutura familiar, avaliações, fotos, localização e requisitos mínimos.</p>
+          <p>Indique. A gente valida antes de colocar no ranking.</p>
           ${state.hotelRecommendationSent ? `<p class="form-success">Indicação recebida. Vamos avaliar antes de incluir na base curada.</p>` : ""}
         </div>
         <form id="hotelRecommendationForm" class="hotel-recommendation-form">
@@ -3538,7 +3515,7 @@ function ConciergeLeadCaptureForm() {
         <div>
           <span class="badge subtle">Próximo passo</span>
           <h2>Quer receber o dossiê da viagem com próximos passos?</h2>
-          <p>Se fizer sentido, confirme seus dados e eu preparo um resumo com cidades, hotéis, checklist e pontos de atenção para continuar depois. Sem grupo, sem spam.</p>
+          <p>Resumo com cidades, hotéis e checklist. Sem grupo, sem spam.</p>
         </div>
         <form id="leadForm" class="lead-form">
           <label>Nome<input name="name" required placeholder="Seu nome" value="${escapeAttr(state.intake.name || "")}"></label>

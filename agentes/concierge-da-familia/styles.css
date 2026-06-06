@@ -934,6 +934,9 @@ p {
   color: var(--muted);
   font-size: 11px;
   font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .map-hotspot-detail h3,
@@ -3962,6 +3965,178 @@ summary {
   padding: 28px 18px 38px;
   color: var(--muted);
   text-align: center;
+}
+
+/* Editorial clean-up: keep decisions scannable and reduce repeated explanation. */
+.section {
+  padding-top: 38px;
+  padding-bottom: 38px;
+}
+
+.section-title {
+  max-width: 720px;
+  margin-bottom: 18px;
+}
+
+.section-title p {
+  max-width: 620px;
+  line-height: 1.42;
+}
+
+.diagnostic-home {
+  min-height: min(720px, calc(100vh - 62px));
+}
+
+.diagnostic-home .hero-copy > p {
+  max-width: 520px;
+  font-size: 15px;
+}
+
+.family-cues {
+  gap: 7px;
+}
+
+.family-cues span {
+  padding: 6px 9px;
+  font-size: 11px;
+}
+
+.map-discovery {
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.map-discovery .map-explorer-layout {
+  grid-template-columns: 210px minmax(500px, 1fr) 300px;
+  gap: 10px;
+}
+
+.map-filter-panel,
+.interactive-map-card,
+.map-hotspot-detail {
+  padding: 10px;
+}
+
+.map-ai-note {
+  padding: 8px;
+}
+
+.map-discovery .interactive-map-canvas {
+  min-height: 405px;
+}
+
+.map-hotspot-detail h3 {
+  font-size: 21px;
+}
+
+.map-detail-grid,
+.map-mini-columns {
+  gap: 6px;
+}
+
+.map-detail-grid span,
+.map-mini-columns > div,
+.map-itinerary-hint,
+.empty-map-state {
+  padding: 7px;
+}
+
+.travel-route-preview {
+  padding: 10px;
+}
+
+.compact-result .result-card {
+  padding: 12px;
+}
+
+.viral-score-grid {
+  margin: 8px 0;
+}
+
+.metric-card {
+  min-height: 74px;
+  padding: 8px;
+}
+
+.metric-card p {
+  display: none;
+}
+
+.criteria-transparency {
+  padding: 9px 11px;
+}
+
+.criteria-transparency summary {
+  cursor: pointer;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.criteria-title {
+  margin-top: 8px;
+}
+
+.destination-recommendations .section-title h2 {
+  font-size: clamp(25px, 3.3vw, 36px);
+}
+
+.recommendation-card {
+  grid-template-columns: auto minmax(190px, .34fr) minmax(0, 1fr);
+  padding: 9px;
+}
+
+.destination-photo-gallery {
+  min-height: 168px;
+}
+
+.gallery-grid {
+  min-height: 150px;
+}
+
+.destination-fact-modules {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.decision-fact {
+  min-height: 76px;
+  padding: 6px;
+}
+
+.decision-fact > span {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+}
+
+.route-sketch {
+  padding: 7px;
+}
+
+.family-itinerary-card {
+  padding: 9px;
+}
+
+.family-itinerary-card p,
+.family-itinerary-card > small,
+.itinerary-stops {
+  display: none;
+}
+
+.destination-experience {
+  padding: 9px;
+}
+
+.experience-columns {
+  gap: 7px;
+}
+
+.share-section,
+.referral-section,
+.hotel-recommendation-section,
+.lead-section {
+  padding-top: 24px;
+  padding-bottom: 24px;
 }
 
 @media (min-width: 760px) and (max-width: 1079px) {
