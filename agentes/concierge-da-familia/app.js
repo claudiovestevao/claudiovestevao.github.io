@@ -640,7 +640,7 @@ function ShareableResultSection(result) {
           <div class="share-preview">
             <span>Meu perfil de viagem em família é...</span>
             <strong>${escapeHtml(result.profileName)}</strong>
-            <p>Índice Sem Perrengue: ${result.semPerrengue.score}/100 · Fit financeiro: ${escapeHtml(result.financialFit.label)}</p>
+            <p>${escapeHtml(shareableProfilePunchline(result.profileName))} · Índice Sem Perrengue: ${result.semPerrengue.score}/100</p>
           </div>
           <div class="hero-actions">
             <button class="button primary" type="button" data-action="share-result">Compartilhar resultado</button>
@@ -652,10 +652,10 @@ function ShareableResultSection(result) {
           <span class="badge subtle">Exemplo beta</span>
           <h3>Perfis mais comuns esta semana</h3>
           <div class="profile-bars">
-            ${ProfileBar("Família Resort Raiz", 32)}
-            ${ProfileBar("Família Hotel Fazenda", 24)}
+            ${ProfileBar("Família Resort Raiz, Pulseirinha e Paz", 32)}
+            ${ProfileBar("Família Hotel Fazenda, Mesa Farta e Soneca", 24)}
             ${ProfileBar("Família Praia com Plano B", 18)}
-            ${ProfileBar("Família Econômica Inteligente", 14)}
+            ${ProfileBar("Família Boa Memória, Sem Loucura", 14)}
           </div>
         </div>
       </div>
@@ -670,6 +670,19 @@ function ProfileBar(label, value) {
       <i style="width:${value}%"></i>
     </div>
   `;
+}
+
+function shareableProfilePunchline(profileName) {
+  const punchlines = {
+    "Família Resort Raiz, Pulseirinha e Paz": "Seu lema: check-in feito, criança feliz, adulto respirando",
+    "Família Praia com Plano B": "Sol, água e uma saída honrosa se chover",
+    "Família Hotel Fazenda, Mesa Farta e Soneca": "Natureza, comida boa e a esperança de uma soneca sincronizada",
+    "Família Mini Aventureira, Mochila Leve": "Passeio sim, maratona de perrengue não",
+    "Família Parque & Pausa Programada": "Encantamento com intervalo oficial para todo mundo voltar a ser gente",
+    "Família Boa Memória, Sem Loucura": "Memória boa, roteiro esperto e zero vontade de complicar",
+    "Família Zero Perrengue, Checklist no Bolso": "Previsibilidade no bolso e improviso só se for divertido"
+  };
+  return punchlines[profileName] || "Viagem boa começa com menos perrengue";
 }
 
 function FriendReferralSection() {
@@ -2277,7 +2290,6 @@ function activateFamilyAlert(button) {
     `Email: ${state.intake.email || ""}`,
     `Perfil: ${state.result.profileName}`,
     `Índice Sem Perrengue: ${state.result.semPerrengue.score}/100`,
-    `Fit financeiro: ${state.result.financialFit.label}`,
     `Custo estimado: ${state.result.costEstimate.headline}`,
     `Destinos preferidos: ${destinations}`,
     `Quando querem ir: ${state.intake.travelPeriod || "data flexível"}`,
@@ -2360,9 +2372,8 @@ function shareResultText(result) {
   return [
     "Fiz o diagnóstico Viagens de família sem perrengue.",
     `Meu perfil de viagem em família: ${result.profileName}`,
+    shareableProfilePunchline(result.profileName),
     `Índice Sem Perrengue: ${result.semPerrengue.score}/100 (${result.semPerrengue.label})`,
-    `Fit financeiro: ${result.financialFit.label}`,
-    `Custo estimado: ${result.costEstimate.headline}`,
     "",
     "Minhas 3 cidades recomendadas:",
     destinations,
@@ -2774,26 +2785,26 @@ function buildDiagnosisResult(answers) {
 }
 
 function inferProfileName(answers, intake) {
-  if (answers.budget_total === "Até R$ 1.500" || answers.budget_season_strategy === "Baixa temporada, prefiro custo-benefício") return "Família Econômica Inteligente";
-  if (intake.childAge === "0 a 12 meses" || intake.lastTrip === "Primeira viagem com criança" || answers.travel_goal === "Primeira viagem sem susto") return "Família Zero Perrengue";
+  if (answers.budget_total === "Até R$ 1.500" || answers.budget_season_strategy === "Baixa temporada, prefiro custo-benefício") return "Família Boa Memória, Sem Loucura";
+  if (intake.childAge === "0 a 12 meses" || intake.lastTrip === "Primeira viagem com criança" || answers.travel_goal === "Primeira viagem sem susto") return "Família Zero Perrengue, Checklist no Bolso";
   if (answers.travel_goal === "Praia e piscina" || answers.stay_style === "Praia com resort") return "Família Praia com Plano B";
-  if (answers.stay_style === "Hotel fazenda" || answers.travel_goal === "Natureza e ar livre") return "Família Hotel Fazenda";
-  if (answers.travel_goal === "Parque ou muita atividade") return "Família Parque & Diversão";
-  if (answers.stay_style === "Resort completo" || answers.decision_profile === "Melhor estrutura, mesmo mais caro") return "Família Resort Raiz";
-  return "Família Mini Aventureira";
+  if (answers.stay_style === "Hotel fazenda" || answers.travel_goal === "Natureza e ar livre") return "Família Hotel Fazenda, Mesa Farta e Soneca";
+  if (answers.travel_goal === "Parque ou muita atividade") return "Família Parque & Pausa Programada";
+  if (answers.stay_style === "Resort completo" || answers.decision_profile === "Melhor estrutura, mesmo mais caro") return "Família Resort Raiz, Pulseirinha e Paz";
+  return "Família Mini Aventureira, Mochila Leve";
 }
 
 function inferFamilyPersona(answers, intake, profileName = inferProfileName(answers, intake)) {
   const descriptions = {
-    "Família Resort Raiz": "Vocês querem conforto, estrutura, recreação e pouca improvisação",
+    "Família Resort Raiz, Pulseirinha e Paz": "Vocês querem conforto, estrutura, recreação e pouca improvisação; a pulseirinha do resort entra quase como item de sobrevivência adulta",
     "Família Praia com Plano B": "Vocês amam praia, mas precisam de sombra, alimentação fácil e alternativa para chuva",
-    "Família Hotel Fazenda": "Vocês combinam com natureza, comida boa, espaço aberto e uma rotina mais tranquila",
-    "Família Mini Aventureira": "Vocês gostam de novidade, mas precisam equilibrar passeio com descanso",
-    "Família Parque & Diversão": "Vocês querem encantamento e atividade, com atenção para fila, estímulo e pausa",
-    "Família Econômica Inteligente": "Vocês querem criar memória sem transformar a viagem em sufoco financeiro",
-    "Família Zero Perrengue": "Vocês priorizam previsibilidade, conforto, segurança e facilidade"
+    "Família Hotel Fazenda, Mesa Farta e Soneca": "Vocês combinam com natureza, comida boa, espaço aberto e aquela tentativa nobre de todo mundo descansar ao mesmo tempo",
+    "Família Mini Aventureira, Mochila Leve": "Vocês gostam de novidade, mas precisam equilibrar passeio com descanso; aventura sim, roteiro impossível não",
+    "Família Parque & Pausa Programada": "Vocês querem encantamento e atividade, com atenção para fila, estímulo e uma pausa oficial para recuperar a humanidade",
+    "Família Boa Memória, Sem Loucura": "Vocês querem criar memória boa com escolhas espertas, sem transformar a viagem em operação de guerra",
+    "Família Zero Perrengue, Checklist no Bolso": "Vocês priorizam previsibilidade, conforto, segurança e facilidade; o checklist vem antes da mala emocional"
   };
-  return `Perfil: ${descriptions[profileName] || descriptions["Família Mini Aventureira"]}`;
+  return `Perfil: ${descriptions[profileName] || descriptions["Família Mini Aventureira, Mochila Leve"]}`;
 }
 
 function calculateSemPerrengueIndex(answers, intake, financialFit, travelEffort) {
