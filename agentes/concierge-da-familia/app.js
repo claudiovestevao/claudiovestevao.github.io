@@ -1,14 +1,20 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=viral-mvp-v4-20260605";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=viral-mvp-v4-20260605";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=viral-mvp-v4-20260605";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=viral-mvp-v4-20260605";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=viral-mvp-v4-20260605";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=viral-mvp-v4-20260605";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=destination-experience-v5-20260606";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=destination-experience-v5-20260606";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=destination-experience-v5-20260606";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=destination-experience-v5-20260606";
+import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=destination-experience-v5-20260606";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=destination-experience-v5-20260606";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=destination-experience-v5-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
   intakeComplete: false,
   intake: {},
+  intakeDraft: {
+    childrenCount: "1",
+    travelTimingMode: "unknown"
+  },
+  leadId: null,
   quizIndex: 0,
   answers: {},
   result: null,
@@ -28,7 +34,10 @@ const state = {
 };
 
 const destinationImagesByKey = new Map(conciergeDestinationImages.map(image => [image.key, image]));
+const destinationExperienceByKey = new Map(conciergeDestinationExperience.map(item => [item.key, item]));
 const curatedHotels = [...conciergeHotels, ...conciergeHotelAdditions].map(normalizeHotel);
+const sessionId = getOrCreateSessionId();
+const supabaseConfig = resolveSupabaseConfig();
 const app = document.getElementById("app");
 let searchRenderTimer;
 
@@ -57,6 +66,7 @@ function render() {
     ${state.result && state.selectedDestinationKey ? RankedHotelsSection() : ""}
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
+  syncDynamicIntakeFields();
 }
 
 function AgentCardConciergeFamilia() {
@@ -89,6 +99,8 @@ function ConciergeHeroSection() {
 }
 
 function ConciergeQuickIntakeForm() {
+  const childrenCount = Number.parseInt(state.intakeDraft.childrenCount, 10) || 0;
+  const travelMode = state.intakeDraft.travelTimingMode || "unknown";
   return `
     <form id="intakeForm" class="quiz-card intake-card">
       <div class="quiz-top">
@@ -101,42 +113,33 @@ function ConciergeQuickIntakeForm() {
         <label>WhatsApp<input name="whatsapp" required inputmode="tel" autocomplete="tel" placeholder="11999999999"></label>
         <label>Email<input name="email" required type="email" autocomplete="email" placeholder="voce@email.com"></label>
         <label>Adultos
-          <select name="adults">
-            <option>1 adulto</option>
-            <option selected>2 adultos</option>
-            <option>3 adultos</option>
-            <option>4+ adultos</option>
+          <select name="adultsCount">
+            <option value="1">1 adulto</option>
+            <option value="2" selected>2 adultos</option>
+            <option value="3">3 adultos</option>
+            <option value="4">4 adultos</option>
+            <option value="5">5+ adultos</option>
           </select>
         </label>
         <label>Crianças
-          <select name="children">
-            <option>1 criança</option>
-            <option selected>2 crianças</option>
-            <option>3 crianças</option>
-            <option>4+ crianças</option>
+          <select name="childrenCount" data-action="children-count">
+            ${[0, 1, 2, 3, 4].map(count => `<option value="${count}" ${childrenCount === count ? "selected" : ""}>${count === 0 ? "Sem criança" : `${count} ${count === 1 ? "criança" : "crianças"}`}</option>`).join("")}
           </select>
         </label>
-        <label>Idade principal
-          <select name="childAge">
-            <option>0 a 12 meses</option>
-            <option selected>1 a 2 anos</option>
-            <option>3 a 5 anos</option>
-            <option>6+ anos</option>
+        <label>Quartos
+          <select name="roomsCount">
+            <option value="1" selected>1 quarto</option>
+            <option value="2">2 quartos</option>
+            <option value="3">3 quartos</option>
+            <option value="4">4+ quartos</option>
           </select>
         </label>
+        ${ChildAgeFields(childrenCount)}
         <label>Pet
           <select name="pet">
             <option selected>Não vai pet</option>
             <option>Vai pet pequeno</option>
             <option>Vai pet médio/grande</option>
-          </select>
-        </label>
-        <label>Quando querem ir?
-          <select name="travelPeriod">
-            <option>Férias de julho</option>
-            <option>Feriado prolongado</option>
-            <option>Verão/Janeiro</option>
-            <option selected>Ainda não sei</option>
           </select>
         </label>
         <label>Última viagem em família
@@ -147,9 +150,54 @@ function ConciergeQuickIntakeForm() {
             <option selected>Mais de 18 meses</option>
           </select>
         </label>
+        <div class="travel-timing-card">
+          <span>Quando querem ir?</span>
+          <div class="intake-segment" role="radiogroup" aria-label="Quando querem ir">
+            ${TravelModeOption("date", "Escolher data", travelMode)}
+            ${TravelModeOption("month", "Escolher mês", travelMode)}
+            ${TravelModeOption("flexible", "Data flexível", travelMode)}
+            ${TravelModeOption("unknown", "Ainda não sei", travelMode)}
+          </div>
+          <div class="travel-mode-fields">
+            <label data-travel-mode-field="date">Data provável<input name="travelDate" type="date"></label>
+            <label data-travel-mode-field="month">Mês provável<input name="travelMonth" type="month"></label>
+            <label data-travel-mode-field="flexible">Janela flexível
+              <select name="flexibleWindow">
+                <option>Próximos 30 dias</option>
+                <option selected>Próximos 3 meses</option>
+                <option>Próximos 6 meses</option>
+                <option>Férias escolares</option>
+                <option>Feriado prolongado</option>
+              </select>
+            </label>
+          </div>
+        </div>
       </div>
       <button class="button primary" type="submit">Começar diagnóstico</button>
     </form>
+  `;
+}
+
+function ChildAgeFields(childrenCount) {
+  return [1, 2, 3, 4].map(index => `
+    <label class="child-age-field ${index > childrenCount ? "hidden-field" : ""}" data-child-age-index="${index}">
+      Idade criança ${index}
+      <select name="childAge${index}" ${index > childrenCount ? "disabled" : ""}>
+        <option value="0 a 12 meses">0 a 12 meses</option>
+        <option value="1 a 2 anos" ${index === 1 ? "selected" : ""}>1 a 2 anos</option>
+        <option value="3 a 5 anos" ${index === 2 ? "selected" : ""}>3 a 5 anos</option>
+        <option value="6+ anos">6+ anos</option>
+      </select>
+    </label>
+  `).join("");
+}
+
+function TravelModeOption(value, label, selected) {
+  return `
+    <label class="segment-option ${selected === value ? "active" : ""}">
+      <input type="radio" name="travelTimingMode" value="${value}" data-action="travel-mode" ${selected === value ? "checked" : ""}>
+      <span>${escapeHtml(label)}</span>
+    </label>
   `;
 }
 
@@ -356,6 +404,7 @@ function DestinationRecommendationsSection() {
 
 function DestinationRecommendationCard(recommendation, index) {
   const active = state.selectedDestinationKey === recommendation.key;
+  const experience = experienceForRecommendation(recommendation);
   return `
     <article class="recommendation-card ${active ? "active" : ""}">
       <div class="recommendation-rank">
@@ -381,6 +430,7 @@ function DestinationRecommendationCard(recommendation, index) {
             <span>${escapeHtml(recommendation.momCheck)}</span>
           </div>
         </div>
+        ${experience ? DestinationExperiencePreview(experience) : ""}
         <div class="tags compact-tags">
           ${recommendation.tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}
         </div>
@@ -389,6 +439,35 @@ function DestinationRecommendationCard(recommendation, index) {
         </button>
       </div>
     </article>
+  `;
+}
+
+function DestinationExperiencePreview(experience) {
+  return `
+    <div class="destination-experience">
+      <div class="experience-pitch">
+        <b>Por que considerar</b>
+        <span>${escapeHtml(experience.whyVisit)}</span>
+      </div>
+      <div class="experience-columns">
+        ${ExperienceColumn("Gastronomia família", experience.restaurants, "restaurant")}
+        ${ExperienceColumn("Atrações locais", experience.attractions, "attraction")}
+      </div>
+    </div>
+  `;
+}
+
+function ExperienceColumn(title, items, type) {
+  return `
+    <div class="experience-column">
+      <strong>${escapeHtml(title)}</strong>
+      ${items.slice(0, 3).map(item => `
+        <a href="${escapeAttr(item.sourceUrl || item.googleMapsUrl || "#")}" target="_blank" rel="noopener" data-track="${type === "restaurant" ? "destination_restaurant_click" : "destination_attraction_click"}" data-source="${escapeAttr(item.source || "curation")}" data-destination="${escapeAttr(item.destination || "")}" data-hotel-id="" data-hotel-name="${escapeAttr(item.name)}">
+          <span>${escapeHtml(item.name)}</span>
+          <small>${escapeHtml(item.ratingLabel || item.familyNote || "curadoria local")}</small>
+        </a>
+      `).join("")}
+    </div>
   `;
 }
 
@@ -771,6 +850,12 @@ function buildDestinationRecommendations() {
   }).sort((a, b) => b.score - a.score || b.bestScore - a.bestScore || a.name.localeCompare(b.name));
 }
 
+function experienceForRecommendation(recommendation) {
+  return destinationExperienceByKey.get(recommendation.key)
+    || destinationExperienceByKey.get(recommendation.bestHotel?.destinationSlug)
+    || destinationExperienceByKey.get(recommendation.imageKey);
+}
+
 function destinationStrategicBonus(group, bestHotel) {
   const answers = state.answers || {};
   const budget = budgetMaxValue(answers.budget_total);
@@ -1042,7 +1127,8 @@ function TravelImage(src, alt, note = "Foto do destino", confidence = "destinati
   }
   return `
     <figure class="travel-image ${confidence === "destination" ? "verified-image" : ""}">
-      <img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" loading="lazy">
+      <div class="warning-mark image-error-mark" aria-hidden="true">!</div>
+      <img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}" loading="lazy" onerror="this.hidden=true;this.closest('figure').classList.add('missing-image','image-load-failed');">
       <figcaption>${escapeHtml(note)}</figcaption>
     </figure>
   `;
@@ -1166,13 +1252,15 @@ function BulletList(items) {
 function handleClick(event) {
   const trackedLink = event.target.closest("a[data-track]");
   if (trackedLink) {
-    trackEvent(trackedLink.dataset.track, {
+    const clickPayload = {
       source: trackedLink.dataset.source || "",
       hotelId: trackedLink.dataset.hotelId || "",
       hotelName: trackedLink.dataset.hotelName || "",
       destination: trackedLink.dataset.destination || "",
       href: trackedLink.href
-    });
+    };
+    trackEvent(trackedLink.dataset.track, clickPayload);
+    if (trackedLink.dataset.track.startsWith("hotel_")) persistHotelClick(clickPayload);
     return;
   }
   const target = event.target.closest("[data-action]");
@@ -1362,6 +1450,7 @@ function analyticsResultPayload() {
 function trackEvent(eventName, payload = {}) {
   const event = {
     event: eventName,
+    sessionId,
     at: new Date().toISOString(),
     payload
   };
@@ -1373,11 +1462,121 @@ function trackEvent(eventName, payload = {}) {
   } catch (error) {
     window.__conciergeFamilyAnalytics = [...(window.__conciergeFamilyAnalytics || []), event].slice(-120);
   }
+  persistSupabase("concierge_events", {
+    session_id: sessionId,
+    event_name: eventName,
+    payload,
+    page_url: window.location.href,
+    user_agent: navigator.userAgent
+  });
+}
+
+async function persistLeadIntake(stage) {
+  const response = await persistSupabase("concierge_leads", {
+    session_id: sessionId,
+    stage,
+    name: state.intake.name || null,
+    whatsapp: state.intake.whatsapp || null,
+    email: state.intake.email || null,
+    adults_count: state.intake.adultsCount || null,
+    children_count: state.intake.childrenCount || 0,
+    rooms_count: state.intake.roomsCount || null,
+    child_ages: state.intake.childAges || [],
+    pet: state.intake.pet || null,
+    travel_timing_mode: state.intake.travelTimingMode || null,
+    travel_date: state.intake.travelDate || null,
+    travel_month: state.intake.travelMonth || null,
+    flexible_window: state.intake.flexibleWindow || null,
+    travel_period_label: state.intake.travelPeriod || null,
+    last_trip: state.intake.lastTrip || null,
+    answers: state.answers || {},
+    result: state.result || {},
+    raw_intake: state.intake || {},
+    page_url: window.location.href
+  });
+  if (response?.id) state.leadId = response.id;
+}
+
+function persistHotelClick(payload) {
+  persistSupabase("concierge_hotel_clicks", {
+    session_id: sessionId,
+    lead_id: state.leadId,
+    hotel_id: payload.hotelId || null,
+    hotel_name: payload.hotelName || null,
+    destination: payload.destination || null,
+    click_source: payload.source || null,
+    href: payload.href || null,
+    profile_name: state.result?.profileName || null,
+    sem_perrengue_score: state.result?.semPerrengue?.score || null,
+    budget_total: state.answers.budget_total || null,
+    trip_duration: state.answers.trip_duration || null,
+    travel_period_label: state.intake.travelPeriod || null,
+    page_url: window.location.href,
+    user_agent: navigator.userAgent
+  }, { keepalive: true });
+}
+
+async function persistSupabase(table, payload, options = {}) {
+  if (!supabaseConfig.url || !supabaseConfig.anonKey) return null;
+  try {
+    const response = await fetch(`${supabaseConfig.url.replace(/\/$/, "")}/rest/v1/${table}`, {
+      method: "POST",
+      keepalive: Boolean(options.keepalive),
+      headers: {
+        apikey: supabaseConfig.anonKey,
+        authorization: `Bearer ${supabaseConfig.anonKey}`,
+        "content-type": "application/json",
+        prefer: "return=representation"
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error(`Supabase insert failed: ${response.status}`);
+    const rows = await response.json();
+    return Array.isArray(rows) ? rows[0] : null;
+  } catch (error) {
+    const failed = {
+      table,
+      payload,
+      error: error.message,
+      at: new Date().toISOString()
+    };
+    window.__conciergeSupabaseQueue = [...(window.__conciergeSupabaseQueue || []), failed].slice(-80);
+    return null;
+  }
+}
+
+function resolveSupabaseConfig() {
+  const runtime = window.CONCIERGE_SUPABASE || {};
+  return {
+    url: runtime.url || window.CONCIERGE_SUPABASE_URL || document.querySelector('meta[name="concierge-supabase-url"]')?.content || "",
+    anonKey: runtime.anonKey || window.CONCIERGE_SUPABASE_ANON_KEY || document.querySelector('meta[name="concierge-supabase-anon-key"]')?.content || ""
+  };
+}
+
+function getOrCreateSessionId() {
+  const key = "conciergeFamilySessionId";
+  try {
+    const current = window.localStorage.getItem(key);
+    if (current) return current;
+    const next = crypto.randomUUID();
+    window.localStorage.setItem(key, next);
+    return next;
+  } catch (error) {
+    return crypto.randomUUID();
+  }
 }
 
 function handleInput(event) {
   const target = event.target.closest("[data-action]");
   if (!target) return;
+  if (target.dataset.action === "children-count") {
+    state.intakeDraft.childrenCount = target.value;
+    syncChildAgeFields(Number.parseInt(target.value, 10) || 0);
+  }
+  if (target.dataset.action === "travel-mode") {
+    state.intakeDraft.travelTimingMode = target.value;
+    syncTravelModeFields(target.value);
+  }
   if (target.dataset.action === "hotel-search") {
     state.hotelFilters.search = target.value;
     clearTimeout(searchRenderTimer);
@@ -1389,19 +1588,89 @@ function handleInput(event) {
   }
 }
 
+function syncDynamicIntakeFields() {
+  const form = document.getElementById("intakeForm");
+  if (!form) return;
+  const childrenCount = Number.parseInt(form.elements.childrenCount?.value || state.intakeDraft.childrenCount, 10) || 0;
+  const travelMode = form.elements.travelTimingMode?.value || state.intakeDraft.travelTimingMode || "unknown";
+  syncChildAgeFields(childrenCount);
+  syncTravelModeFields(travelMode);
+}
+
+function syncChildAgeFields(childrenCount) {
+  document.querySelectorAll("[data-child-age-index]").forEach(field => {
+    const index = Number.parseInt(field.dataset.childAgeIndex, 10);
+    const enabled = index <= childrenCount;
+    field.classList.toggle("hidden-field", !enabled);
+    const select = field.querySelector("select");
+    if (select) select.disabled = !enabled;
+  });
+}
+
+function syncTravelModeFields(mode) {
+  document.querySelectorAll(".segment-option").forEach(option => {
+    const input = option.querySelector("input");
+    option.classList.toggle("active", input?.value === mode && input.checked);
+  });
+  document.querySelectorAll("[data-travel-mode-field]").forEach(field => {
+    const enabled = field.dataset.travelModeField === mode;
+    field.classList.toggle("hidden-field", !enabled);
+    field.querySelectorAll("input, select").forEach(input => {
+      input.disabled = !enabled;
+    });
+  });
+}
+
+function travelPeriodLabel({ mode, date, month, flexibleWindow }) {
+  if (mode === "date" && date) return `Data provável: ${formatDateLabel(date)}`;
+  if (mode === "month" && month) return `Mês provável: ${formatMonthLabel(month)}`;
+  if (mode === "flexible") return `Data flexível: ${flexibleWindow || "janela a definir"}`;
+  return "Ainda não sei";
+}
+
+function formatDateLabel(value) {
+  const [year, month, day] = String(value).split("-");
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
+}
+
+function formatMonthLabel(value) {
+  const [year, month] = String(value).split("-");
+  if (!year || !month) return value;
+  return `${month}/${year}`;
+}
+
 document.addEventListener("submit", event => {
   if (event.target.id === "intakeForm") {
     event.preventDefault();
     const form = new FormData(event.target);
+    const childrenCount = Number.parseInt(form.get("childrenCount"), 10) || 0;
+    const childAges = [1, 2, 3, 4]
+      .map(index => form.get(`childAge${index}`))
+      .filter((_, index) => index < childrenCount);
+    const travelTimingMode = form.get("travelTimingMode") || "unknown";
     state.intake = {
       name: form.get("name") || "",
       whatsapp: form.get("whatsapp") || "",
       email: form.get("email") || "",
-      adults: form.get("adults") || "",
-      children: form.get("children") || "",
-      childAge: form.get("childAge") || "",
+      adultsCount: Number.parseInt(form.get("adultsCount"), 10) || 2,
+      childrenCount,
+      roomsCount: Number.parseInt(form.get("roomsCount"), 10) || 1,
+      childAges,
+      adults: `${Number.parseInt(form.get("adultsCount"), 10) || 2} adulto(s)`,
+      children: `${childrenCount} criança(s)`,
+      childAge: childAges[0] || "",
       pet: form.get("pet") || "",
-      travelPeriod: form.get("travelPeriod") || "",
+      travelTimingMode,
+      travelDate: form.get("travelDate") || "",
+      travelMonth: form.get("travelMonth") || "",
+      flexibleWindow: form.get("flexibleWindow") || "",
+      travelPeriod: travelPeriodLabel({
+        mode: travelTimingMode,
+        date: form.get("travelDate") || "",
+        month: form.get("travelMonth") || "",
+        flexibleWindow: form.get("flexibleWindow") || ""
+      }),
       lastTrip: form.get("lastTrip") || ""
     };
     state.answers.child_age = state.intake.childAge;
@@ -1411,10 +1680,13 @@ document.addEventListener("submit", event => {
       travelPeriod: state.intake.travelPeriod,
       childAge: state.intake.childAge,
       pet: state.intake.pet,
-      adults: state.intake.adults,
-      children: state.intake.children,
+      adults: state.intake.adultsCount,
+      children: state.intake.childrenCount,
+      rooms: state.intake.roomsCount,
+      childAges: state.intake.childAges,
       lastTrip: state.intake.lastTrip
     });
+    persistLeadIntake("intake_completed");
     render();
     return;
   }
@@ -1429,7 +1701,8 @@ document.addEventListener("submit", event => {
     `Região de SP: ${form.get("region") || ""}`,
     `Idade da criança: ${form.get("age") || state.intake.childAge || ""}`,
     `Mês provável: ${form.get("month") || state.intake.travelPeriod || ""}`,
-    `Quem vai: ${state.intake.adults || ""}, ${state.intake.children || ""}, ${state.intake.pet || ""}`,
+    `Quem vai: ${state.intake.adults || ""}, ${state.intake.children || ""}, ${state.intake.roomsCount || ""} quarto(s), ${state.intake.pet || ""}`,
+    `Idades das crianças: ${(state.intake.childAges || []).join(", ") || "não informado"}`,
     `Última viagem: ${state.intake.lastTrip || ""}`,
     `Orçamento/época: ${state.answers.budget_season_strategy || ""}`,
     `Tipo de viagem: ${form.get("trip") || ""}`
@@ -1461,6 +1734,7 @@ function nextQuiz() {
     state.showMoreDestinations = false;
     state.hotelFilters = defaultHotelFilters();
     trackEvent("diagnosis_completed", analyticsResultPayload());
+    persistLeadIntake("diagnosis_completed");
     setTimeout(() => document.getElementById("resultado")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
   render();
@@ -1680,6 +1954,8 @@ function imageKeyForHotelDestination(hotel) {
   const destination = removeAccents(String(hotel.destination || "").toLowerCase());
   if (destination.includes("campinas")) return "resort-interior-sp";
   if (destination.includes("atibaia")) return "atibaia";
+  if (destination.includes("mogi")) return "mogi-das-cruzes";
+  if (destination.includes("cesario")) return "cesario-lange";
   if (destination.includes("dourado")) return "hotel-fazenda-sp";
   if (destination.includes("guaruja")) return "litoral-norte-sp";
   if (hotel.destinationSlug === "resort-interior-sp") return null;

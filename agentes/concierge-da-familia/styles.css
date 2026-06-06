@@ -163,7 +163,7 @@ a {
 
 .intake-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px 10px;
 }
 
@@ -196,6 +196,63 @@ a {
 .intake-card .button {
   width: 100%;
   margin-top: 12px;
+}
+
+.hidden-field {
+  display: none !important;
+}
+
+.travel-timing-card {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(234, 243, 255, .72);
+}
+
+.travel-timing-card > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.intake-segment {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.segment-option {
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b8d4f8;
+  border-radius: 12px;
+  padding: 8px 7px;
+  color: var(--blue);
+  background: #fff;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.segment-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segment-option.active {
+  border-color: rgba(254, 187, 2, .9);
+  background: var(--cream);
+}
+
+.travel-mode-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .compact-quiz .chips {
@@ -1103,6 +1160,74 @@ p {
   font-weight: 750;
 }
 
+.destination-experience {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid rgba(0, 108, 228, .16);
+  border-bottom: 1px solid rgba(0, 108, 228, .16);
+  padding: 10px 0;
+}
+
+.experience-pitch {
+  display: grid;
+  gap: 4px;
+}
+
+.experience-pitch b,
+.experience-column strong {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.experience-pitch span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 760;
+}
+
+.experience-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.experience-column {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.experience-column a {
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  background: #fff;
+  text-decoration: none;
+}
+
+.experience-column a span {
+  overflow: hidden;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.experience-column a small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .recommendation-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1368,6 +1493,14 @@ p {
   box-shadow: 0 0 0 8px rgba(168, 85, 0, .12);
 }
 
+.image-error-mark {
+  display: none;
+}
+
+.image-load-failed .image-error-mark {
+  display: grid;
+}
+
 .travel-image figcaption {
   position: absolute;
   left: 10px;
@@ -1523,13 +1656,13 @@ summary {
   .diagnostic-home {
     min-height: calc(100vh - 62px);
     grid-template-columns: 1fr;
-    gap: 12px;
-    padding-top: 14px;
-    padding-bottom: 12px;
+    gap: 8px;
+    padding-top: 10px;
+    padding-bottom: 8px;
   }
 
   .diagnostic-home h1 {
-    font-size: clamp(29px, 9vw, 38px);
+    font-size: clamp(26px, 8vw, 34px);
     line-height: 1.02;
   }
 
@@ -1545,12 +1678,12 @@ summary {
 
   .diagnostic-panel .quiz-card {
     border-radius: 18px;
-    padding: 14px;
+    padding: 11px;
   }
 
   .intake-card h3,
   .compact-quiz h3 {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .intake-card label {
@@ -1560,14 +1693,35 @@ summary {
 
   .intake-card input,
   .intake-card select {
-    min-height: 36px;
-    padding: 7px 9px;
-    font-size: 13px;
+    min-height: 32px;
+    padding: 6px 8px;
+    font-size: 12px;
   }
 
   .intake-card .button {
-    min-height: 42px;
-    margin-top: 10px;
+    min-height: 38px;
+    margin-top: 8px;
+  }
+
+  .intake-grid,
+  .travel-mode-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .travel-timing-card {
+    gap: 6px;
+    padding: 7px;
+  }
+
+  .intake-segment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .segment-option {
+    min-height: 31px;
+    padding: 6px;
+    font-size: 11px;
   }
 
   .viral-score-grid,
@@ -1605,6 +1759,10 @@ summary {
   }
 
   .decision-lens {
+    grid-template-columns: 1fr;
+  }
+
+  .experience-columns {
     grid-template-columns: 1fr;
   }
 
