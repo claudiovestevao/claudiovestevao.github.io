@@ -2302,6 +2302,61 @@ p {
   line-height: 1.35;
 }
 
+.hotel-testimonials {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(0, 108, 228, .14);
+  border-radius: 16px;
+  padding: 9px;
+  background: rgba(255, 255, 255, .86);
+}
+
+.hotel-testimonials-title {
+  display: grid;
+  gap: 2px;
+}
+
+.hotel-testimonials-title b {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.hotel-testimonials-title span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.testimonial-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.testimonial-list blockquote {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  border-left: 3px solid var(--gold);
+  border-radius: 10px;
+  padding: 7px;
+  background: #fff8df;
+}
+
+.testimonial-list p {
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.32;
+}
+
+.testimonial-list footer {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+}
+
 .compact-tags {
   gap: 6px;
 }
@@ -3030,6 +3085,10 @@ summary {
 
   .referral-actions .button {
     width: 100%;
+  }
+
+  .testimonial-list {
+    grid-template-columns: 1fr;
   }
 
   .live-hotel-grid {

@@ -1270,6 +1270,7 @@ function RankedHotelCard(hotel, index) {
         </div>
         ${HotelApprovalExplanation(approval)}
         ${googleCoverage ? GoogleHotelSignals(googleCoverage) : ""}
+        ${HotelFamilyTestimonials(hotel, googleCoverage)}
         ${hotel.rankingNotes.length ? `<small>${escapeHtml(hotel.rankingNotes.join(" · "))}</small>` : ""}
         <div class="availability-actions">
           <a class="button primary compact-button" href="${escapeAttr(officialAvailabilityUrl)}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="official" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Ver disponibilidade</a>
@@ -1502,6 +1503,113 @@ function HotelApprovalExplanation(approval) {
       ? "Aprovado, mas vale validar detalhes como berço, horários e política de refeições antes de reservar."
       : "Viável, desde que a família aceite alguns pontos de planejamento antes da reserva.";
   return `<p class="approval-copy">${escapeHtml(text)}</p>`;
+}
+
+function HotelFamilyTestimonials(hotel, googleCoverage) {
+  const testimonials = hotel.familyTestimonials?.length
+    ? hotel.familyTestimonials.slice(0, 5).map(item => ({ ...item, verified: true }))
+    : inferredFamilyTestimonials(hotel, googleCoverage);
+  if (!testimonials.length) return "";
+  const verified = testimonials.some(item => item.verified);
+  return `
+    <div class="hotel-testimonials" aria-label="Comentarios familiares sobre ${escapeAttr(hotel.name)}">
+      <div class="hotel-testimonials-title">
+        <b>${verified ? "Depoimentos de familias" : "Comentarios familiares em validacao"}</b>
+        <span>${verified ? "Trechos curados de familias que relataram experiencia no hotel." : "Ainda sem review textual autorizado; abaixo sao sinteses da curadoria para orientar a leitura de avaliacoes reais."}</span>
+      </div>
+      <div class="testimonial-list">
+        ${testimonials.slice(0, 5).map(item => `
+          <blockquote>
+            <p>${escapeHtml(item.text)}</p>
+            <footer>${escapeHtml(item.source || (item.verified ? "familia verificada" : "sintese da curadoria"))}</footer>
+          </blockquote>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function inferredFamilyTestimonials(hotel, googleCoverage) {
+  const comments = [];
+  const source = googleCoverage?.rating
+    ? `sintese + Google ${numberLabel(googleCoverage.rating, 1)} (${numberLabel(googleCoverage.userRatingCount || 0, 0)} avaliacoes)`
+    : "sintese da curadoria";
+  if (hotel.driveTimeFromSaoPaulo) {
+    comments.push({
+      text: `Para familias saindo de Sao Paulo, o deslocamento de cerca de ${formatMinutesLabel(hotel.driveTimeFromSaoPaulo)} ajuda a reduzir cansaco antes mesmo do check-in.`,
+      source
+    });
+  } else if (hotel.transferMinutes) {
+    comments.push({
+      text: `Depois do voo, o ponto critico para familias e o traslado de aproximadamente ${hotel.transferMinutes} min; vale combinar horario e chegada com folga.`,
+      source
+    });
+  }
+  if (hotel.copaBaby || hotel.copaBaby24h) {
+    comments.push({
+      text: "Para quem viaja com bebe, a estrutura de copa baby aparece como diferencial para mamadeira, papinha e rotina noturna.",
+      source
+    });
+  }
+  if (hotel.kidsClub || hotel.recreation) {
+    comments.push({
+      text: "Familias com criancas pequenas tendem a valorizar recreacao e espacos infantis porque o hotel sustenta parte do dia sem roteiro corrido.",
+      source
+    });
+  }
+  if (hotel.kidsPool || hotel.heatedPool) {
+    comments.push({
+      text: "Piscina infantil ou aquecida pesa muito na experiencia: e o tipo de coisa que salva tarde de energia alta e clima incerto.",
+      source
+    });
+  }
+  if (hotel.allInclusive) {
+    comments.push({
+      text: "Quando a alimentacao esta mais resolvida, a familia decide menos no dia e reduz aquele efeito 'onde vamos comer agora?'.",
+      source
+    });
+  } else if (hotel.hasKitchenette) {
+    comments.push({
+      text: "Cozinha ou apoio para lanche facilita a vida de quem precisa manter horario de comida, leite ou pequenas emergencias de fome.",
+      source
+    });
+  }
+  if (hotel.worksOnRainyDay) {
+    comments.push({
+      text: "Ter plano B dentro do hotel e essencial para familia: chuva deixa de virar crise e vira mudanca de agenda.",
+      source
+    });
+  }
+  if (hotel.sourceHighlights?.length) {
+    comments.push({
+      text: `A curadoria encontrou sinais publicos relevantes: ${hotel.sourceHighlights[0]}`,
+      source: "fonte publica consultada"
+    });
+  }
+  if (hotel.attentionPoint) {
+    comments.push({
+      text: `Ponto que familia costuma precisar confirmar antes de reservar: ${hotel.attentionPoint}`,
+      source: "alerta de curadoria"
+    });
+  }
+  return comments.length >= 3 ? comments.slice(0, 5) : comments.concat(fallbackFamilyTestimonials(hotel)).slice(0, 3);
+}
+
+function fallbackFamilyTestimonials(hotel) {
+  return [
+    {
+      text: "Antes de reservar, vale ler reviews recentes procurando mencoes a limpeza, barulho, filas e atendimento com criancas.",
+      source: "checklist de reviews"
+    },
+    {
+      text: "Para familias, o melhor hotel nao e so o mais bonito: e o que reduz decisoes dificeis no meio do dia.",
+      source: "sintese da curadoria"
+    },
+    {
+      text: `Confirme diretamente com ${hotel.name} itens como berco, horarios de recreacao, refeicoes infantis e politica de cancelamento.`,
+      source: "validacao recomendada"
+    }
+  ];
 }
 
 function travelBurden(hotel) {
