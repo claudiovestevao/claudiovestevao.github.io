@@ -1,6 +1,13 @@
 {
+  "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/web"
+  ],
   "scripts": {
-    "test": "node --test agentes/concierge-da-familia/tests/*.test.mjs"
+    "test": "node --test agentes/concierge-da-familia/tests/*.test.mjs",
+    "web:dev": "npm --workspace apps/web run dev",
+    "web:build": "npm --workspace apps/web run build",
+    "web:start": "npm --workspace apps/web run start"
   }
 }

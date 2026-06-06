@@ -1,1 +1,4 @@
 agentes/concierge-da-familia/.cache/
+node_modules/
+.next/
+apps/web/.next/

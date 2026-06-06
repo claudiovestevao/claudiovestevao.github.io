@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run web:build",
+  "devCommand": "npm run web:dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/enrich-destinations",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}

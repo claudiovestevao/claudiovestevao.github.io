@@ -1,0 +1,166 @@
+"use client";
+
+import { useMemo, useState, useTransition } from "react";
+import { Loader2, Search, SlidersHorizontal } from "lucide-react";
+
+export default function DestinationExplorer({ initialResult }) {
+  const [query, setQuery] = useState("");
+  const [stateCode, setStateCode] = useState("");
+  const [type, setType] = useState("");
+  const [curationLevel, setCurationLevel] = useState("");
+  const [result, setResult] = useState(initialResult);
+  const [isPending, startTransition] = useTransition();
+
+  const destinations = result?.destinations || [];
+  const facets = result?.facets || { states: [], types: [], curationLevels: [] };
+  const visiblePins = useMemo(() => destinations.slice(0, 12), [destinations]);
+
+  function submit(event) {
+    event.preventDefault();
+    const params = new URLSearchParams({
+      q: query,
+      state: stateCode,
+      type,
+      curationLevel,
+      limit: "32"
+    });
+    startTransition(async () => {
+      const response = await fetch(`/api/destinations?${params.toString()}`, {
+        headers: { accept: "application/json" }
+      });
+      setResult(await response.json());
+    });
+  }
+
+  return (
+    <section className="surface overflow-hidden" aria-label="Explorador de destinos familiares">
+      <form className="filter-strip" onSubmit={submit}>
+        <label className="form-label m-0">
+          <span className="small fw-bold text-primary d-flex align-items-center gap-1 mb-1">
+            <Search size={14} /> Buscar
+          </span>
+          <input
+            className="form-control"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Ex: praia, serra, Atibaia"
+          />
+        </label>
+        <SelectField label="UF" value={stateCode} onChange={setStateCode} options={facets.states} />
+        <SelectField label="Perfil" value={type} onChange={setType} options={facets.types} />
+        <label className="form-label m-0">
+          <span className="small fw-bold text-primary d-flex align-items-center gap-1 mb-1">
+            <SlidersHorizontal size={14} /> Curadoria
+          </span>
+          <select className="form-select" value={curationLevel} onChange={(event) => setCurationLevel(event.target.value)}>
+            <option value="">Todos</option>
+            <option value="known_family_destination">Conhecidos</option>
+            <option value="family_destination_candidate">Candidatos</option>
+          </select>
+        </label>
+        <div className="d-grid d-lg-flex align-items-end">
+          <button className="btn btn-primary fw-bold px-4" disabled={isPending}>
+            {isPending ? <Loader2 className="me-2" size={16} /> : null}
+            Explorar
+          </button>
+        </div>
+      </form>
+
+      <div className="destination-map">
+        <div className="map-grid" role="img" aria-label="Mapa exploratório de destinos familiares">
+          {visiblePins.map((destination, index) => (
+            <button
+              className="map-pin"
+              key={destination.slug}
+              style={pinStyle(destination, visiblePins)}
+              type="button"
+              title={`${destination.name}, ${destination.stateCode}`}
+              onClick={() => setQuery(destination.name)}
+            >
+              <b>{index + 1}</b>
+              <span>
+                {destination.name}
+                <small>{destination.stateCode} · {destination.familyScore}/100</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="p-3 p-lg-4">
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div>
+            <strong>{destinations.length} destinos nesta visão</strong>
+            <div className="text-secondary small">
+              Fonte: {result?.source} · catálogo conhecido: {Number(result?.totalKnown || 0).toLocaleString("pt-BR")}
+            </div>
+          </div>
+          <span className="badge-soft">Hotel aprovado continua sendo etapa separada</span>
+        </div>
+        <div>
+          {destinations.slice(0, 10).map((destination) => (
+            <DestinationRow destination={destination} key={destination.slug} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SelectField({ label, value, onChange, options }) {
+  return (
+    <label className="form-label m-0">
+      <span className="small fw-bold text-primary mb-1 d-block">{label}</span>
+      <select className="form-select" value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Todos</option>
+        {(options || []).slice(0, 50).map((option) => (
+          <option value={option.value} key={option.value}>
+            {option.value} ({option.count})
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function DestinationRow({ destination }) {
+  return (
+    <div className="destination-row">
+      <div className="score-pill">{destination.familyScore}</div>
+      <div className="min-w-0">
+        <div className="fw-bold">{destination.name}, {destination.stateCode}</div>
+        <div className="text-secondary small">
+          {destination.bestFor || "Destino familiar candidato"} · {destination.recommendationReadiness}
+        </div>
+        <div className="d-flex flex-wrap gap-1 mt-2">
+          {(destination.tags || []).slice(0, 4).map((tag) => (
+            <span className="badge-soft" key={tag}>{tag}</span>
+          ))}
+        </div>
+      </div>
+      <a
+        className="btn btn-outline-primary btn-sm fw-bold"
+        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${destination.name} ${destination.stateCode}`)}`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Ver mapa
+      </a>
+    </div>
+  );
+}
+
+function pinStyle(destination, destinations) {
+  const lats = destinations.map((item) => Number(item.latitude)).filter(Number.isFinite);
+  const lngs = destinations.map((item) => Number(item.longitude)).filter(Number.isFinite);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const latRange = Math.max(.001, maxLat - minLat);
+  const lngRange = Math.max(.001, maxLng - minLng);
+  return {
+    left: `${10 + ((Number(destination.longitude) - minLng) / lngRange) * 80}%`,
+    top: `${88 - ((Number(destination.latitude) - minLat) / latRange) * 76}%`
+  };
+}
