@@ -36,6 +36,12 @@ const state = {
     amenities: [],
     search: "",
     sort: "score"
+  },
+  mapFilters: {
+    travel: "all",
+    fit: "all",
+    price: "all",
+    selectedKey: ""
   }
 };
 
@@ -85,6 +91,7 @@ function defaultHotelFilters() {
 function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
+    ${!state.result ? ConciergeMapExplorerSection() : ""}
     ${!state.result ? ConciergeLiveDataSection() : ""}
     ${!state.result ? ConciergeHowItWorksSection() : ""}
     ${!state.result ? PopularFamilyDestinationsSection() : ""}
@@ -157,10 +164,10 @@ function ConciergeHeroSection() {
       <div class="hero-copy">
         <span class="badge">Family Trip Intelligence</span>
         <h1>Viagens de família sem perrengue</h1>
-        <p>Em poucos minutos, eu cruzo idade das crianças, ritmo dos pais, orçamento, sazonalidade e logística saindo de São Paulo para indicar destinos que fazem sentido de verdade.</p>
+        <p>Explore o mapa de destinos curados saindo de São Paulo e, quando quiser afunilar, o assistente cruza idade das crianças, orçamento, sazonalidade e logística.</p>
         <div class="hero-actions">
-          <a class="button primary" href="#diagnostico">Encontrar minha viagem ideal</a>
-          <a class="button secondary" href="#como-funciona">Ver como funciona</a>
+          <a class="button primary" href="#mapa">Explorar mapa</a>
+          <a class="button secondary" href="#diagnostico">Falar com assistente</a>
         </div>
         <div class="family-cues" aria-label="Critérios de curadoria familiar">
           <span>Resultado antes do contato</span>
@@ -459,6 +466,220 @@ function TravelModeOption(value, label, selected) {
   `;
 }
 
+function ConciergeMapExplorerSection() {
+  const hotspots = filteredMapHotspots();
+  const selected = hotspots.find(item => item.key === state.mapFilters.selectedKey) || hotspots[0];
+  return `
+    <section class="section map-explorer-section" id="mapa">
+      <div class="section-title compact-title">
+        <span class="badge subtle">Mapa de decisão saindo de São Paulo</span>
+        <h2>Explore destinos por logística, estrutura e risco de perrengue.</h2>
+        <p>Clique nos hotspots para comparar cidades, hotéis-base e combinações regionais. Depois o assistente transforma essa exploração em recomendação final.</p>
+      </div>
+      <div class="map-explorer-layout">
+        <div class="map-filter-panel">
+          <div class="map-filter-group">
+            <span>Deslocamento</span>
+            ${MapFilterButton("travel", "all", "Todos")}
+            ${MapFilterButton("travel", "2h", "Até 2h")}
+            ${MapFilterButton("travel", "4h", "Até 4h")}
+            ${MapFilterButton("travel", "flight", "Voo + traslado")}
+          </div>
+          <div class="map-filter-group">
+            <span>Fit família</span>
+            ${MapFilterButton("fit", "all", "Todos")}
+            ${MapFilterButton("fit", "baby", "Bebê")}
+            ${MapFilterButton("fit", "kidsClub", "Kids club")}
+            ${MapFilterButton("fit", "heatedPool", "Piscina aquecida")}
+            ${MapFilterButton("fit", "rain", "Plano B chuva")}
+            ${MapFilterButton("fit", "multi", "Multi-destino")}
+          </div>
+          <div class="map-filter-group">
+            <span>Faixa</span>
+            ${MapFilterButton("price", "all", "Todas")}
+            ${MapFilterButton("price", "mid", "Controlável")}
+            ${MapFilterButton("price", "upscale", "Conforto")}
+            ${MapFilterButton("price", "luxury", "Premium")}
+          </div>
+        </div>
+        <div class="interactive-map-card">
+          <div class="interactive-map-canvas" role="img" aria-label="Mapa interativo com hotspots de destinos familiares saindo de Sao Paulo">
+            <span class="map-origin main-origin">São Paulo</span>
+            ${hotspots.map((hotspot, index) => MapExplorerPin(hotspot, index)).join("")}
+          </div>
+          <div class="map-hotspot-list">
+            ${hotspots.slice(0, 8).map((hotspot, index) => MapHotspotListItem(hotspot, index)).join("") || EmptyMapHotspotState()}
+          </div>
+        </div>
+        ${selected ? MapHotspotDetail(selected) : ""}
+      </div>
+    </section>
+  `;
+}
+
+function MapFilterButton(group, value, label) {
+  return `<button class="filter ${state.mapFilters[group] === value ? "active" : ""}" type="button" data-action="map-filter" data-filter-group="${group}" data-filter-value="${value}">${escapeHtml(label)}</button>`;
+}
+
+function MapExplorerPin(hotspot, index) {
+  const position = hotspot.mapPosition;
+  return `
+    <button class="map-hotspot-pin ${state.mapFilters.selectedKey === hotspot.key ? "active" : ""}" type="button" style="left:${position.x}%;top:${position.y}%" data-action="map-hotspot" data-hotspot-key="${escapeAttr(hotspot.key)}" aria-label="${escapeAttr(`Ver ${hotspot.name}`)}">
+      <b>${index + 1}</b>
+      <span>${escapeHtml(hotspot.shortName)}</span>
+    </button>
+  `;
+}
+
+function MapHotspotListItem(hotspot, index) {
+  return `
+    <button class="map-hotspot-row ${state.mapFilters.selectedKey === hotspot.key ? "active" : ""}" type="button" data-action="map-hotspot" data-hotspot-key="${escapeAttr(hotspot.key)}">
+      <b>${index + 1}</b>
+      <span>${escapeHtml(hotspot.name)}</span>
+      <small>${escapeHtml(hotspot.routeLabel)}</small>
+    </button>
+  `;
+}
+
+function MapHotspotDetail(hotspot) {
+  return `
+    <aside class="map-hotspot-detail">
+      <span class="badge subtle">${escapeHtml(hotspot.badge)}</span>
+      <h3>${escapeHtml(hotspot.name)}</h3>
+      <p>${escapeHtml(hotspot.reason)}</p>
+      <div class="map-detail-grid">
+        <span><b>Base</b>${escapeHtml(hotspot.bestHotel.name)}</span>
+        <span><b>Rota</b>${escapeHtml(hotspot.routeLabel)}</span>
+        <span><b>Fit</b>${escapeHtml(hotspot.fitLabel)}</span>
+        <span><b>Faixa</b>${escapeHtml(priceTierLabel(hotspot.priceTier))}</span>
+      </div>
+      ${hotspot.itinerary ? `
+        <div class="map-itinerary-hint">
+          <strong>${escapeHtml(hotspot.itinerary.title)}</strong>
+          <small>${escapeHtml(hotspot.itinerary.baseStrategy)}</small>
+        </div>
+      ` : ""}
+      <div class="hero-actions">
+        <button class="button primary compact-button" type="button" data-action="map-start-diagnosis" data-hotspot-key="${escapeAttr(hotspot.key)}">Diagnosticar este destino</button>
+        <a class="button secondary compact-button" href="${escapeAttr(googleMapsDirectionsUrl(hotspot.name))}" target="_blank" rel="noopener" data-track="map_explorer_route_clicked" data-source="map_explorer" data-destination="${escapeAttr(hotspot.name)}">Ver rota</a>
+      </div>
+    </aside>
+  `;
+}
+
+function EmptyMapHotspotState() {
+  return `<div class="empty-map-state"><strong>Nenhum hotspot com estes filtros.</strong><span>Abra um pouco os critérios para comparar mais destinos.</span></div>`;
+}
+
+function filteredMapHotspots() {
+  return buildMapHotspots()
+    .filter(hotspot => matchesMapTravelFilter(hotspot))
+    .filter(hotspot => matchesMapFitFilter(hotspot))
+    .filter(hotspot => state.mapFilters.price === "all" || hotspot.priceTier === state.mapFilters.price)
+    .slice(0, 16);
+}
+
+function buildMapHotspots() {
+  const groups = new Map();
+  curatedHotels.forEach(hotel => {
+    const key = cityKeyForHotel(hotel);
+    const current = groups.get(key) || {
+      key,
+      name: hotel.destination,
+      shortName: shortCityName(hotel.destination),
+      hotels: [],
+      bestScore: 0
+    };
+    current.hotels.push(hotel);
+    current.bestScore = Math.max(current.bestScore, hotel.score || 0);
+    groups.set(key, current);
+  });
+  return [...groups.values()].map(group => {
+    const hotels = group.hotels.sort((a, b) => (b.score || 0) - (a.score || 0));
+    const bestHotel = hotels[0];
+    const itinerary = itineraryForDestinationKey(group.key, bestHotel);
+    return {
+      ...group,
+      bestHotel,
+      itinerary,
+      mapPosition: mapPositionForDestination(bestHotel),
+      routeLabel: mapRouteLabel(bestHotel),
+      fitLabel: mapFitLabel(bestHotel, itinerary),
+      priceTier: bestHotel.priceTier || "upscale",
+      badge: itinerary ? "Pode combinar destinos" : bestHotel.departureMode === "carro" ? "Carro saindo de SP" : "Voo + traslado",
+      reason: mapHotspotReason(group, bestHotel, itinerary)
+    };
+  }).sort((a, b) => b.bestScore - a.bestScore || travelBurden(a.bestHotel) - travelBurden(b.bestHotel));
+}
+
+function itineraryForDestinationKey(key, hotel) {
+  const keys = new Set([key, hotel.destinationSlug, hotel.destinationKey, imageKeyForHotelDestination(hotel)].filter(Boolean));
+  return conciergeFamilyItineraries.find(itinerary => itinerary.primaryDestinationKeys.some(item => keys.has(item)));
+}
+
+function matchesMapTravelFilter(hotspot) {
+  const mode = state.mapFilters.travel;
+  const burden = travelBurden(hotspot.bestHotel);
+  if (mode === "2h") return hotspot.bestHotel.departureMode === "carro" && burden <= 120;
+  if (mode === "4h") return hotspot.bestHotel.departureMode === "carro" && burden <= 240;
+  if (mode === "flight") return hotspot.bestHotel.departureMode !== "carro";
+  return true;
+}
+
+function matchesMapFitFilter(hotspot) {
+  const fit = state.mapFilters.fit;
+  const hotel = hotspot.bestHotel;
+  if (fit === "baby") return Boolean(hotel.copaBaby || hotel.hasKitchenette || hotel.copaBaby24h);
+  if (fit === "kidsClub") return Boolean(hotel.kidsClub || hotel.recreation);
+  if (fit === "heatedPool") return Boolean(hotel.heatedPool);
+  if (fit === "rain") return Boolean(hotel.worksOnRainyDay);
+  if (fit === "multi") return Boolean(hotspot.itinerary);
+  return true;
+}
+
+function mapRouteLabel(hotel) {
+  if (hotel.driveTimeFromSaoPaulo) return `${formatHotelTime(hotel)} de carro`;
+  return `voo + traslado ${hotel.transferMinutes || "?"} min`;
+}
+
+function mapFitLabel(hotel, itinerary) {
+  if (itinerary) return "roteiro regional";
+  if (hotel.copaBaby || hotel.copaBaby24h) return "forte para bebê";
+  if (hotel.allInclusive) return "alimentação resolvida";
+  if (hotel.kidsClub || hotel.recreation) return "atividade para criança";
+  return "base prática";
+}
+
+function mapHotspotReason(group, hotel, itinerary) {
+  if (itinerary) return `${group.shortName} funciona como base e ainda permite explorar a região com calma quando há noites suficientes.`;
+  if (hotel.driveTimeFromSaoPaulo && hotel.driveTimeFromSaoPaulo <= 120) return `${group.shortName} reduz fricção: pouca estrada, hotel como base e volta simples se a rotina apertar.`;
+  if (hotel.departureMode !== "carro") return `${group.shortName} entra quando a família aceita voo para comprar praia, natureza ou experiência mais marcante.`;
+  return `${group.shortName} vale quando a família quer estrutura e aceita planejar melhor estrada, pausas e refeições.`;
+}
+
+function mapPositionForDestination(hotel) {
+  const bySlug = {
+    "resort-interior-sp": { x: 39, y: 61 },
+    "campinas-sp": { x: 39, y: 61 },
+    atibaia: { x: 47, y: 55 },
+    "aguas-de-lindoia": { x: 37, y: 48 },
+    "mogi-das-cruzes": { x: 57, y: 61 },
+    "cesario-lange": { x: 29, y: 67 },
+    "hotel-fazenda-sp": { x: 25, y: 75 },
+    olimpia: { x: 24, y: 42 },
+    "foz-do-iguacu": { x: 39, y: 82 },
+    gramado: { x: 43, y: 88 },
+    "praia-do-forte": { x: 76, y: 32 },
+    "porto-de-galinhas": { x: 81, y: 24 },
+    maragogi: { x: 80, y: 27 },
+    "beto-carrero-penha": { x: 49, y: 84 },
+    "campos-do-jordao": { x: 52, y: 51 },
+    orlando: { x: 88, y: 13 },
+    "buenos-aires": { x: 30, y: 91 }
+  };
+  return bySlug[hotel.destinationSlug] || bySlug[imageKeyForHotelDestination(hotel)] || hotelMapPosition(hotel.id);
+}
+
 function ConciergeDiagnosisDonePanel() {
   return `
     <div class="quiz-card compact-quiz done-card">
@@ -524,13 +745,19 @@ function ConciergeDiagnosisQuiz() {
   const progress = Math.round(((state.quizIndex + 1) / conciergeQuizQuestions.length) * 100);
   const remaining = conciergeQuizQuestions.length - state.quizIndex - 1;
   return `
-      <div class="quiz-card compact-quiz">
+      <div class="quiz-card compact-quiz assistant-quiz">
         <div class="quiz-top">
-          <span>Pergunta ${state.quizIndex + 1} de ${conciergeQuizQuestions.length}${remaining ? ` · faltam ${remaining}` : " · última"}</span>
+          <span>Assistente Concierge · ${state.quizIndex + 1}/${conciergeQuizQuestions.length}${remaining ? ` · faltam ${remaining}` : " · última"}</span>
           <div class="progress"><i style="width:${progress}%"></i></div>
         </div>
-        <h3>${escapeHtml(question.question)}</h3>
-        ${question.help ? `<p class="question-help">${escapeHtml(question.help)}</p>` : ""}
+        <div class="assistant-thread">
+          ${AssistantAnswerHistory()}
+          <div class="assistant-message">
+            <span>Concierge da Família</span>
+            <h3>${escapeHtml(question.question)}</h3>
+            ${question.help ? `<p class="question-help">${escapeHtml(question.help)}</p>` : ""}
+          </div>
+        </div>
         <div class="chips ${question.type === "multi" ? "multi" : ""}">
           ${question.options.map(option => QuizOption(question, option)).join("")}
         </div>
@@ -541,6 +768,20 @@ function ConciergeDiagnosisQuiz() {
         </div>
       </div>
   `;
+}
+
+function AssistantAnswerHistory() {
+  return conciergeQuizQuestions.slice(0, state.quizIndex).map(question => {
+    const answer = state.answers[question.id];
+    if (!answer || (Array.isArray(answer) && !answer.length)) return "";
+    const value = Array.isArray(answer) ? answer.join(", ") : answer;
+    return `
+      <div class="assistant-history-row">
+        <small>${escapeHtml(question.question)}</small>
+        <strong>${escapeHtml(value)}</strong>
+      </div>
+    `;
+  }).join("");
 }
 
 function QuizOption(question, option) {
@@ -1394,6 +1635,7 @@ function hotelMapPosition(id) {
     "royal-palm-plaza-campinas": { x: 38, y: 62, label: "Campinas" },
     "bourbon-atibaia": { x: 45, y: 54, label: "Atibaia" },
     "taua-resort-atibaia": { x: 47, y: 55, label: "Atibaia" },
+    "bendito-cacao-family-resort": { x: 37, y: 48, label: "Águas" },
     "club-med-lake-paradise": { x: 56, y: 61, label: "Mogi das Cruzes" },
     "mavsa-resort": { x: 30, y: 66, label: "Cesário Lange" },
     "tivoli-praia-do-forte": { x: 74, y: 34, label: "Praia do Forte" },
@@ -2423,6 +2665,41 @@ function handleClick(event) {
   const target = event.target.closest("[data-action]");
   if (!target) return;
   const action = target.dataset.action;
+  if (action === "map-filter") {
+    state.mapFilters[target.dataset.filterGroup] = target.dataset.filterValue;
+    state.mapFilters.selectedKey = "";
+    trackEvent("map_filter_applied", { group: target.dataset.filterGroup, value: target.dataset.filterValue });
+    render();
+    return;
+  }
+  if (action === "map-hotspot") {
+    state.mapFilters.selectedKey = target.dataset.hotspotKey || "";
+    const hotspot = buildMapHotspots().find(item => item.key === state.mapFilters.selectedKey);
+    trackEvent("map_hotspot_selected", {
+      destinationKey: state.mapFilters.selectedKey,
+      destinationName: hotspot?.name || "",
+      bestHotel: hotspot?.bestHotel?.name || ""
+    });
+    render();
+    setTimeout(() => document.getElementById("mapa")?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
+    return;
+  }
+  if (action === "map-start-diagnosis") {
+    const hotspot = buildMapHotspots().find(item => item.key === target.dataset.hotspotKey);
+    state.intakeDraft.destinationInterestKey = hotspot?.key || target.dataset.hotspotKey || "";
+    state.intakeDraft.destinationInterestName = hotspot?.name || "";
+    trackEvent("map_diagnosis_started", {
+      destinationKey: state.intakeDraft.destinationInterestKey,
+      destinationName: state.intakeDraft.destinationInterestName,
+      bestHotel: hotspot?.bestHotel?.name || ""
+    });
+    render();
+    setTimeout(() => {
+      document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.querySelector("#intakeForm [name='leadName']")?.focus({ preventScroll: true });
+    }, 40);
+    return;
+  }
   if (action === "popular-destination") {
     state.intakeDraft.destinationInterestKey = target.dataset.destinationKey || "";
     state.intakeDraft.destinationInterestName = target.dataset.destinationName || "";
