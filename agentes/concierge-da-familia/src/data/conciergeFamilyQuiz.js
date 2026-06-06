@@ -36,6 +36,18 @@ export const conciergeQuizQuestions = [
     ]
   },
   {
+    id: "trip_duration",
+    question: "Quantos dias vocês imaginam?",
+    type: "single",
+    options: ["Bate-volta", "1 noite", "2 noites", "3 noites", "4 a 5 noites", "6+ noites", "Ainda não sei"]
+  },
+  {
+    id: "budget_total",
+    question: "Qual gasto total seria confortável?",
+    type: "single",
+    options: ["Até R$ 1.500", "R$ 1.500 a R$ 3.000", "R$ 3.000 a R$ 5.000", "R$ 5.000 a R$ 8.000", "Acima de R$ 8.000", "Prefiro não informar"]
+  },
+  {
     id: "comfort_needs",
     question: "O que precisa existir para você ficar tranquilo?",
     type: "multi",

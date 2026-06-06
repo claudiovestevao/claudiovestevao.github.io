@@ -1,9 +1,9 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=destination-first-v3-20260605";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=destination-first-v3-20260605";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=destination-first-v3-20260605";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=destination-first-v3-20260605";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=destination-first-v3-20260605";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=destination-first-v3-20260605";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=viral-mvp-v4-20260605";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=viral-mvp-v4-20260605";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=viral-mvp-v4-20260605";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=viral-mvp-v4-20260605";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=viral-mvp-v4-20260605";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=viral-mvp-v4-20260605";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -52,6 +52,7 @@ function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
+    ${state.result ? ShareableResultSection(state.result) : ""}
     ${state.result ? DestinationRecommendationsSection() : ""}
     ${state.result && state.selectedDestinationKey ? RankedHotelsSection() : ""}
     ${state.result ? ConciergeLeadCaptureForm() : ""}
@@ -71,13 +72,13 @@ function ConciergeHeroSection() {
   return `
     <section class="hero section minimal-hero diagnostic-home" id="diagnostico">
       <div class="hero-copy">
-        <span class="badge">Diagnóstico em até 2 minutos</span>
-        <h1>Encontre o destino certo para sua família.</h1>
-        <p>Primeiro entendemos quem viaja, quando vocês querem ir, o orçamento e quanta logística a família tolera. Depois mostramos 3 destinos para decidir com calma.</p>
+        <span class="badge">Teste das Férias Sem Perrengue</span>
+        <h1>Descubra qual viagem combina com a sua família.</h1>
+        <p>Um teste gratuito para entender crianças, ritmo dos pais, orçamento e destinos com menor chance de perrengue. O Booking mostra onde ficar. A gente ajuda a descobrir onde sua família vai ficar bem.</p>
         <div class="family-cues" aria-label="Critérios de curadoria familiar">
           <span>WhatsApp e email</span>
           <span>Quem vai viajar</span>
-          <span>Ritmo da família</span>
+          <span>Orçamento sem susto</span>
         </div>
       </div>
       <div class="diagnostic-panel">
@@ -244,21 +245,91 @@ function ConciergeDiagnosisResult(result) {
   return `
     <section class="section result-section compact-result" id="resultado">
       <div class="result-card good">
-        <span class="badge">Resultado</span>
-        <h2>Seu perfil de viagem</h2>
+        <span class="badge">Seu resultado</span>
+        <h2>${escapeHtml(result.profileName)}</h2>
         <p>${escapeHtml(result.profile)}</p>
+        <div class="viral-score-grid">
+          ${MetricCard("Índice Sem Perrengue", `${result.semPerrengue.score}/100`, result.semPerrengue.label)}
+          ${MetricCard("Fit Financeiro", result.financialFit.label, result.financialFit.detail)}
+          ${MetricCard("Esforço logístico", result.travelEffort.label, result.travelEffort.detail)}
+        </div>
+        <div class="cost-estimate">
+          <div>
+            <span class="eyebrow">Estimativa inicial de custo</span>
+            <h3>${escapeHtml(result.costEstimate.headline)}</h3>
+            <p>${escapeHtml(result.costEstimate.note)}</p>
+          </div>
+          <div class="cost-grid">
+            <span><b>Econômico</b>${escapeHtml(result.costEstimate.economic)}</span>
+            <span><b>Equilibrado</b>${escapeHtml(result.costEstimate.balanced)}</span>
+            <span><b>Conforto</b>${escapeHtml(result.costEstimate.comfort)}</span>
+          </div>
+        </div>
+        <p class="micro">Este índice é uma estimativa criada a partir das suas respostas para ajudar na decisão. Não representa garantia de experiência ou preço.</p>
         <div class="quick-insights">
           <div>
-          <h3>Recomendamos priorizar</h3>
+          <h3>Eu priorizaria</h3>
             ${BulletList(result.prioritize.slice(0, 3))}
           </div>
           <div>
-          <h3>Evitar por enquanto</h3>
+          <h3>Eu evitaria por enquanto</h3>
             ${BulletList(result.avoid.slice(0, 2))}
           </div>
         </div>
       </div>
     </section>
+  `;
+}
+
+function MetricCard(label, value, detail) {
+  return `
+    <div class="metric-card">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+      <p>${escapeHtml(detail)}</p>
+    </div>
+  `;
+}
+
+function ShareableResultSection(result) {
+  return `
+    <section class="section share-section" id="compartilhar">
+      <div class="share-layout">
+        <div class="share-card">
+          <span class="badge subtle">Card compartilhável</span>
+          <h2>Mostre o perfil da sua família.</h2>
+          <div class="share-preview">
+            <span>Meu perfil de viagem em família é...</span>
+            <strong>${escapeHtml(result.profileName)}</strong>
+            <p>Índice Sem Perrengue: ${result.semPerrengue.score}/100 · Fit financeiro: ${escapeHtml(result.financialFit.label)}</p>
+          </div>
+          <div class="hero-actions">
+            <button class="button primary" type="button" data-action="share-result">Compartilhar resultado</button>
+            <button class="button secondary" type="button" data-action="copy-share-text">Copiar texto</button>
+            <button class="button secondary" type="button" data-action="family-alert">Ativar alerta de oportunidade</button>
+          </div>
+        </div>
+        <div class="social-proof-card">
+          <span class="badge subtle">Exemplo beta</span>
+          <h3>Perfis mais comuns esta semana</h3>
+          <div class="profile-bars">
+            ${ProfileBar("Família Resort Raiz", 32)}
+            ${ProfileBar("Família Hotel Fazenda", 24)}
+            ${ProfileBar("Família Praia com Plano B", 18)}
+            ${ProfileBar("Família Econômica Inteligente", 14)}
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function ProfileBar(label, value) {
+  return `
+    <div class="profile-bar">
+      <span>${escapeHtml(label)} <b>${value}%</b></span>
+      <i style="width:${value}%"></i>
+    </div>
   `;
 }
 
@@ -484,9 +555,9 @@ function RankedHotelCard(hotel, index) {
         </div>
         ${hotel.rankingNotes.length ? `<small>${escapeHtml(hotel.rankingNotes.join(" · "))}</small>` : ""}
         <div class="availability-actions">
-          <a class="button primary compact-button" href="${escapeAttr(hotel.officialSiteUrl || hotel.sourceUrl)}" target="_blank" rel="noopener">Ver disponibilidade</a>
-          <a class="button secondary compact-button" href="${escapeAttr(hotel.bookingUrl || bookingSearchUrl(hotel))}" target="_blank" rel="noopener">Buscar no Booking</a>
-          ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener">Fonte da curadoria</a>` : ""}
+          <a class="button primary compact-button" href="${escapeAttr(hotel.officialSiteUrl || hotel.sourceUrl)}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="official" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Ver disponibilidade</a>
+          <a class="button secondary compact-button" href="${escapeAttr(hotel.bookingUrl || bookingSearchUrl(hotel))}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="booking" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Buscar no Booking</a>
+          ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener" data-track="hotel_source_click" data-source="curation" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Fonte da curadoria</a>` : ""}
         </div>
       </div>
       <div class="ranking-score">
@@ -702,10 +773,25 @@ function buildDestinationRecommendations() {
 
 function destinationStrategicBonus(group, bestHotel) {
   const answers = state.answers || {};
+  const budget = budgetMaxValue(answers.budget_total);
+  const shortTrip = ["Bate-volta", "1 noite"].includes(answers.trip_duration);
+  const longTrip = answers.trip_duration === "6+ noites";
   let bonus = group.hotels.length > 1 ? 0.1 : 0;
   if (answers.budget_season_strategy === "Feriado curto, preciso logística simples" && travelBurden(bestHotel) <= 120) bonus += 0.18;
   if (answers.budget_season_strategy === "Baixa temporada, prefiro custo-benefício" && group.hotels.some(hotel => hotel.priceTier === "mid")) bonus += 0.14;
   if (answers.budget_season_strategy === "Verão/praia, aceito pagar mais pelo clima" && isBeachDestination(bestHotel)) bonus += 0.16;
+  if (budget && budget <= 3000) {
+    if (bestHotel.departureMode === "carro" && travelBurden(bestHotel) <= 150) bonus += 0.26;
+    if (group.hotels.some(hotel => hotel.priceTier === "mid")) bonus += 0.14;
+    if (bestHotel.priceTier === "luxury" || bestHotel.departureMode.includes("voo")) bonus -= 0.28;
+  }
+  if (budget && budget > 3000 && budget <= 5000) {
+    if (bestHotel.departureMode === "carro") bonus += 0.1;
+    if (bestHotel.priceTier === "luxury" && !answers.budget_season_strategy?.includes("Baixa temporada")) bonus -= 0.12;
+  }
+  if (budget && budget >= 8000 && answers.decision_profile === "Melhor estrutura, mesmo mais caro" && ["upscale", "luxury"].includes(bestHotel.priceTier)) bonus += 0.12;
+  if (shortTrip && travelBurden(bestHotel) > 150) bonus -= 0.22;
+  if (longTrip && (bestHotel.allInclusive || isBeachDestination(bestHotel))) bonus += 0.1;
   if (answers.decision_profile === "Evitar lotação e filas" && ["orlando", "beto-carrero-penha", "olimpia", "gramado"].includes(bestHotel.destinationSlug)) bonus -= 0.22;
   return bonus;
 }
@@ -729,9 +815,15 @@ function buildDestinationReason(group, bestHotel) {
 
 function buildBudgetNote(group, bestHotel) {
   const strategy = state.answers?.budget_season_strategy || "";
+  const budgetLabel = state.answers?.budget_total || "";
+  const budget = budgetMaxValue(budgetLabel);
   const tiers = unique(group.hotels.map(hotel => hotel.priceTier));
   const hasMid = tiers.includes("mid");
   const hasLuxury = tiers.includes("luxury");
+  if (budget && budget <= 1500) return bestHotel.driveTimeFromSaoPaulo ? "eu trataria como bate-volta ou 1 noite bem simples" : "alto risco de estourar; melhor trocar por destino perto";
+  if (budget && budget <= 3000) return bestHotel.driveTimeFromSaoPaulo ? "mais realista se controlar diária, pedágio e refeições" : "só faz sentido com promoção muito boa e pouca bagagem";
+  if (budget && budget <= 5000) return hasMid ? "cabe melhor em datas fora de pico e hotéis mid" : "pode apertar; compare taxas e refeições antes";
+  if (budget && budget >= 8000) return hasLuxury ? "permite comprar estrutura e previsibilidade" : "há folga para quarto melhor ou mais noites";
   if (strategy.includes("Baixa temporada")) return hasMid ? "melhor chance de controlar diária fora de pico" : "vale monitorar promoção; tende a ser mais caro";
   if (strategy.includes("Alta temporada")) return hasLuxury ? "não é barato, mas compra previsibilidade" : "pode performar bem se reservar cedo";
   if (strategy.includes("Feriado curto")) return bestHotel.driveTimeFromSaoPaulo ? "economiza voo, mas atenção à estrada" : "voo curto ajuda; compre com antecedência";
@@ -743,6 +835,9 @@ function buildBudgetNote(group, bestHotel) {
 function buildSeasonNote(group, bestHotel) {
   const period = state.intake?.travelPeriod || "Ainda não sei";
   const strategy = state.answers?.budget_season_strategy || "";
+  const duration = state.answers?.trip_duration || "";
+  if (["Bate-volta", "1 noite"].includes(duration)) return travelBurden(bestHotel) <= 150 ? "bom para viagem curta; sair cedo muda tudo" : "curto demais para tanta logística";
+  if (duration === "6+ noites" && isBeachDestination(bestHotel)) return "mais noites diluem o deslocamento, mas eu evitaria pico e chuva forte";
   if (strategy.includes("Baixa temporada")) return "fora de férias, eu procuraria melhor tarifa e mais espaço no hotel";
   if (period === "Férias de julho" && ["gramado", "campos-do-jordao"].includes(bestHotel.destinationSlug)) return "julho combina com serra, mas lota e encarece bastante";
   if (period === "Verão/Janeiro" && isBeachDestination(bestHotel)) return "verão favorece praia, mas exige reserva cedo e plano para chuva";
@@ -1069,6 +1164,17 @@ function BulletList(items) {
 }
 
 function handleClick(event) {
+  const trackedLink = event.target.closest("a[data-track]");
+  if (trackedLink) {
+    trackEvent(trackedLink.dataset.track, {
+      source: trackedLink.dataset.source || "",
+      hotelId: trackedLink.dataset.hotelId || "",
+      hotelName: trackedLink.dataset.hotelName || "",
+      destination: trackedLink.dataset.destination || "",
+      href: trackedLink.href
+    });
+    return;
+  }
   const target = event.target.closest("[data-action]");
   if (!target) return;
   const action = target.dataset.action;
@@ -1082,18 +1188,21 @@ function handleClick(event) {
     state.selectedDestinationKey = null;
     state.showMoreDestinations = false;
     state.intakeComplete = false;
+    trackEvent("diagnosis_restarted");
     render();
     setTimeout(() => document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return;
   }
   if (action === "show-more-destinations") {
     state.showMoreDestinations = true;
+    trackEvent("destination_more_options_opened", analyticsResultPayload());
     render();
     setTimeout(() => document.getElementById("recomendacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return;
   }
   if (action === "show-top-destinations") {
     state.showMoreDestinations = false;
+    trackEvent("destination_top_three_restored", analyticsResultPayload());
     render();
     setTimeout(() => document.getElementById("recomendacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return;
@@ -1101,16 +1210,27 @@ function handleClick(event) {
   if (action === "select-destination-recommendation") {
     state.selectedDestinationKey = target.dataset.destinationKey;
     state.hotelFilters = defaultHotelFilters();
+    const recommendation = buildDestinationRecommendations().find(item => item.key === state.selectedDestinationKey);
+    trackEvent("destination_selected", {
+      ...analyticsResultPayload(),
+      destinationKey: state.selectedDestinationKey,
+      destinationName: recommendation?.name || "",
+      destinationScore: recommendation?.score || null
+    });
     render();
     setTimeout(() => document.getElementById("ranking")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return;
   }
   if (action === "back-to-destinations") {
     state.selectedDestinationKey = null;
+    trackEvent("destination_selection_reopened", analyticsResultPayload());
     render();
     setTimeout(() => document.getElementById("recomendacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return;
   }
+  if (action === "share-result") return shareCurrentResult(target);
+  if (action === "copy-share-text") return copyCurrentResult(target);
+  if (action === "family-alert") return activateFamilyAlert(target);
   if (action === "hotel-filter") {
     state.hotelFilter = target.dataset.filter;
     render();
@@ -1133,6 +1253,125 @@ function handleClick(event) {
   if (action === "calendar") {
     state.selectedCalendar = target.dataset.calendar;
     render();
+  }
+}
+
+async function shareCurrentResult(button) {
+  if (!state.result) return;
+  const text = shareResultText(state.result);
+  const url = `${window.location.origin}${window.location.pathname}#diagnostico`;
+  trackEvent("result_share_attempted", analyticsResultPayload());
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Meu perfil no Concierge da Família",
+        text,
+        url
+      });
+      trackEvent("result_shared", analyticsResultPayload());
+      markTemporaryButton(button, "Compartilhado");
+      return;
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+    }
+  }
+  await copyText(text);
+  trackEvent("result_share_copied_fallback", analyticsResultPayload());
+  markTemporaryButton(button, "Texto copiado");
+}
+
+async function copyCurrentResult(button) {
+  if (!state.result) return;
+  await copyText(shareResultText(state.result));
+  trackEvent("result_copied", analyticsResultPayload());
+  markTemporaryButton(button, "Texto copiado");
+}
+
+function activateFamilyAlert(button) {
+  if (!state.result) return;
+  const destinations = buildDestinationRecommendations().slice(0, 3).map(item => item.name).join(", ");
+  const text = [
+    "Oi! Quero ativar o Alerta Família Concierge para oportunidades de viagem.",
+    `Nome: ${state.intake.name || ""}`,
+    `WhatsApp: ${state.intake.whatsapp || ""}`,
+    `Email: ${state.intake.email || ""}`,
+    `Perfil: ${state.result.profileName}`,
+    `Índice Sem Perrengue: ${state.result.semPerrengue.score}/100`,
+    `Fit financeiro: ${state.result.financialFit.label}`,
+    `Custo estimado: ${state.result.costEstimate.headline}`,
+    `Destinos preferidos: ${destinations}`,
+    `Quando querem ir: ${state.intake.travelPeriod || "data flexível"}`,
+    `Duração: ${state.answers.trip_duration || "a definir"}`,
+    `Orçamento confortável: ${state.answers.budget_total || "a definir"}`
+  ].join("\n");
+  trackEvent("family_alert_requested", analyticsResultPayload());
+  markTemporaryButton(button, "Abrindo WhatsApp");
+  window.open(leadWhatsAppUrl(text), "_blank", "noopener");
+}
+
+function shareResultText(result) {
+  const destinations = buildDestinationRecommendations().slice(0, 3).map((item, index) => `${index + 1}. ${item.name}`).join("\n");
+  return [
+    "Fiz o Teste das Férias Sem Perrengue.",
+    `Meu perfil de viagem em família: ${result.profileName}`,
+    `Índice Sem Perrengue: ${result.semPerrengue.score}/100 (${result.semPerrengue.label})`,
+    `Fit financeiro: ${result.financialFit.label}`,
+    `Custo estimado: ${result.costEstimate.headline}`,
+    "",
+    "Minhas 3 cidades recomendadas:",
+    destinations,
+    "",
+    `${window.location.origin}${window.location.pathname}`
+  ].join("\n");
+}
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch (error) {
+      // Browser permission can fail on some embedded previews; prompt keeps the flow usable.
+    }
+  }
+  window.prompt("Copie seu resultado:", text);
+}
+
+function markTemporaryButton(button, label) {
+  if (!button) return;
+  const original = button.textContent;
+  button.textContent = label;
+  window.setTimeout(() => {
+    button.textContent = original;
+  }, 1800);
+}
+
+function analyticsResultPayload() {
+  if (!state.result) return {};
+  return {
+    profileName: state.result.profileName,
+    semPerrengue: state.result.semPerrengue.score,
+    financialFit: state.result.financialFit.label,
+    travelEffort: state.result.travelEffort.label,
+    budgetTotal: state.answers.budget_total || "",
+    tripDuration: state.answers.trip_duration || "",
+    travelPeriod: state.intake.travelPeriod || ""
+  };
+}
+
+function trackEvent(eventName, payload = {}) {
+  const event = {
+    event: eventName,
+    at: new Date().toISOString(),
+    payload
+  };
+  window.dataLayer?.push({ event: eventName, ...payload });
+  try {
+    const current = JSON.parse(window.localStorage.getItem("conciergeFamilyAnalytics") || "[]");
+    current.push(event);
+    window.localStorage.setItem("conciergeFamilyAnalytics", JSON.stringify(current.slice(-120)));
+  } catch (error) {
+    window.__conciergeFamilyAnalytics = [...(window.__conciergeFamilyAnalytics || []), event].slice(-120);
   }
 }
 
@@ -1168,6 +1407,14 @@ document.addEventListener("submit", event => {
     state.answers.child_age = state.intake.childAge;
     state.answers.travel_period = state.intake.travelPeriod;
     state.intakeComplete = true;
+    trackEvent("diagnosis_intake_completed", {
+      travelPeriod: state.intake.travelPeriod,
+      childAge: state.intake.childAge,
+      pet: state.intake.pet,
+      adults: state.intake.adults,
+      children: state.intake.children,
+      lastTrip: state.intake.lastTrip
+    });
     render();
     return;
   }
@@ -1187,6 +1434,7 @@ document.addEventListener("submit", event => {
     `Orçamento/época: ${state.answers.budget_season_strategy || ""}`,
     `Tipo de viagem: ${form.get("trip") || ""}`
   ].join("\n");
+  trackEvent("lead_whatsapp_requested", analyticsResultPayload());
   window.open(leadWhatsAppUrl(text), "_blank", "noopener");
 });
 
@@ -1212,6 +1460,7 @@ function nextQuiz() {
     state.selectedDestinationKey = null;
     state.showMoreDestinations = false;
     state.hotelFilters = defaultHotelFilters();
+    trackEvent("diagnosis_completed", analyticsResultPayload());
     setTimeout(() => document.getElementById("resultado")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
   render();
@@ -1226,10 +1475,15 @@ function buildDiagnosisResult(answers) {
   const concerns = arrayAnswer(answers.avoid_risks);
   const must = arrayAnswer(answers.comfort_needs);
   const intake = state.intake || {};
-  const persona = inferFamilyPersona(answers, intake);
+  const profileName = inferProfileName(answers, intake);
+  const persona = inferFamilyPersona(answers, intake, profileName);
   const babySmall = intake.childAge === "0 a 12 meses";
   const hasPet = intake.pet && intake.pet !== "Não vai pet";
   const budgetSeason = answers.budget_season_strategy || "orçamento e data ainda flexíveis";
+  const costEstimate = estimateTripCost(answers, intake);
+  const financialFit = calculateFinancialFit(answers, costEstimate);
+  const travelEffort = calculateTravelEffort(answers, intake);
+  const semPerrengue = calculateSemPerrengueIndex(answers, intake, financialFit, travelEffort);
   const profile = `${persona}. Viagem para ${intake.adults || "2 adultos"} e ${intake.children || "criança(s)"}, ${hasPet ? "com pet" : "sem pet"}, pensando em ${intake.travelPeriod || "data flexível"}. Estratégia: ${budgetSeason}. Última viagem: ${intake.lastTrip || "não informado"}.`;
   const prioritize = [
     "escolher primeiro a cidade que reduz risco para a rotina da família, antes de comparar resort",
@@ -1251,7 +1505,12 @@ function buildDiagnosisResult(answers) {
   ];
   if (must.includes("Copa baby 24h")) prioritize.push("confirmar copa baby 24h com evidência antes da reserva");
   return {
+    profileName,
     profile,
+    semPerrengue,
+    financialFit,
+    travelEffort,
+    costEstimate,
     prioritize: unique(prioritize).slice(0, 6),
     avoid: unique(avoid).slice(0, 5),
     paths: [
@@ -1262,13 +1521,137 @@ function buildDiagnosisResult(answers) {
   };
 }
 
-function inferFamilyPersona(answers, intake) {
-  if (intake.childAge === "0 a 12 meses" || intake.lastTrip === "Primeira viagem com criança") return "Perfil: primeira viagem com bebê, precisa de baixa fricção e alta previsibilidade";
-  if (answers.travel_goal === "Parque ou muita atividade") return "Perfil: família com energia, boa para destinos de parque e hotel com recreação";
-  if (answers.decision_profile === "Evitar lotação e filas") return "Perfil: família sensível a lotação, melhor com datas e destinos mais tranquilos";
-  if (answers.stay_style === "Apart-hotel com cozinha") return "Perfil: família que valoriza rotina e autonomia na alimentação";
-  if (answers.decision_profile === "Melhor estrutura, mesmo mais caro") return "Perfil: família conforto premium, prefere pagar para reduzir risco";
-  return "Perfil: família prática, buscando equilíbrio entre logística, estrutura e descanso";
+function inferProfileName(answers, intake) {
+  if (answers.budget_total === "Até R$ 1.500" || answers.budget_season_strategy === "Baixa temporada, prefiro custo-benefício") return "Família Econômica Inteligente";
+  if (intake.childAge === "0 a 12 meses" || intake.lastTrip === "Primeira viagem com criança" || answers.travel_goal === "Primeira viagem sem susto") return "Família Zero Perrengue";
+  if (answers.travel_goal === "Praia e piscina" || answers.stay_style === "Praia com resort") return "Família Praia com Plano B";
+  if (answers.stay_style === "Hotel fazenda" || answers.travel_goal === "Natureza e ar livre") return "Família Hotel Fazenda";
+  if (answers.travel_goal === "Parque ou muita atividade") return "Família Parque & Diversão";
+  if (answers.stay_style === "Resort completo" || answers.decision_profile === "Melhor estrutura, mesmo mais caro") return "Família Resort Raiz";
+  return "Família Mini Aventureira";
+}
+
+function inferFamilyPersona(answers, intake, profileName = inferProfileName(answers, intake)) {
+  const descriptions = {
+    "Família Resort Raiz": "Vocês querem conforto, estrutura, recreação e pouca improvisação",
+    "Família Praia com Plano B": "Vocês amam praia, mas precisam de sombra, alimentação fácil e alternativa para chuva",
+    "Família Hotel Fazenda": "Vocês combinam com natureza, comida boa, espaço aberto e uma rotina mais tranquila",
+    "Família Mini Aventureira": "Vocês gostam de novidade, mas precisam equilibrar passeio com descanso",
+    "Família Parque & Diversão": "Vocês querem encantamento e atividade, com atenção para fila, estímulo e pausa",
+    "Família Econômica Inteligente": "Vocês querem criar memória sem transformar a viagem em sufoco financeiro",
+    "Família Zero Perrengue": "Vocês priorizam previsibilidade, conforto, segurança e facilidade"
+  };
+  return `Perfil: ${descriptions[profileName] || descriptions["Família Mini Aventureira"]}`;
+}
+
+function calculateSemPerrengueIndex(answers, intake, financialFit, travelEffort) {
+  const must = arrayAnswer(answers.comfort_needs);
+  const concerns = arrayAnswer(answers.avoid_risks);
+  let score = 72;
+  if (answers.displacement_limit === "Até 2h de carro") score += 10;
+  if (answers.displacement_limit === "Até 4h de carro") score += 5;
+  if (answers.displacement_limit === "Aceito mais logística se valer muito") score -= 8;
+  if (intake.childAge === "0 a 12 meses" && answers.displacement_limit?.includes("Voo")) score -= 5;
+  if (must.includes("Copa baby")) score += 5;
+  if (must.includes("Plano B para chuva")) score += 5;
+  if (must.includes("All inclusive") || must.includes("Kitchenette/cozinha")) score += 4;
+  if (answers.budget_season_strategy?.includes("Alta temporada")) score -= 5;
+  if (answers.budget_season_strategy?.includes("Baixa temporada")) score += 4;
+  if (financialFit.risk === "high") score -= 16;
+  if (financialFit.risk === "medium") score -= 7;
+  if (travelEffort.risk === "high") score -= 12;
+  if (concerns.includes("Fila e lotação")) score -= 4;
+  if (concerns.includes("Traslado longo")) score -= 5;
+  score = Math.max(28, Math.min(96, Math.round(score)));
+  return {
+    score,
+    label: score >= 86 ? "excelente fit familiar" : score >= 66 ? "boa escolha com atenção" : score >= 41 ? "atenção aos detalhes" : "alto risco de perrengue"
+  };
+}
+
+function calculateFinancialFit(answers, estimate) {
+  const budget = budgetMaxValue(answers.budget_total);
+  if (!budget) return { label: "A confirmar", detail: "sem orçamento total informado", risk: "unknown" };
+  if (budget >= estimate.balancedMax) return { label: "Cabe bem", detail: "há espaço para uma escolha confortável", risk: "low" };
+  if (budget >= estimate.economicMax) return { label: "Cabe com atenção", detail: "dá para buscar boa opção sem muitos extras", risk: "medium" };
+  if (budget >= estimate.economicMin) return { label: "Pode apertar", detail: "melhor encurtar, evitar pico ou trocar destino", risk: "medium" };
+  return { label: "Risco de estourar", detail: "eu olharia bate-volta ou baixa temporada", risk: "high" };
+}
+
+function calculateTravelEffort(answers, intake) {
+  if (answers.displacement_limit === "Até 2h de carro") return { label: "Leve", detail: "bom para fim de semana e criança pequena", risk: "low" };
+  if (answers.displacement_limit === "Até 4h de carro") return { label: "Moderado", detail: "funciona com pausas e saída bem planejada", risk: "medium" };
+  if (answers.displacement_limit === "Voo direto e traslado até 1h") return { label: "Moderado", detail: "voo ajuda, mas horário de chegada importa muito", risk: "medium" };
+  return { label: "Alto", detail: "só vale se o destino compensar e a família tolerar logística", risk: "high" };
+}
+
+function estimateTripCost(answers, intake) {
+  const nights = tripNights(answers.trip_duration);
+  const people = familySize(intake);
+  const flightTrip = answers.displacement_limit === "Voo direto e traslado até 1h" || answers.stay_style === "Praia com resort";
+  const premium = answers.decision_profile === "Melhor estrutura, mesmo mais caro" || answers.budget_season_strategy?.includes("Alta temporada");
+  const lowSeason = answers.budget_season_strategy?.includes("Baixa temporada") || answers.budget_season_strategy?.includes("Data flexível");
+  const lodgingBase = flightTrip ? 920 : 620;
+  const multiplier = premium ? 1.25 : lowSeason ? .86 : 1;
+  const lodgingEconomic = Math.round(lodgingBase * .72 * multiplier * Math.max(1, nights));
+  const lodgingBalanced = Math.round(lodgingBase * 1.22 * multiplier * Math.max(1, nights));
+  const lodgingComfort = Math.round(lodgingBase * 2.05 * multiplier * Math.max(1, nights));
+  const transportEconomic = flightTrip ? people * 550 : 260;
+  const transportBalanced = flightTrip ? people * 900 : 480;
+  const transportComfort = flightTrip ? people * 1450 : 760;
+  const foodFactor = answers.comfort_needs?.includes("All inclusive") ? .45 : 1;
+  const foodEconomic = Math.round(people * Math.max(1, nights) * 65 * foodFactor);
+  const foodBalanced = Math.round(people * Math.max(1, nights) * 120 * foodFactor);
+  const foodComfort = Math.round(people * Math.max(1, nights) * 210 * foodFactor);
+  const economicMin = Math.round((lodgingEconomic + transportEconomic + foodEconomic) * .9);
+  const economicMax = Math.round((lodgingEconomic + transportEconomic + foodEconomic) * 1.2);
+  const balancedMin = Math.round((lodgingBalanced + transportBalanced + foodBalanced) * .92);
+  const balancedMax = Math.round((lodgingBalanced + transportBalanced + foodBalanced) * 1.25);
+  const comfortMin = Math.round((lodgingComfort + transportComfort + foodComfort) * .95);
+  const comfortMax = Math.round((lodgingComfort + transportComfort + foodComfort) * 1.32);
+  return {
+    economicMin,
+    economicMax,
+    balancedMax,
+    headline: `${formatCurrency(economicMin)} a ${formatCurrency(balancedMax)}`,
+    economic: `${formatCurrency(economicMin)}-${formatCurrency(economicMax)}`,
+    balanced: `${formatCurrency(balancedMin)}-${formatCurrency(balancedMax)}`,
+    comfort: `${formatCurrency(comfortMin)}-${formatCurrency(comfortMax)}`,
+    note: `Faixa estimada para ${answers.trip_duration || "3 noites"} considerando hospedagem, transporte, alimentação e extras básicos.`
+  };
+}
+
+function tripNights(duration) {
+  const map = {
+    "Bate-volta": 0,
+    "1 noite": 1,
+    "2 noites": 2,
+    "3 noites": 3,
+    "4 a 5 noites": 4,
+    "6+ noites": 6
+  };
+  return map[duration] ?? 3;
+}
+
+function familySize(intake) {
+  const adults = Number.parseInt(intake.adults, 10) || 2;
+  const children = Number.parseInt(intake.children, 10) || 1;
+  return adults + children;
+}
+
+function budgetMaxValue(range) {
+  const map = {
+    "Até R$ 1.500": 1500,
+    "R$ 1.500 a R$ 3.000": 3000,
+    "R$ 3.000 a R$ 5.000": 5000,
+    "R$ 5.000 a R$ 8.000": 8000,
+    "Acima de R$ 8.000": 12000
+  };
+  return map[range] || null;
+}
+
+function formatCurrency(value) {
+  return `R$ ${Math.round(value).toLocaleString("pt-BR")}`;
 }
 
 function matchesHotelFilter(hotel) {
