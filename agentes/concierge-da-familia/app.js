@@ -93,6 +93,8 @@ const app = document.getElementById("app");
 let searchRenderTimer;
 let routeAnimationFrame = null;
 let routeLastTick = 0;
+let discoveryMap = null;
+let discoveryMapMarkers = [];
 
 document.addEventListener("click", handleClick);
 document.addEventListener("input", handleInput);
@@ -112,6 +114,7 @@ function defaultHotelFilters() {
 }
 
 function render() {
+  destroyDiscoveryMap();
   app.innerHTML = `
     ${ConciergeHeroSection()}
     ${!state.result ? ConciergeMapExplorerSection() : ""}
@@ -127,6 +130,7 @@ function render() {
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
   syncDynamicIntakeFields();
+  initDiscoveryMap();
 }
 
 async function loadLiveConciergeData() {
@@ -170,6 +174,94 @@ function groupBy(items, keyFn) {
     groups.get(key).push(item);
   });
   return groups;
+}
+
+function initDiscoveryMap() {
+  const container = document.getElementById("familyRealMap");
+  if (!container || !window.L) {
+    document.querySelector(".real-map-shell")?.classList.add("map-fallback-active");
+    return;
+  }
+  const hotspots = filteredMapHotspots();
+  if (!hotspots.length) return;
+  const L = window.L;
+  discoveryMap = L.map(container, {
+    zoomControl: true,
+    scrollWheelZoom: false,
+    attributionControl: true
+  });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: "&copy; OpenStreetMap"
+  }).addTo(discoveryMap);
+
+  const originIcon = L.divIcon({
+    className: "family-map-origin-icon",
+    html: "<b>SP</b><span>origem</span>",
+    iconSize: [66, 34],
+    iconAnchor: [33, 34]
+  });
+  L.marker([SAO_PAULO_CENTER.latitude, SAO_PAULO_CENTER.longitude], { icon: originIcon, keyboard: false }).addTo(discoveryMap);
+
+  hotspots.forEach((hotspot, index) => {
+    const coordinates = hotspot.coordinates || approximateDestinationCoordinates(hotspot.bestHotel);
+    const active = state.mapFilters.selectedKey === hotspot.key || (!state.mapFilters.selectedKey && index === 0);
+    const marker = L.marker([coordinates.latitude, coordinates.longitude], {
+      icon: L.divIcon({
+        className: "family-map-destination-wrap",
+        html: `<button class="family-map-destination-icon ${hotspot.familyScore.medal} ${active ? "active" : ""}" type="button" data-action="map-hotspot" data-hotspot-key="${escapeAttr(hotspot.key)}"><b>${index + 1}</b><span>${escapeHtml(hotspot.shortName)}<small>${escapeHtml(hotspot.timeLabel)}</small></span></button>`,
+        iconSize: [154, 46],
+        iconAnchor: [18, 42]
+      }),
+      keyboard: true,
+      title: hotspot.name
+    }).addTo(discoveryMap);
+    marker.getElement()?.querySelector(".family-map-destination-icon")?.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      selectMapHotspotFromLeaflet(hotspot);
+    });
+    marker.on("click", () => selectMapHotspotFromLeaflet(hotspot));
+    marker.bindTooltip(`${hotspot.name} | ${hotspot.routeLabel}`, { direction: "top", offset: [0, -26], opacity: .92 });
+    discoveryMapMarkers.push(marker);
+  });
+
+  fitDiscoveryMapToHotspots(hotspots);
+  setTimeout(() => discoveryMap?.invalidateSize(), 80);
+  document.querySelector(".real-map-shell")?.classList.add("leaflet-ready");
+}
+
+function destroyDiscoveryMap() {
+  discoveryMapMarkers = [];
+  if (discoveryMap) {
+    discoveryMap.remove();
+    discoveryMap = null;
+  }
+}
+
+function fitDiscoveryMapToHotspots(hotspots) {
+  const L = window.L;
+  const points = hotspots.map(hotspot => hotspot.coordinates || approximateDestinationCoordinates(hotspot.bestHotel));
+  points.push(SAO_PAULO_CENTER);
+  const hasOnlySaoPauloRange = points.every(point => point.latitude < -19 && point.latitude > -26 && point.longitude < -44 && point.longitude > -54);
+  discoveryMap.fitBounds(L.latLngBounds(points.map(point => [point.latitude, point.longitude])), {
+    padding: [62, 62],
+    maxZoom: hasOnlySaoPauloRange ? 9 : 6,
+    animate: false
+  });
+}
+
+function selectMapHotspotFromLeaflet(hotspot) {
+  state.mapFilters.selectedKey = hotspot.key;
+  if (state.routePreview.destinationKey !== hotspot.key) stopRouteAnimation();
+  trackEvent("map_hotspot_selected", {
+    destinationKey: hotspot.key,
+    destinationName: hotspot.name,
+    bestHotel: hotspot.bestHotel?.name || "",
+    source: "real_map_marker"
+  });
+  render();
+  setTimeout(() => document.getElementById("mapa")?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
 }
 
 function AgentCardConciergeFamilia() {
@@ -779,9 +871,16 @@ function ConciergeMapExplorerSection() {
             <strong>${escapeHtml(hotspots.length ? `${hotspots.length} destinos familiares encontrados` : "Nenhum destino com estes filtros")}</strong>
             <span>${escapeHtml(mapDiscoverySummary())}</span>
           </div>
-          <div class="interactive-map-canvas" role="img" aria-label="Mapa interativo com hotspots de destinos familiares saindo de Sao Paulo">
-            <span class="map-origin main-origin">${escapeHtml(mapOriginShortLabel())}</span>
-            ${hotspots.map((hotspot, index) => MapExplorerPin(hotspot, index)).join("")}
+          <div class="interactive-map-canvas real-map-shell" role="img" aria-label="Mapa real do estado de Sao Paulo com destinos familiares recomendados">
+            <div id="familyRealMap" class="family-real-map" aria-hidden="true"></div>
+            <div class="map-fallback-overlay">
+              <span class="map-origin main-origin">${escapeHtml(mapOriginShortLabel())}</span>
+              ${hotspots.map((hotspot, index) => MapExplorerPin(hotspot, index)).join("")}
+            </div>
+            <div class="map-real-caption">
+              <strong>Mapa real de Sao Paulo</strong>
+              <span>Arraste, aproxime e toque nas cidades para comparar.</span>
+            </div>
           </div>
           <div class="map-hotspot-list">
             ${hotspots.slice(0, 10).map((hotspot, index) => MapHotspotListItem(hotspot, index)).join("") || EmptyMapHotspotState()}
@@ -976,6 +1075,11 @@ function routePreviewForHotspot(hotspot) {
 }
 
 function routeDestinationCoordinates(recommendation, bestHotel, googleCoverage) {
+  const canonical = destinationCoordinateBySlug(recommendation.key)
+    || destinationCoordinateBySlug(bestHotel.destinationKey)
+    || destinationCoordinateBySlug(bestHotel.destinationSlug)
+    || destinationCoordinateBySlug(imageKeyForHotelDestination(bestHotel));
+  if (canonical) return canonical;
   const livePoint = firstLiveMatch(recommendation, liveConciergeData.mapPointsBySlug);
   if (livePoint?.latitude && livePoint?.longitude) return { latitude: Number(livePoint.latitude), longitude: Number(livePoint.longitude) };
   if (googleCoverage?.latitude && googleCoverage?.longitude) return { latitude: Number(googleCoverage.latitude), longitude: Number(googleCoverage.longitude) };
@@ -985,11 +1089,28 @@ function routeDestinationCoordinates(recommendation, bestHotel, googleCoverage) 
 }
 
 function approximateDestinationCoordinates(bestHotel) {
+  return destinationCoordinateBySlug(bestHotel.destinationKey)
+    || destinationCoordinateBySlug(bestHotel.destinationSlug)
+    || destinationCoordinateBySlug(imageKeyForHotelDestination(bestHotel))
+    || { latitude: -23.116, longitude: -46.553 };
+}
+
+function destinationCoordinateBySlug(slug) {
   const bySlug = {
     "campinas-sp": { latitude: -22.9051, longitude: -47.0613 },
+    "resort-interior-sp": { latitude: -22.9051, longitude: -47.0613 },
     "atibaia-sp": { latitude: -23.116, longitude: -46.553 },
+    atibaia: { latitude: -23.116, longitude: -46.553 },
     "aguas-de-lindoia": { latitude: -22.473, longitude: -46.632 },
+    "aguas-de-lindoia-sp": { latitude: -22.473, longitude: -46.632 },
     "mogi-das-cruzes": { latitude: -23.5217, longitude: -46.186 },
+    "mogi-das-cruzes-sp": { latitude: -23.5217, longitude: -46.186 },
+    "sao-roque": { latitude: -23.5292, longitude: -47.1351 },
+    "sao-roque-sp": { latitude: -23.5292, longitude: -47.1351 },
+    "guaruja-sp": { latitude: -23.9931, longitude: -46.2564 },
+    guaruja: { latitude: -23.9931, longitude: -46.2564 },
+    "litoral-norte-sp": { latitude: -23.7903, longitude: -45.5581 },
+    maresias: { latitude: -23.7903, longitude: -45.5581 },
     "cesario-lange": { latitude: -23.2247, longitude: -47.9546 },
     olimpia: { latitude: -20.7372, longitude: -48.9111 },
     "campos-do-jordao": { latitude: -22.7408, longitude: -45.5944 },
@@ -1002,7 +1123,7 @@ function approximateDestinationCoordinates(bestHotel) {
     "buenos-aires": { latitude: -34.6037, longitude: -58.3821 },
     orlando: { latitude: 28.5384, longitude: -81.3789 }
   };
-  return bySlug[bestHotel.destinationSlug] || bySlug[imageKeyForHotelDestination(bestHotel)] || { latitude: -23.116, longitude: -46.553 };
+  return bySlug[String(slug || "").trim()] || null;
 }
 
 function fallbackRouteGeoPoints(hotspot) {
