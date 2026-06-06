@@ -91,6 +91,7 @@ function render() {
     ${state.result ? DestinationRecommendationsSection() : ""}
     ${state.result && state.selectedDestinationKey ? RankedHotelsSection() : ""}
     ${state.result ? ShareableResultSection(state.result) : ""}
+    ${FriendReferralSection()}
     ${HotelRecommendationSection()}
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
@@ -668,6 +669,31 @@ function ProfileBar(label, value) {
       <span>${escapeHtml(label)} <b>${value}%</b></span>
       <i style="width:${value}%"></i>
     </div>
+  `;
+}
+
+function FriendReferralSection() {
+  const hasResult = Boolean(state.result);
+  const title = hasResult
+    ? "Tem amigos pais que tambem estao escolhendo viagem?"
+    : "Indique o Concierge da Familia para outros pais";
+  const text = hasResult
+    ? "Envie seu achado para outro pai ou mae fazer o diagnostico em 2 minutos."
+    : "Compartilhe a ferramenta com uma familia que esta tentando escolher destino sem perrengue.";
+  return `
+    <section class="section referral-section" id="indicar-amigos">
+      <div class="referral-box">
+        <div>
+          <span class="badge subtle">Indique para amigos</span>
+          <h2>${escapeHtml(title)}</h2>
+          <p>${escapeHtml(text)} O link vai com uma referencia anonima da sessao para medirmos quais indicacoes estao trazendo novas familias.</p>
+        </div>
+        <div class="referral-actions">
+          <a class="button primary referral-whatsapp" href="${escapeAttr(whatsappShareUrl(friendReferralMessage()))}" target="_blank" rel="noopener" data-action="friend-referral-whatsapp">Enviar pelo WhatsApp</a>
+          <button class="button secondary" type="button" data-action="copy-referral-link">Copiar link</button>
+        </div>
+      </div>
+    </section>
   `;
 }
 
@@ -2165,6 +2191,8 @@ function handleClick(event) {
     setTimeout(() => document.getElementById("recomendacoes")?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
     return;
   }
+  if (action === "friend-referral-whatsapp") return trackFriendReferral("whatsapp");
+  if (action === "copy-referral-link") return copyReferralLink(target);
   if (action === "share-result") return shareCurrentResult(target);
   if (action === "copy-share-text") return copyCurrentResult(target);
   if (action === "family-alert") return activateFamilyAlert(target);
@@ -2224,6 +2252,21 @@ async function copyCurrentResult(button) {
   markTemporaryButton(button, "Texto copiado");
 }
 
+async function copyReferralLink(button) {
+  const url = referralUrl();
+  await copyText(url);
+  trackFriendReferral("copy_link");
+  markTemporaryButton(button, "Link copiado");
+}
+
+function trackFriendReferral(channel) {
+  trackEvent("friend_referral_clicked", {
+    ...analyticsResultPayload(),
+    channel,
+    referralUrl: referralUrl()
+  });
+}
+
 function activateFamilyAlert(button) {
   if (!state.result) return;
   const destinations = buildDestinationRecommendations().slice(0, 3).map(item => item.name).join(", ");
@@ -2243,6 +2286,29 @@ function activateFamilyAlert(button) {
   trackEvent("family_alert_requested", analyticsResultPayload());
   markTemporaryButton(button, "Abrindo WhatsApp");
   window.open(leadWhatsAppUrl(text), "_blank", "noopener");
+}
+
+function friendReferralMessage() {
+  const intro = state.result
+    ? `Eu fiz um diagnostico de viagem em familia e meu perfil deu ${state.result.profileName}.`
+    : "Achei um diagnostico rapido para escolher viagem em familia com menos perrengue.";
+  return [
+    intro,
+    "Ele cruza idade das criancas, orcamento, epoca, logistica saindo de SP, hoteis e risco de perrengue.",
+    "Talvez ajude voces tambem:",
+    referralUrl()
+  ].join("\n");
+}
+
+function referralUrl() {
+  const url = new URL(`${window.location.origin}${window.location.pathname}`);
+  url.searchParams.set("ref", sessionId.slice(0, 10));
+  url.hash = "diagnostico";
+  return url.toString();
+}
+
+function whatsappShareUrl(message) {
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
 
 async function submitHotelRecommendation(formElement) {

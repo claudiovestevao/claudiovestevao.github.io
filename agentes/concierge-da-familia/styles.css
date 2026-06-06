@@ -2568,6 +2568,45 @@ summary {
   color: inherit;
 }
 
+.referral-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid rgba(27, 128, 73, .2);
+  border-radius: 22px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(231, 248, 239, .9), rgba(255, 255, 255, .94)),
+    #fff;
+}
+
+.referral-box h2,
+.referral-box p {
+  margin: 0;
+}
+
+.referral-box p {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.referral-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.referral-whatsapp {
+  background: #128c4a;
+}
+
+.referral-whatsapp:hover,
+.referral-whatsapp:focus-visible {
+  background: #0d6f3a;
+}
+
 .hotel-recommendation-box {
   display: grid;
   grid-template-columns: .85fr 1.15fr;
@@ -2980,8 +3019,17 @@ summary {
   }
 
   .hotel-recommendation-box,
+  .referral-box,
   .location-grid {
     grid-template-columns: 1fr;
+  }
+
+  .referral-actions {
+    justify-content: stretch;
+  }
+
+  .referral-actions .button {
+    width: 100%;
   }
 
   .live-hotel-grid {
