@@ -14,7 +14,11 @@ const state = {
   intakeComplete: false,
   intake: {},
   intakeDraft: {
+    adultsCount: "2",
     childrenCount: "1",
+    roomsCount: "1",
+    tripDuration: "3 noites",
+    childAges: ["1 a 2 anos"],
     travelTimingMode: "unknown",
     destinationInterestKey: "",
     destinationInterestName: ""
@@ -38,9 +42,13 @@ const state = {
     sort: "score"
   },
   mapFilters: {
-    travel: "all",
+    origin: "Grande SP",
+    adults: "2",
+    children: "1",
+    childAges: ["1 a 2 anos"],
+    travel: "2h",
     fit: "all",
-    price: "all",
+    budget: "comfort",
     selectedKey: ""
   }
 };
@@ -333,7 +341,10 @@ function PopularDestinationCard(destination, index) {
 }
 
 function ConciergeQuickIntakeForm() {
+  const adultsCount = Number.parseInt(state.intakeDraft.adultsCount, 10) || 2;
   const childrenCount = Number.parseInt(state.intakeDraft.childrenCount, 10) || 0;
+  const roomsCount = Number.parseInt(state.intakeDraft.roomsCount, 10) || 1;
+  const tripDuration = state.intakeDraft.tripDuration || "3 noites";
   const travelMode = state.intakeDraft.travelTimingMode || "unknown";
   return `
     <form id="intakeForm" class="quiz-card intake-card">
@@ -369,11 +380,7 @@ function ConciergeQuickIntakeForm() {
       <div class="intake-grid">
         <label>Adultos
           <select name="adultsCount">
-            <option value="1">1 adulto</option>
-            <option value="2" selected>2 adultos</option>
-            <option value="3">3 adultos</option>
-            <option value="4">4 adultos</option>
-            <option value="5">5+ adultos</option>
+            ${[1, 2, 3, 4, 5].map(count => `<option value="${count}" ${adultsCount === count ? "selected" : ""}>${count === 5 ? "5+ adultos" : `${count} ${count === 1 ? "adulto" : "adultos"}`}</option>`).join("")}
           </select>
         </label>
         <label>Crianças
@@ -383,19 +390,12 @@ function ConciergeQuickIntakeForm() {
         </label>
         <label>Quartos
           <select name="roomsCount">
-            <option value="1" selected>1 quarto</option>
-            <option value="2">2 quartos</option>
-            <option value="3">3 quartos</option>
-            <option value="4">4+ quartos</option>
+            ${[1, 2, 3, 4].map(count => `<option value="${count}" ${roomsCount === count ? "selected" : ""}>${count === 4 ? "4+ quartos" : `${count} ${count === 1 ? "quarto" : "quartos"}`}</option>`).join("")}
           </select>
         </label>
         <label>Noites
           <select name="tripDuration">
-            <option>1 noite</option>
-            <option>2 noites</option>
-            <option selected>3 noites</option>
-            <option>4 a 5 noites</option>
-            <option>6+ noites</option>
+            ${["1 noite", "2 noites", "3 noites", "4 a 5 noites", "6+ noites"].map(option => `<option ${tripDuration === option ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}
           </select>
         </label>
         ${ChildAgeFields(childrenCount)}
@@ -443,7 +443,7 @@ function ConciergeQuickIntakeForm() {
   `;
 }
 
-function ChildAgeFields(childrenCount) {
+function LegacyChildAgeFields(childrenCount) {
   return [1, 2, 3, 4].map(index => `
     <label class="child-age-field ${index > childrenCount ? "hidden-field" : ""}" data-child-age-index="${index}">
       Idade criança ${index}
@@ -457,6 +457,22 @@ function ChildAgeFields(childrenCount) {
   `).join("");
 }
 
+function ChildAgeFields(childrenCount) {
+  const fallbackByIndex = ["1 a 2 anos", "3 a 5 anos", "0 a 12 meses", "0 a 12 meses"];
+  const options = ["0 a 12 meses", "1 a 2 anos", "3 a 5 anos", "6+ anos"];
+  return [1, 2, 3, 4].map(index => {
+    const selected = state.intakeDraft.childAges?.[index - 1] || fallbackByIndex[index - 1];
+    return `
+      <label class="child-age-field ${index > childrenCount ? "hidden-field" : ""}" data-child-age-index="${index}">
+        Idade crianca ${index}
+        <select name="childAge${index}" ${index > childrenCount ? "disabled" : ""}>
+          ${options.map(option => `<option value="${escapeAttr(option)}" ${selected === option ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+        </select>
+      </label>
+    `;
+  }).join("");
+}
+
 function TravelModeOption(value, label, selected) {
   return `
     <label class="segment-option ${selected === value ? "active" : ""}">
@@ -466,7 +482,7 @@ function TravelModeOption(value, label, selected) {
   `;
 }
 
-function ConciergeMapExplorerSection() {
+function LegacyConciergeMapExplorerSection() {
   const hotspots = filteredMapHotspots();
   const selected = hotspots.find(item => item.key === state.mapFilters.selectedKey) || hotspots[0];
   return `
@@ -521,7 +537,7 @@ function MapFilterButton(group, value, label) {
   return `<button class="filter ${state.mapFilters[group] === value ? "active" : ""}" type="button" data-action="map-filter" data-filter-group="${group}" data-filter-value="${value}">${escapeHtml(label)}</button>`;
 }
 
-function MapExplorerPin(hotspot, index) {
+function LegacyMapExplorerPin(hotspot, index) {
   const position = hotspot.mapPosition;
   return `
     <button class="map-hotspot-pin ${state.mapFilters.selectedKey === hotspot.key ? "active" : ""}" type="button" style="left:${position.x}%;top:${position.y}%" data-action="map-hotspot" data-hotspot-key="${escapeAttr(hotspot.key)}" aria-label="${escapeAttr(`Ver ${hotspot.name}`)}">
@@ -531,7 +547,7 @@ function MapExplorerPin(hotspot, index) {
   `;
 }
 
-function MapHotspotListItem(hotspot, index) {
+function LegacyMapHotspotListItem(hotspot, index) {
   return `
     <button class="map-hotspot-row ${state.mapFilters.selectedKey === hotspot.key ? "active" : ""}" type="button" data-action="map-hotspot" data-hotspot-key="${escapeAttr(hotspot.key)}">
       <b>${index + 1}</b>
@@ -541,7 +557,7 @@ function MapHotspotListItem(hotspot, index) {
   `;
 }
 
-function MapHotspotDetail(hotspot) {
+function LegacyMapHotspotDetail(hotspot) {
   return `
     <aside class="map-hotspot-detail">
       <span class="badge subtle">${escapeHtml(hotspot.badge)}</span>
@@ -567,11 +583,11 @@ function MapHotspotDetail(hotspot) {
   `;
 }
 
-function EmptyMapHotspotState() {
+function LegacyEmptyMapHotspotState() {
   return `<div class="empty-map-state"><strong>Nenhum hotspot com estes filtros.</strong><span>Abra um pouco os critérios para comparar mais destinos.</span></div>`;
 }
 
-function filteredMapHotspots() {
+function LegacyFilteredMapHotspots() {
   return buildMapHotspots()
     .filter(hotspot => matchesMapTravelFilter(hotspot))
     .filter(hotspot => matchesMapFitFilter(hotspot))
@@ -579,7 +595,7 @@ function filteredMapHotspots() {
     .slice(0, 16);
 }
 
-function buildMapHotspots() {
+function LegacyBuildMapHotspots() {
   const groups = new Map();
   curatedHotels.forEach(hotel => {
     const key = cityKeyForHotel(hotel);
@@ -617,7 +633,7 @@ function itineraryForDestinationKey(key, hotel) {
   return conciergeFamilyItineraries.find(itinerary => itinerary.primaryDestinationKeys.some(item => keys.has(item)));
 }
 
-function matchesMapTravelFilter(hotspot) {
+function LegacyMatchesMapTravelFilter(hotspot) {
   const mode = state.mapFilters.travel;
   const burden = travelBurden(hotspot.bestHotel);
   if (mode === "2h") return hotspot.bestHotel.departureMode === "carro" && burden <= 120;
@@ -650,7 +666,7 @@ function mapFitLabel(hotel, itinerary) {
   return "base prática";
 }
 
-function mapHotspotReason(group, hotel, itinerary) {
+function LegacyMapHotspotReason(group, hotel, itinerary) {
   if (itinerary) return `${group.shortName} funciona como base e ainda permite explorar a região com calma quando há noites suficientes.`;
   if (hotel.driveTimeFromSaoPaulo && hotel.driveTimeFromSaoPaulo <= 120) return `${group.shortName} reduz fricção: pouca estrada, hotel como base e volta simples se a rotina apertar.`;
   if (hotel.departureMode !== "carro") return `${group.shortName} entra quando a família aceita voo para comprar praia, natureza ou experiência mais marcante.`;
@@ -678,6 +694,431 @@ function mapPositionForDestination(hotel) {
     "buenos-aires": { x: 30, y: 91 }
   };
   return bySlug[hotel.destinationSlug] || bySlug[imageKeyForHotelDestination(hotel)] || hotelMapPosition(hotel.id);
+}
+
+function ConciergeMapExplorerSection() {
+  const hotspots = filteredMapHotspots();
+  const selected = hotspots.find(item => item.key === state.mapFilters.selectedKey) || hotspots[0];
+  const totalChildren = Math.max(0, Math.min(4, Number.parseInt(state.mapFilters.children, 10) || 0));
+  return `
+    <section class="section map-explorer-section map-discovery" id="mapa">
+      <div class="section-title compact-title map-hero-title">
+        <span class="badge subtle">Concierge da Familia Explore</span>
+        <h2>Descubra no mapa o melhor destino para viajar com sua familia</h2>
+        <p>Comece com poucos dados, veja destinos no mapa e refine depois com IA. O foco aqui e esforco real da familia: estrada, custo, seguranca, comida, lazer e idade das criancas.</p>
+      </div>
+      <div class="map-quick-panel" aria-label="Filtros rapidos do mapa">
+        <label class="map-field wide">
+          <span>Origem</span>
+          <input type="text" value="${escapeAttr(state.mapFilters.origin)}" data-action="map-input" data-map-field="origin" placeholder="Grande SP">
+        </label>
+        <label class="map-field">
+          <span>Adultos</span>
+          <select data-action="map-input" data-map-field="adults">
+            ${[1, 2, 3, 4, 5, 6].map(value => `<option value="${value}" ${state.mapFilters.adults === String(value) ? "selected" : ""}>${value}</option>`).join("")}
+          </select>
+        </label>
+        <label class="map-field">
+          <span>Criancas</span>
+          <select data-action="map-input" data-map-field="children">
+            ${[0, 1, 2, 3, 4].map(value => `<option value="${value}" ${state.mapFilters.children === String(value) ? "selected" : ""}>${value}</option>`).join("")}
+          </select>
+        </label>
+        <div class="map-child-ages ${totalChildren ? "" : "is-empty"}">
+          ${totalChildren ? Array.from({ length: totalChildren }, (_, index) => MapChildAgeField(index)).join("") : "<span>Sem criancas informadas</span>"}
+        </div>
+      </div>
+      <div class="map-explorer-layout">
+        <div class="map-filter-panel">
+          <div class="map-filter-group">
+            <span>Limite de deslocamento</span>
+            ${MapFilterButton("travel", "1h", "Ate 1h")}
+            ${MapFilterButton("travel", "2h", "Ate 2h")}
+            ${MapFilterButton("travel", "4h", "Ate 4h")}
+            ${MapFilterButton("travel", "flight", "Voo curto")}
+            ${MapFilterButton("travel", "international", "Viagem internacional")}
+          </div>
+          <div class="map-filter-group">
+            <span>Orcamento</span>
+            ${MapFilterButton("budget", "minimum", "Quero gastar o minimo")}
+            ${MapFilterButton("budget", "economic", "Economico")}
+            ${MapFilterButton("budget", "comfort", "Confortavel")}
+            ${MapFilterButton("budget", "premium", "Premium")}
+          </div>
+          <div class="map-filter-group secondary-filter">
+            <span>Refinar agora</span>
+            ${MapFilterButton("fit", "all", "Todos")}
+            ${MapFilterButton("fit", "baby", "Bebe")}
+            ${MapFilterButton("fit", "kidsClub", "Kids club")}
+            ${MapFilterButton("fit", "rain", "Plano B chuva")}
+            ${MapFilterButton("fit", "multi", "Multi-destino")}
+          </div>
+          <div class="map-ai-note">
+            <strong>Depois a IA afina.</strong>
+            <span>Compara datas, clima, lotacao, eventos e hoteis sem prometer preco ou disponibilidade que ainda nao foram consultados.</span>
+          </div>
+        </div>
+        <div class="interactive-map-card">
+          <div class="map-card-topline">
+            <strong>${escapeHtml(hotspots.length ? `${hotspots.length} destinos familiares encontrados` : "Nenhum destino com estes filtros")}</strong>
+            <span>${escapeHtml(mapDiscoverySummary())}</span>
+          </div>
+          <div class="interactive-map-canvas" role="img" aria-label="Mapa interativo com hotspots de destinos familiares saindo de Sao Paulo">
+            <span class="map-origin main-origin">${escapeHtml(mapOriginShortLabel())}</span>
+            ${hotspots.map((hotspot, index) => MapExplorerPin(hotspot, index)).join("")}
+          </div>
+          <div class="map-hotspot-list">
+            ${hotspots.slice(0, 10).map((hotspot, index) => MapHotspotListItem(hotspot, index)).join("") || EmptyMapHotspotState()}
+          </div>
+        </div>
+        ${selected ? MapHotspotDetail(selected) : ""}
+      </div>
+    </section>
+  `;
+}
+
+function MapChildAgeField(index) {
+  const value = state.mapFilters.childAges[index] || "1 a 2 anos";
+  const options = ["0 a 12 meses", "1 a 2 anos", "3 a 5 anos", "6+ anos"];
+  return `
+    <label class="map-field child-age">
+      <span>Idade ${index + 1}</span>
+      <select data-action="map-input" data-map-field="childAge" data-child-age-index="${index}">
+        ${options.map(option => `<option value="${escapeAttr(option)}" ${value === option ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+      </select>
+    </label>
+  `;
+}
+
+function MapExplorerPin(hotspot, index) {
+  const position = hotspot.mapPosition;
+  return `
+    <button class="map-hotspot-pin ${state.mapFilters.selectedKey === hotspot.key ? "active" : ""} ${escapeAttr(hotspot.familyScore.medal)}" type="button" style="left:${position.x}%;top:${position.y}%" data-action="map-hotspot" data-hotspot-key="${escapeAttr(hotspot.key)}" aria-label="${escapeAttr(`Ver ${hotspot.name}`)}">
+      <b>${index + 1}</b>
+      <span>${escapeHtml(hotspot.shortName)}<small>${escapeHtml(hotspot.costRange.short)}</small></span>
+    </button>
+  `;
+}
+
+function MapHotspotListItem(hotspot, index) {
+  return `
+    <button class="map-hotspot-row ${state.mapFilters.selectedKey === hotspot.key ? "active" : ""}" type="button" data-action="map-hotspot" data-hotspot-key="${escapeAttr(hotspot.key)}">
+      <b>${index + 1}</b>
+      <span>${escapeHtml(hotspot.name)}</span>
+      <small>${escapeHtml(`${hotspot.routeLabel} | ${hotspot.badgeShort}`)}</small>
+    </button>
+  `;
+}
+
+function MapHotspotDetail(hotspot) {
+  return `
+    <aside class="map-hotspot-detail">
+      <div class="map-detail-header">
+        <span class="map-family-badge ${escapeAttr(hotspot.familyScore.medal)}">${escapeHtml(hotspot.badgeShort)}</span>
+        <small>${escapeHtml(hotspot.familyScore.score)}/100</small>
+      </div>
+      <h3>${escapeHtml(hotspot.name)}</h3>
+      <p>${escapeHtml(hotspot.reason)}</p>
+      <div class="map-detail-grid">
+        <span><b>Distancia</b>${escapeHtml(hotspot.distanceLabel)}</span>
+        <span><b>Tempo</b>${escapeHtml(hotspot.timeLabel)}</span>
+        <span><b>Custo estimado</b>${escapeHtml(hotspot.costRange.label)}</span>
+        <span><b>Melhor epoca</b>${escapeHtml(hotspot.bestSeason)}</span>
+        <span><b>Idade ideal</b>${escapeHtml(hotspot.idealAge)}</span>
+        <span><b>Base segura</b>${escapeHtml(hotspot.bestHotel.name)}</span>
+      </div>
+      <div class="map-cost-note">${escapeHtml(hotspot.costRange.detail)}</div>
+      <div class="map-mini-columns">
+        <div>
+          <strong>Atracoes familiares</strong>
+          ${MapMiniList(hotspot.attractions)}
+        </div>
+        <div>
+          <strong>Pontos de atencao</strong>
+          ${MapMiniList(hotspot.attentionPoints)}
+        </div>
+      </div>
+      ${hotspot.itinerary ? `
+        <div class="map-itinerary-hint">
+          <strong>${escapeHtml(hotspot.itinerary.title)}</strong>
+          <small>${escapeHtml(hotspot.itinerary.baseStrategy)}</small>
+        </div>
+      ` : ""}
+      <div class="map-detail-actions">
+        <button class="button primary compact-button" type="button" data-action="map-start-diagnosis" data-hotspot-key="${escapeAttr(hotspot.key)}">Ver por que combina com minha familia</button>
+        <button class="button secondary compact-button" type="button" data-action="map-build-route" data-hotspot-key="${escapeAttr(hotspot.key)}">Montar roteiro familiar</button>
+        <button class="button ghost compact-button" type="button" data-action="map-compare">Comparar com outro destino</button>
+        <a class="map-route-link" href="${escapeAttr(googleMapsDirectionsUrl(hotspot.name))}" target="_blank" rel="noopener" data-track="map_explorer_route_clicked" data-source="map_explorer" data-destination="${escapeAttr(hotspot.name)}">Abrir rota no Google Maps</a>
+      </div>
+    </aside>
+  `;
+}
+
+function MapMiniList(items) {
+  return `<ul>${items.slice(0, 3).map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
+function EmptyMapHotspotState() {
+  return `<div class="empty-map-state"><strong>Nenhum hotspot com estes filtros.</strong><span>Tente ampliar o deslocamento ou trocar o orcamento para ver destinos com estrutura familiar minima.</span></div>`;
+}
+
+function filteredMapHotspots() {
+  return buildMapHotspots()
+    .filter(hotspot => matchesMapTravelFilter(hotspot))
+    .filter(hotspot => matchesMapFitFilter(hotspot))
+    .filter(hotspot => matchesMapBudgetFilter(hotspot))
+    .slice(0, 16);
+}
+
+function buildMapHotspots() {
+  const groups = new Map();
+  curatedHotels.forEach(hotel => {
+    const key = cityKeyForHotel(hotel);
+    const current = groups.get(key) || {
+      key,
+      name: hotel.destination,
+      shortName: shortCityName(hotel.destination),
+      hotels: [],
+      bestScore: 0
+    };
+    current.hotels.push(hotel);
+    current.bestScore = Math.max(current.bestScore, hotel.score || 0);
+    groups.set(key, current);
+  });
+  return [...groups.values()].map(group => {
+    const hotels = group.hotels.sort((a, b) => (b.score || 0) - (a.score || 0));
+    const bestHotel = hotels[0];
+    const itinerary = itineraryForDestinationKey(group.key, bestHotel);
+    const recommendation = {
+      ...group,
+      hotels,
+      bestHotel,
+      score: Math.min(10, Math.round((bestHotel.score || 0) * 10) / 10),
+      imageKey: imageKeyForHotelDestination(bestHotel)
+    };
+    const experience = experienceForRecommendation(recommendation);
+    const liveSummary = liveSummaryForRecommendation(recommendation);
+    const googleCoverage = googleCoverageForRecommendation(recommendation);
+    const familyScore = destinationFamilyScore(recommendation, liveSummary, experience);
+    const route = mapRouteStats(recommendation, bestHotel, googleCoverage, liveSummary);
+    const destinationCatalog = destinationCatalogForHotspot(group.key, bestHotel);
+    return {
+      ...group,
+      bestHotel,
+      experience,
+      familyScore,
+      itinerary,
+      mapPosition: mapPositionForDestination(bestHotel),
+      routeLabel: route.routeLabel,
+      distanceLabel: route.distanceLabel,
+      timeLabel: route.timeLabel,
+      costRange: mapTripCostRange(recommendation, bestHotel, route),
+      bestSeason: destinationCatalog?.bestSeason || buildSeasonNote(recommendation, bestHotel),
+      idealAge: bestHotel.idealAge || mapIdealAgeFromChildren(),
+      attractions: mapAttractionsForHotspot(experience),
+      attentionPoints: mapAttentionPoints(recommendation, bestHotel, itinerary, destinationCatalog),
+      priceTier: bestHotel.priceTier || "upscale",
+      badgeShort: mapBadgeShort(familyScore.medal),
+      reason: mapHotspotReason(group, bestHotel, itinerary)
+    };
+  }).filter(hotspot => passesFamilyMinimum(hotspot))
+    .sort((a, b) => b.familyScore.score - a.familyScore.score || travelBurden(a.bestHotel) - travelBurden(b.bestHotel));
+}
+
+function matchesMapTravelFilter(hotspot) {
+  const mode = state.mapFilters.travel;
+  const burden = travelBurden(hotspot.bestHotel);
+  if (mode === "1h") return hotspot.bestHotel.departureMode === "carro" && burden <= 75;
+  if (mode === "2h") return hotspot.bestHotel.departureMode === "carro" && burden <= 120;
+  if (mode === "4h") return hotspot.bestHotel.departureMode === "carro" && burden <= 240;
+  if (mode === "flight") return hotspot.bestHotel.departureMode !== "carro" && !isInternationalHotspot(hotspot);
+  if (mode === "international") return isInternationalHotspot(hotspot);
+  return true;
+}
+
+function matchesMapBudgetFilter(hotspot) {
+  const budget = state.mapFilters.budget;
+  const hotel = hotspot.bestHotel;
+  if (budget === "minimum") return hotel.departureMode === "carro" && travelBurden(hotel) <= 180 && ["budget", "mid", "upscale"].includes(hotel.priceTier);
+  if (budget === "economic") return !isInternationalHotspot(hotspot) && hotel.priceTier !== "luxury";
+  if (budget === "comfort") return !isInternationalHotspot(hotspot) || hotel.priceTier !== "luxury";
+  if (budget === "premium") return ["upscale", "luxury"].includes(hotel.priceTier) || Boolean(hotel.allInclusive);
+  return true;
+}
+
+function passesFamilyMinimum(hotspot) {
+  const hotel = hotspot.bestHotel;
+  if ((hotel.score || 0) < 7.2) return false;
+  if (hotspot.familyScore.medal === "not-recommended") return false;
+  return Boolean(hotel.copaBaby || hotel.copaBaby24h || hotel.kidsPool || hotel.recreation || hotel.kidsClub || hotel.allInclusive || hotel.worksOnRainyDay || hotel.hasKitchenette || hotel.calmBeach);
+}
+
+function mapHotspotReason(group, hotel, itinerary) {
+  const family = mapFamilyCompositionLabel();
+  if (itinerary) return `${group.shortName} e bom para ${family}: funciona como base e pode virar roteiro regional sem trocar de mala todo dia.`;
+  if (hotel.driveTimeFromSaoPaulo && hotel.driveTimeFromSaoPaulo <= 120) return `${group.shortName} reduz atrito para ${family}: pouca estrada, hotel como base e volta simples se a rotina apertar.`;
+  if (hotel.departureMode !== "carro") return `${group.shortName} entra quando a familia aceita voo para comprar praia, natureza ou experiencia mais marcante.`;
+  return `${group.shortName} vale quando a familia quer estrutura e aceita planejar estrada, pausas e refeicoes com mais cuidado.`;
+}
+
+function mapRouteStats(recommendation, bestHotel, googleCoverage, liveSummary) {
+  const oneWayKm = estimateOneWayKm(recommendation, bestHotel, googleCoverage);
+  const driveMinutes = Number(liveSummary?.sp_drive_minutes || bestHotel.driveTimeFromSaoPaulo || estimateDriveMinutes(oneWayKm) || 0);
+  if (bestHotel.departureMode === "carro" || oneWayKm) {
+    const distanceLabel = oneWayKm ? `${oneWayKm} km` : "distancia a validar";
+    const timeLabel = formatMinutesLabel(driveMinutes);
+    return {
+      oneWayKm,
+      driveMinutes,
+      isRoadTrip: true,
+      distanceLabel,
+      timeLabel,
+      routeLabel: `${distanceLabel} | ${timeLabel}`
+    };
+  }
+  const transfer = bestHotel.transferMinutes || 0;
+  return {
+    oneWayKm: 0,
+    driveMinutes: 0,
+    isRoadTrip: false,
+    distanceLabel: bestHotel.recommendedAirport || "voo a consultar",
+    timeLabel: transfer ? `traslado ${transfer} min` : "traslado a validar",
+    routeLabel: transfer ? `voo curto + ${transfer} min` : "voo + traslado"
+  };
+}
+
+function mapTripCostRange(recommendation, bestHotel, route) {
+  const nights = mapBudgetNights();
+  const people = mapFamilySize();
+  const hotels = recommendation.hotels || [bestHotel];
+  const nightlyAverage = Math.round(hotels.reduce((sum, hotel) => sum + nightlyEstimateForHotel(hotel), 0) / Math.max(1, hotels.length));
+  const lodging = nightlyAverage * nights;
+  const food = foodDailyEstimate(bestHotel, people) * nights;
+  const road = route.isRoadTrip ? tollRoundTripEstimate(recommendation, bestHotel) + Math.round(((route.oneWayKm || 0) * 2 / SUV_KM_PER_LITER) * GASOLINE_BRL_PER_LITER) : people * mapFlightCostEstimate(bestHotel);
+  const total = Math.round((lodging + food + road) * mapBudgetMultiplier());
+  const min = Math.round(total * .85);
+  const max = Math.round(total * 1.22);
+  return {
+    short: formatMoneyEstimate(min),
+    label: `${formatMoneyEstimate(min)} a ${formatMoneyEstimate(max)}`,
+    detail: `${nights} noites | ${people} pessoas | ${mealPlanLabel(bestHotel)}`
+  };
+}
+
+function mapBudgetNights() {
+  if (state.mapFilters.travel === "1h") return 2;
+  if (state.mapFilters.travel === "international") return 6;
+  if (state.mapFilters.travel === "flight") return 4;
+  return 3;
+}
+
+function mapBudgetMultiplier() {
+  return {
+    minimum: .78,
+    economic: .9,
+    comfort: 1.08,
+    premium: 1.35
+  }[state.mapFilters.budget] || 1;
+}
+
+function mapFlightCostEstimate(bestHotel) {
+  if (isInternationalSlug(bestHotel.destinationSlug)) return 2800;
+  return bestHotel.transferMinutes && bestHotel.transferMinutes <= 70 ? 980 : 1250;
+}
+
+function mapAttractionsForHotspot(experience) {
+  const items = experience?.attractions || [];
+  if (items.length) return items.slice(0, 3).map(item => item.name || item.familyNote || item);
+  return ["passeio leve em familia", "restaurantes e apoio local", "programa para dias de chuva a validar"];
+}
+
+function mapAttentionPoints(recommendation, bestHotel, itinerary, destinationCatalog) {
+  const items = [
+    bestHotel.attentionPoint,
+    itinerary?.avoidWhen,
+    ...(destinationCatalog?.attentionPoints || [])
+  ].filter(Boolean);
+  return unique(items).slice(0, 3).length
+    ? unique(items).slice(0, 3)
+    : ["validar berco, refeicoes e horarios", "evitar chegada tarde", "confirmar disponibilidade antes de reservar"];
+}
+
+function destinationCatalogForHotspot(key, bestHotel) {
+  const keys = new Set([key, bestHotel.destinationSlug, bestHotel.destinationKey, imageKeyForHotelDestination(bestHotel)].filter(Boolean));
+  return conciergeDestinations.find(destination => keys.has(destination.slug) || keys.has(destination.key) || keys.has(slugifyText(destination.name)));
+}
+
+function isInternationalHotspot(hotspot) {
+  return isInternationalSlug(hotspot.bestHotel.destinationSlug) || /orlando|buenos|argentina|fl/i.test([hotspot.key, hotspot.name, hotspot.bestHotel.destination].join(" "));
+}
+
+function isInternationalSlug(slug) {
+  return ["orlando", "buenos-aires"].includes(slug);
+}
+
+function mapBadgeShort(medal) {
+  if (medal === "gold") return "Padrao Ouro";
+  if (medal === "silver") return "Padrao Prata";
+  return "Padrao Bronze";
+}
+
+function mapFamilySize() {
+  return (Number.parseInt(state.mapFilters.adults, 10) || 2) + (Number.parseInt(state.mapFilters.children, 10) || 0);
+}
+
+function mapFamilyCompositionLabel() {
+  const adults = Number.parseInt(state.mapFilters.adults, 10) || 2;
+  const children = Number.parseInt(state.mapFilters.children, 10) || 0;
+  if (!children) return `${adults} adulto${adults > 1 ? "s" : ""}`;
+  return `${adults} adulto${adults > 1 ? "s" : ""} e ${children} crianca${children > 1 ? "s" : ""}`;
+}
+
+function mapIdealAgeFromChildren() {
+  const ages = state.mapFilters.childAges || [];
+  if (ages.includes("0 a 12 meses")) return "bebes, com rotina preservada";
+  if (ages.includes("1 a 2 anos")) return "toddlers e criancas pequenas";
+  if (ages.includes("3 a 5 anos")) return "3 a 5 anos";
+  return "criancas maiores";
+}
+
+function mapOriginShortLabel() {
+  const origin = String(state.mapFilters.origin || "Grande SP").trim();
+  return origin.length > 18 ? `${origin.slice(0, 16)}...` : origin;
+}
+
+function mapDiscoverySummary() {
+  const travel = {
+    "1h": "ate 1h",
+    "2h": "ate 2h",
+    "4h": "ate 4h",
+    flight: "voo curto",
+    international: "internacional"
+  }[state.mapFilters.travel] || "deslocamento flexivel";
+  const budget = {
+    minimum: "minimo possivel",
+    economic: "economico",
+    comfort: "confortavel",
+    premium: "premium"
+  }[state.mapFilters.budget] || "orcamento flexivel";
+  return `${mapFamilyCompositionLabel()} | ${travel} | ${budget}`;
+}
+
+function mapDisplacementAnswerLabel() {
+  return {
+    "1h": "Ate 2h de carro",
+    "2h": "Ate 2h de carro",
+    "4h": "Ate 4h de carro",
+    flight: "Voo direto e traslado ate 1h",
+    international: "Aceito mais logistica se valer muito"
+  }[state.mapFilters.travel] || "Ate 2h de carro";
+}
+
+function syncMapFiltersToIntakeDraft() {
+  const children = Math.max(0, Math.min(4, Number.parseInt(state.mapFilters.children, 10) || 0));
+  state.intakeDraft.adultsCount = state.mapFilters.adults || "2";
+  state.intakeDraft.childrenCount = String(children);
+  state.intakeDraft.childAges = Array.from({ length: children }, (_, index) => state.mapFilters.childAges[index] || "1 a 2 anos");
+  state.intakeDraft.tripDuration = state.mapFilters.travel === "1h" ? "2 noites" : state.mapFilters.travel === "international" ? "6+ noites" : state.mapFilters.travel === "flight" ? "4 a 5 noites" : "3 noites";
 }
 
 function ConciergeDiagnosisDonePanel() {
@@ -2686,6 +3127,7 @@ function handleClick(event) {
   }
   if (action === "map-start-diagnosis") {
     const hotspot = buildMapHotspots().find(item => item.key === target.dataset.hotspotKey);
+    syncMapFiltersToIntakeDraft();
     state.intakeDraft.destinationInterestKey = hotspot?.key || target.dataset.hotspotKey || "";
     state.intakeDraft.destinationInterestName = hotspot?.name || "";
     trackEvent("map_diagnosis_started", {
@@ -2698,6 +3140,29 @@ function handleClick(event) {
       document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" });
       document.querySelector("#intakeForm [name='leadName']")?.focus({ preventScroll: true });
     }, 40);
+    return;
+  }
+  if (action === "map-build-route") {
+    const hotspot = buildMapHotspots().find(item => item.key === target.dataset.hotspotKey);
+    syncMapFiltersToIntakeDraft();
+    state.intakeDraft.destinationInterestKey = hotspot?.key || target.dataset.hotspotKey || "";
+    state.intakeDraft.destinationInterestName = hotspot?.name || "";
+    state.answers.trip_duration = hotspot?.itinerary ? "4 a 5 noites" : state.mapFilters.travel === "1h" ? "2 noites" : "3 noites";
+    state.answers.displacement_limit = mapDisplacementAnswerLabel();
+    trackEvent("map_route_builder_started", {
+      destinationKey: state.intakeDraft.destinationInterestKey,
+      destinationName: state.intakeDraft.destinationInterestName,
+      itinerary: hotspot?.itinerary?.title || ""
+    });
+    render();
+    setTimeout(() => document.getElementById("diagnostico")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
+    return;
+  }
+  if (action === "map-compare") {
+    state.mapFilters.selectedKey = "";
+    trackEvent("map_compare_requested");
+    render();
+    setTimeout(() => document.querySelector(".map-hotspot-list")?.scrollIntoView({ behavior: "smooth", block: "center" }), 30);
     return;
   }
   if (action === "popular-destination") {
@@ -3099,6 +3564,23 @@ function getOrCreateSessionId() {
 function handleInput(event) {
   const target = event.target.closest("[data-action]");
   if (!target) return;
+  if (target.dataset.action === "map-input") {
+    const field = target.dataset.mapField;
+    if (field === "childAge") {
+      const index = Number.parseInt(target.dataset.childAgeIndex, 10) || 0;
+      state.mapFilters.childAges[index] = target.value;
+    } else {
+      state.mapFilters[field] = target.value;
+      if (field === "children") {
+        const count = Math.max(0, Math.min(4, Number.parseInt(target.value, 10) || 0));
+        state.mapFilters.childAges = Array.from({ length: count }, (_, index) => state.mapFilters.childAges[index] || "1 a 2 anos");
+      }
+    }
+    syncMapFiltersToIntakeDraft();
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer = setTimeout(render, 120);
+    return;
+  }
   if (target.dataset.action === "children-count") {
     state.intakeDraft.childrenCount = target.value;
     syncChildAgeFields(Number.parseInt(target.value, 10) || 0);
