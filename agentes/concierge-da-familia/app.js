@@ -835,7 +835,7 @@ function ConciergeMapExplorerSection() {
           ${totalChildren ? Array.from({ length: totalChildren }, (_, index) => MapChildAgeField(index)).join("") : "<span>Sem criancas informadas</span>"}
         </div>
       </div>
-      <div class="map-explorer-layout">
+      <div class="map-explorer-layout map-widescreen-layout">
         <div class="map-filter-panel">
           <div class="map-filter-group">
             <span>Limite de deslocamento</span>
@@ -881,11 +881,13 @@ function ConciergeMapExplorerSection() {
               <span>Arraste e toque nas cidades.</span>
             </div>
           </div>
-          <div class="map-hotspot-list">
+        </div>
+        <div class="map-widescreen-bottom">
+          <div class="map-hotspot-list wide-list">
             ${hotspots.slice(0, 10).map((hotspot, index) => MapHotspotListItem(hotspot, index)).join("") || EmptyMapHotspotState()}
           </div>
+          ${selected ? MapHotspotDetail(selected) : ""}
         </div>
-        ${selected ? MapHotspotDetail(selected) : ""}
       </div>
       ${selected ? TravelRoutePreview(selected) : ""}
     </section>

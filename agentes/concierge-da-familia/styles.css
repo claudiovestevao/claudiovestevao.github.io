@@ -4011,6 +4011,58 @@ summary {
   gap: 10px;
 }
 
+.map-discovery .map-widescreen-layout {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.map-discovery .map-widescreen-layout .map-filter-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.map-discovery .map-widescreen-layout .map-filter-group {
+  flex: 1 1 220px;
+  align-content: start;
+}
+
+.map-discovery .map-widescreen-layout .map-ai-note {
+  flex: 0 1 220px;
+}
+
+.map-discovery .map-widescreen-layout .interactive-map-card {
+  min-width: 0;
+}
+
+.map-discovery .map-widescreen-layout .interactive-map-canvas {
+  aspect-ratio: 16 / 9;
+  min-height: 520px;
+  max-height: min(72vh, 760px);
+}
+
+.map-widescreen-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.map-widescreen-bottom .map-hotspot-list {
+  align-content: start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+  gap: 7px;
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.map-widescreen-bottom .map-hotspot-row {
+  flex: none;
+  width: 100%;
+}
+
 .map-filter-panel,
 .interactive-map-card,
 .map-hotspot-detail {
@@ -4167,6 +4219,14 @@ summary {
 
   .map-filter-group {
     flex: 0 0 220px;
+  }
+
+  .map-discovery .map-widescreen-layout .interactive-map-canvas {
+    min-height: 430px;
+  }
+
+  .map-widescreen-bottom {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -4631,6 +4691,14 @@ summary {
     flex: initial;
   }
 
+  .map-discovery .map-widescreen-layout .interactive-map-canvas {
+    min-height: 430px;
+  }
+
+  .map-widescreen-bottom {
+    grid-template-columns: 1fr;
+  }
+
   .travel-route-preview {
     grid-template-columns: 1fr;
   }
@@ -4708,6 +4776,25 @@ summary {
 
   .map-discovery .interactive-map-canvas {
     min-height: 340px;
+  }
+
+  .map-discovery .map-widescreen-layout .interactive-map-canvas {
+    aspect-ratio: auto;
+    min-height: 340px;
+    max-height: none;
+  }
+
+  .map-widescreen-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .map-widescreen-bottom .map-hotspot-list {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .map-widescreen-bottom .map-hotspot-row {
+    flex: 0 0 170px;
   }
 
   .map-real-caption {
