@@ -1400,6 +1400,50 @@ p {
   padding-inline: 18px;
 }
 
+.live-signals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(0, 53, 128, .12);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(238, 247, 255, .94), rgba(255, 255, 255, .92));
+}
+
+.live-signals .badge,
+.live-signals p {
+  grid-column: 1 / -1;
+}
+
+.live-signals div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.live-signals b {
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.live-signals span {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.3;
+}
+
+.live-signals p {
+  max-height: 4.25em;
+  overflow: hidden;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.42;
+}
+
 .eyebrow {
   color: var(--terra);
   font-size: 12px;
@@ -1709,6 +1753,69 @@ p {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.live-hotel-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(0, 53, 128, .12);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(238, 247, 255, .82), transparent 46%),
+    rgba(255, 255, 255, .92);
+}
+
+.live-panel-title {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+}
+
+.live-panel-title h3,
+.live-panel-title p,
+.live-hotel-card h4,
+.live-hotel-card p {
+  margin: 0;
+}
+
+.live-panel-title p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.live-hotel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.live-hotel-card {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px;
+  background: #fff;
+}
+
+.live-hotel-card .travel-image {
+  margin: 0;
+  border-radius: 12px;
+}
+
+.live-hotel-card h4 {
+  color: var(--blue);
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.live-hotel-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .empty-state {
@@ -2105,6 +2212,18 @@ summary {
 
   .hotel-availability-cta {
     width: 100%;
+  }
+
+  .live-signals {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .live-hotel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .live-panel-title {
+    display: grid;
   }
 
   .decision-lens {

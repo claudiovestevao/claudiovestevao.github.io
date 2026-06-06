@@ -1,11 +1,11 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=destination-galleries-v8-20260606";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=destination-galleries-v8-20260606";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=destination-galleries-v8-20260606";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=destination-galleries-v8-20260606";
-import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=destination-galleries-v8-20260606";
-import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=destination-galleries-v8-20260606";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=destination-galleries-v8-20260606";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=destination-galleries-v8-20260606";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=live-supabase-v9-20260606";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=live-supabase-v9-20260606";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=live-supabase-v9-20260606";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=live-supabase-v9-20260606";
+import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=live-supabase-v9-20260606";
+import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=live-supabase-v9-20260606";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=live-supabase-v9-20260606";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=live-supabase-v9-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -46,12 +46,21 @@ conciergeDestinationGalleries.forEach(gallery => {
 const curatedHotels = [...conciergeHotels, ...conciergeHotelAdditions].map(normalizeHotel);
 const sessionId = getOrCreateSessionId();
 const supabaseConfig = resolveSupabaseConfig();
+const liveConciergeData = {
+  loaded: false,
+  loading: false,
+  error: null,
+  summariesBySlug: new Map(),
+  mapPointsBySlug: new Map(),
+  hotelCardsBySlug: new Map()
+};
 const app = document.getElementById("app");
 let searchRenderTimer;
 
 document.addEventListener("click", handleClick);
 document.addEventListener("input", handleInput);
 render();
+loadLiveConciergeData();
 
 function defaultHotelFilters() {
   return {
@@ -76,6 +85,50 @@ function render() {
     ${state.result ? ConciergeLeadCaptureForm() : ""}
   `;
   syncDynamicIntakeFields();
+}
+
+async function loadLiveConciergeData() {
+  if (!supabaseConfig.url || !supabaseConfig.anonKey || liveConciergeData.loading || liveConciergeData.loaded) return;
+  liveConciergeData.loading = true;
+  try {
+    const [summaries, mapPoints, hotelCards] = await Promise.all([
+      fetchSupabaseRows("destination_stay_summary", "slug,destination_name,state,google_top_place,google_rating,google_ratings_total,family_summary,sp_distance_text,sp_drive_minutes,sp_drive_text,sp_drive_text_traffic,movimento_level,event_count,total_predicted_attendance,top_events,holiday_windows,bookable_hotels,avg_guest_rating,top_hotels"),
+      fetchSupabaseRows("destination_map_points", "slug,destination_name,state,latitude,longitude,google_rating,sp_drive_text,sp_drive_minutes,sp_distance_text,movimento_level,bookable_hotels"),
+      fetchSupabaseRows("destination_hotel_cards", "destination_slug,destination_name,liteapi_id,hotel_name,stars,liteapi_rating,review_count,address,main_photo,thumbnail,latitude,longitude,description")
+    ]);
+    liveConciergeData.summariesBySlug = new Map(summaries.map(item => [item.slug, item]));
+    liveConciergeData.mapPointsBySlug = new Map(mapPoints.map(item => [item.slug, item]));
+    liveConciergeData.hotelCardsBySlug = groupBy(hotelCards, item => item.destination_slug);
+    liveConciergeData.loaded = true;
+    liveConciergeData.error = null;
+    render();
+  } catch (error) {
+    liveConciergeData.error = error.message;
+  } finally {
+    liveConciergeData.loading = false;
+  }
+}
+
+async function fetchSupabaseRows(table, select) {
+  const url = `${supabaseConfig.url.replace(/\/$/, "")}/rest/v1/${table}?select=${encodeURIComponent(select)}&limit=200`;
+  const response = await fetch(url, {
+    headers: {
+      apikey: supabaseConfig.anonKey,
+      authorization: `Bearer ${supabaseConfig.anonKey}`
+    }
+  });
+  if (!response.ok) throw new Error(`Supabase read failed: ${table} ${response.status}`);
+  return response.json();
+}
+
+function groupBy(items, keyFn) {
+  const groups = new Map();
+  items.forEach(item => {
+    const key = keyFn(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  });
+  return groups;
 }
 
 function AgentCardConciergeFamilia() {
@@ -491,6 +544,7 @@ function DestinationRecommendationsSection() {
 function DestinationRecommendationCard(recommendation, index) {
   const active = state.selectedDestinationKey === recommendation.key;
   const experience = experienceForRecommendation(recommendation);
+  const liveSummary = liveSummaryForRecommendation(recommendation);
   return `
     <article class="recommendation-card ${active ? "active" : ""}">
       <div class="recommendation-rank">
@@ -505,6 +559,7 @@ function DestinationRecommendationCard(recommendation, index) {
         <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
           ${active ? "Hotéis e disponibilidade abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
         </button>
+        ${liveSummary ? LiveDestinationSignals(liveSummary) : ""}
         <div class="decision-lens">
           <div>
             <b>Orçamento</b>
@@ -525,6 +580,29 @@ function DestinationRecommendationCard(recommendation, index) {
         </div>
       </div>
     </article>
+  `;
+}
+
+function LiveDestinationSignals(summary) {
+  const googleLabel = summary.google_rating
+    ? `${numberLabel(summary.google_rating, 1)} Google · ${numberLabel(summary.google_ratings_total, 0)} avaliações`
+    : "Google em validação";
+  const routeLabel = summary.sp_drive_text_traffic || summary.sp_drive_text || summary.sp_distance_text || "rota em validação";
+  const movementLabel = summary.movimento_level
+    ? `${summary.movimento_level}${summary.event_count ? ` · ${summary.event_count} eventos` : ""}`
+    : "movimento em validação";
+  const hotelLabel = summary.bookable_hotels
+    ? `${summary.bookable_hotels} hotéis LiteAPI${summary.avg_guest_rating ? ` · média ${numberLabel(summary.avg_guest_rating, 1)}` : ""}`
+    : "hotéis em validação";
+  return `
+    <div class="live-signals" aria-label="Dados vivos do destino">
+      <span class="badge subtle">Dados vivos</span>
+      <div><b>Nota local</b><span>${escapeHtml(googleLabel)}</span></div>
+      <div><b>Saindo de SP</b><span>${escapeHtml(routeLabel)}</span></div>
+      <div><b>Movimento</b><span>${escapeHtml(movementLabel)}</span></div>
+      <div><b>Hospedagem</b><span>${escapeHtml(hotelLabel)}</span></div>
+      ${summary.family_summary ? `<p>${escapeHtml(summary.family_summary)}</p>` : ""}
+    </div>
   `;
 }
 
@@ -571,11 +649,52 @@ function RankedHotelsSection() {
       ${ranked.length ? ConciergeMap(ranked) : ""}
       <button class="button secondary compact-button back-destination-button" data-action="back-to-destinations">Trocar destino</button>
       ${HotelExplorerControls(ranked)}
+      ${selectedRecommendation ? LiveHotelCards(selectedRecommendation) : ""}
       ${DestinationSummary(destinationGroups)}
       <div class="ranking-list">
         ${ranked.length ? ranked.map((hotel, index) => RankedHotelCard(hotel, index)).join("") : EmptyHotelState()}
       </div>
     </section>
+  `;
+}
+
+function LiveHotelCards(recommendation) {
+  const liveHotels = liveHotelsForRecommendation(recommendation).slice(0, 3);
+  if (!liveHotels.length) return "";
+  return `
+    <div class="live-hotel-panel">
+      <div class="live-panel-title">
+        <span class="badge subtle">LiteAPI</span>
+        <div>
+          <h3>Hotéis reais encontrados para ${escapeHtml(recommendation.shortName)}</h3>
+          <p>Inventário vindo da camada viva do Supabase. Use como sinal de mercado; a curadoria familiar continua nos cards aprovados abaixo.</p>
+        </div>
+      </div>
+      <div class="live-hotel-grid">
+        ${liveHotels.map(hotel => LiveHotelCard(hotel, recommendation)).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function LiveHotelCard(hotel, recommendation) {
+  const rating = hotel.liteapi_rating ? `${numberLabel(hotel.liteapi_rating, 1)}/10` : "nota a validar";
+  const reviewCount = hotel.review_count ? `${numberLabel(hotel.review_count, 0)} avaliações` : "sem volume de avaliações";
+  const stars = hotel.stars ? `${numberLabel(hotel.stars, 1)} estrelas` : "categoria a validar";
+  return `
+    <article class="live-hotel-card">
+      ${TravelImage(hotel.main_photo || hotel.thumbnail, hotel.hotel_name, "Foto do inventário LiteAPI", hotel.main_photo || hotel.thumbnail ? "destination" : "missing")}
+      <div>
+        <h4>${escapeHtml(hotel.hotel_name)}</h4>
+        <p>${escapeHtml(hotel.address || recommendation.name)}</p>
+        <div class="tags compact-tags">
+          <span>${escapeHtml(rating)}</span>
+          <span>${escapeHtml(reviewCount)}</span>
+          <span>${escapeHtml(stars)}</span>
+        </div>
+        <a class="button secondary compact-button" href="${escapeAttr(bookingSearchUrl({ name: hotel.hotel_name, destination: recommendation.name }))}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="liteapi_booking_search" data-hotel-id="${escapeAttr(hotel.liteapi_id || "")}" data-hotel-name="${escapeAttr(hotel.hotel_name)}" data-destination="${escapeAttr(recommendation.name)}">Buscar disponibilidade</a>
+      </div>
+    </article>
   `;
 }
 
@@ -940,6 +1059,52 @@ function experienceForRecommendation(recommendation) {
   return destinationExperienceByKey.get(recommendation.key)
     || destinationExperienceByKey.get(recommendation.bestHotel?.destinationSlug)
     || destinationExperienceByKey.get(recommendation.imageKey);
+}
+
+function liveSummaryForRecommendation(recommendation) {
+  return firstLiveMatch(recommendation, liveConciergeData.summariesBySlug);
+}
+
+function liveHotelsForRecommendation(recommendation) {
+  const match = liveSlugCandidates(recommendation).find(slug => liveConciergeData.hotelCardsBySlug.has(slug));
+  if (!match) return [];
+  const unique = new Map();
+  liveConciergeData.hotelCardsBySlug.get(match).forEach(hotel => {
+    const key = slugifyText(hotel.hotel_name);
+    const current = unique.get(key);
+    if (!current || liveHotelSortValue(hotel) > liveHotelSortValue(current)) unique.set(key, hotel);
+  });
+  return [...unique.values()].sort((a, b) => liveHotelSortValue(b) - liveHotelSortValue(a));
+}
+
+function firstLiveMatch(recommendation, sourceMap) {
+  return liveSlugCandidates(recommendation).map(slug => sourceMap.get(slug)).find(Boolean) || null;
+}
+
+function liveSlugCandidates(recommendation) {
+  const values = [
+    recommendation.key,
+    recommendation.imageKey,
+    recommendation.bestHotel?.destinationSlug,
+    recommendation.bestHotel?.destinationKey,
+    recommendation.name,
+    recommendation.bestHotel?.destination
+  ];
+  const candidates = new Set();
+  values.filter(Boolean).forEach(value => {
+    const slug = slugifyText(value);
+    candidates.add(slug);
+    candidates.add(removeStateSuffix(slug));
+  });
+  return [...candidates].filter(Boolean);
+}
+
+function removeStateSuffix(slug) {
+  return String(slug || "").replace(/-(sp|rj|ba|pe|al|pr|rs|sc|go|mg|ce|rn|pb|es|fl|argentina|brasil)$/i, "");
+}
+
+function liveHotelSortValue(hotel) {
+  return (Number(hotel.liteapi_rating) || 0) * 10000 + (Number(hotel.review_count) || 0);
 }
 
 function destinationStrategicBonus(group, bestHotel) {
@@ -2102,6 +2267,15 @@ function budgetMaxValue(range) {
 
 function formatCurrency(value) {
   return `R$ ${Math.round(value).toLocaleString("pt-BR")}`;
+}
+
+function numberLabel(value, digits = 0) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "";
+  return numeric.toLocaleString("pt-BR", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits
+  });
 }
 
 function matchesHotelFilter(hotel) {

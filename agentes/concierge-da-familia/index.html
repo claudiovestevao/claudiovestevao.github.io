@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Concierge da Família | Claudio Code</title>
   <meta name="description" content="Curadoria inteligente de viagens para famílias da capital de São Paulo com bebês e crianças pequenas.">
-  <link rel="stylesheet" href="styles.css?v=destination-galleries-v8-20260606">
+  <meta name="concierge-supabase-url" content="https://roojvzpicxnnqjrrdpdx.supabase.co">
+  <meta name="concierge-supabase-anon-key" content="sb_publishable_uZNfw5rT6qtrrm5rHrjVEA_cUSntjZA">
+  <link rel="stylesheet" href="styles.css?v=live-supabase-v9-20260606">
 </head>
 <body>
   <header class="site-header">
@@ -21,6 +23,12 @@
     <strong>Concierge da Família</strong>
     <span>Começamos por São Paulo para recomendar melhor.</span>
   </footer>
-  <script type="module" src="app.js?v=destination-galleries-v8-20260606"></script>
+  <script>
+    window.CONCIERGE_SUPABASE = {
+      url: "https://roojvzpicxnnqjrrdpdx.supabase.co",
+      anonKey: "sb_publishable_uZNfw5rT6qtrrm5rHrjVEA_cUSntjZA"
+    };
+  </script>
+  <script type="module" src="app.js?v=live-supabase-v9-20260606"></script>
 </body>
 </html>
