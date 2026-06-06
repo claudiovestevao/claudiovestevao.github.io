@@ -1554,6 +1554,36 @@ p {
   background: rgba(234, 243, 255, .72);
 }
 
+.travel-timing-result {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid rgba(0, 108, 228, .16);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(238, 247, 255, .95), rgba(255, 255, 255, .9));
+}
+
+.travel-timing-result div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.travel-timing-result span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.travel-timing-result strong,
+.travel-timing-result b {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
 .family-score-summary {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 8px 0;
@@ -1755,7 +1785,7 @@ p {
 
 .destination-fact-modules {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -2516,6 +2546,10 @@ summary {
 
   .destination-fact-modules {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .travel-timing-result {
+    grid-template-columns: 1fr;
   }
 }
 

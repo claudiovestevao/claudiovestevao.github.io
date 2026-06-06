@@ -541,6 +541,7 @@ function ConciergeDiagnosisResult(result) {
           ${MetricCard("Fit Financeiro", result.financialFit.label, result.financialFit.detail)}
           ${MetricCard("Esforço logístico", result.travelEffort.label, result.travelEffort.detail)}
         </div>
+        ${TravelTimingResultPanel()}
         <div class="cost-estimate">
           <div>
             <span class="eyebrow">Estimativa inicial de custo</span>
@@ -569,6 +570,26 @@ function MetricCard(label, value, detail) {
       <span>${escapeHtml(label)}</span>
       <strong>${escapeHtml(value)}</strong>
       <p>${escapeHtml(detail)}</p>
+    </div>
+  `;
+}
+
+function TravelTimingResultPanel() {
+  const timing = travelTimingInsight();
+  return `
+    <div class="travel-timing-result" aria-label="Periodo desejado para a viagem">
+      <div>
+        <span class="eyebrow">Quando voces querem ir</span>
+        <strong>${escapeHtml(timing.label)}</strong>
+      </div>
+      <div>
+        <span>Clima esperado</span>
+        <b>${escapeHtml(timing.climate)}</b>
+      </div>
+      <div>
+        <span>Eventos e movimento</span>
+        <b>${escapeHtml(timing.events)}</b>
+      </div>
     </div>
   `;
 }
@@ -696,6 +717,7 @@ function DestinationFactModules(recommendation, liveSummary, experience, googleC
   const facts = destinationDecisionFacts(recommendation, liveSummary, experience, googleCoverage);
   return `
     <div class="destination-fact-modules" aria-label="Dados objetivos para escolher ${escapeAttr(recommendation.name)}">
+      ${DecisionFact("Cal", "Epoca", facts.timing.primary, facts.timing.detail)}
       ${DecisionFact("🛣️", "Logística", facts.logistics.primary, facts.logistics.detail)}
       ${DecisionFact("💰", "Custo total", facts.cost.primary, facts.cost.detail)}
       ${DecisionFact("🍽️", "Alimentação", facts.food.primary, facts.food.detail)}
@@ -735,6 +757,7 @@ function destinationDecisionFacts(recommendation, liveSummary, experience, googl
   const restaurants = experience?.restaurants?.length || 0;
   const attractions = experience?.attractions?.length || 0;
   const googleRating = averageGoogleHotelRating(hotels);
+  const timing = destinationTimingInsight(recommendation, bestHotel, liveSummary);
   return {
     logistics: {
       primary: isRoadTrip
@@ -743,6 +766,10 @@ function destinationDecisionFacts(recommendation, liveSummary, experience, googl
       detail: isRoadTrip
         ? `Centro de SP como referência; pedágio ~${formatCurrency(tollRoundTrip)} ida e volta`
         : `Saída: ${bestHotel.recommendedAirport || "aeroporto a definir"}`
+    },
+    timing: {
+      primary: timing.primary,
+      detail: timing.detail
     },
     cost: {
       primary: isRoadTrip
@@ -2619,6 +2646,211 @@ function calculateTravelEffort(answers, intake) {
   if (answers.displacement_limit === "Até 4h de carro") return { label: "Moderado", detail: "funciona com pausas e saída bem planejada", risk: "medium" };
   if (answers.displacement_limit === "Voo direto e traslado até 1h") return { label: "Moderado", detail: "voo ajuda, mas horário de chegada importa muito", risk: "medium" };
   return { label: "Alto", detail: "só vale se o destino compensar e a família tolerar logística", risk: "high" };
+}
+
+function travelTimingInsight() {
+  const window = selectedTravelWindow();
+  const label = state.intake?.travelPeriod || "Ainda nao sei";
+  if (window.mode === "unknown") {
+    return {
+      label,
+      climate: "data aberta: clima depende da cidade escolhida",
+      events: "vou sinalizar eventos e feriados em cada destino"
+    };
+  }
+  const climate = window.months.length === 1
+    ? genericClimateForMonth(window.months[0])
+    : genericClimateForMonthRange(window.months);
+  return {
+    label,
+    climate,
+    events: window.eventHint
+  };
+}
+
+function destinationTimingInsight(recommendation, bestHotel, liveSummary) {
+  const window = selectedTravelWindow();
+  const months = window.months.length ? window.months : [new Date().getMonth() + 1];
+  const climate = destinationClimateLabel(recommendation, bestHotel, months);
+  const matchingEvents = matchingLiveEvents(liveSummary?.top_events, window).slice(0, 2);
+  const matchingHolidays = matchingLiveEvents(liveSummary?.holiday_windows, window).slice(0, 1);
+  const movement = liveSummary?.movimento_level || "movimento a validar";
+  if (matchingEvents.length) {
+    return {
+      primary: shortTravelWindowLabel(window),
+      detail: `${climate}; evento: ${eventShortLabel(matchingEvents[0])}`
+    };
+  }
+  if (matchingHolidays.length) {
+    return {
+      primary: shortTravelWindowLabel(window),
+      detail: `${climate}; janela escolar/feriado na base`
+    };
+  }
+  return {
+    primary: shortTravelWindowLabel(window),
+    detail: `${climate}; ${movement}${liveSummary?.event_count ? `, ${liveSummary.event_count} eventos mapeados` : ", sem evento forte na janela"}`
+  };
+}
+
+function selectedTravelWindow() {
+  const intake = state.intake || {};
+  const mode = intake.travelTimingMode || "unknown";
+  const now = new Date();
+  if (mode === "date" && intake.travelDate) {
+    const date = parseDateValue(intake.travelDate);
+    const month = date ? date.getMonth() + 1 : 0;
+    const end = date ? new Date(date) : null;
+    if (end) end.setHours(23, 59, 59, 999);
+    return {
+      mode,
+      label: intake.travelPeriod,
+      shortLabel: month ? monthName(month) : "data",
+      start: date,
+      end,
+      months: month ? [month] : [],
+      eventHint: "eventos filtrados pela data escolhida"
+    };
+  }
+  if (mode === "month" && intake.travelMonth) {
+    const [year, monthText] = String(intake.travelMonth).split("-");
+    const month = Number(monthText);
+    return {
+      mode,
+      label: intake.travelPeriod,
+      shortLabel: month ? monthName(month) : "mes",
+      start: month ? new Date(Number(year), month - 1, 1) : null,
+      end: month ? new Date(Number(year), month, 0, 23, 59, 59) : null,
+      months: month ? [month] : [],
+      eventHint: "eventos filtrados pelo mes escolhido"
+    };
+  }
+  if (mode === "flexible") {
+    const flexible = intake.flexibleWindow || "";
+    const normalizedFlexible = removeAccents(flexible).toLowerCase();
+    if (normalizedFlexible.includes("ferias")) return namedMonthWindow([1, 7, 12], intake.travelPeriod, "ferias escolares pedem reserva cedo");
+    if (flexible.includes("30")) return rollingWindow(now, 30, intake.travelPeriod);
+    if (flexible.includes("6 meses")) return rollingWindow(now, 180, intake.travelPeriod);
+    if (flexible.includes("Ferias") || flexible.includes("FÃ©rias")) return namedMonthWindow([1, 7, 12], intake.travelPeriod, "ferias escolares pedem reserva cedo");
+    if (flexible.includes("Feriado")) return namedMonthWindow([new Date().getMonth() + 1], intake.travelPeriod, "feriados tendem a elevar estrada, diaria e restaurantes");
+    return rollingWindow(now, 90, intake.travelPeriod);
+  }
+  return {
+    mode: "unknown",
+    label: intake.travelPeriod || "Ainda nao sei",
+    shortLabel: "Data aberta",
+    start: null,
+    end: null,
+    months: [],
+    eventHint: "eventos avaliados quando a janela ficar clara"
+  };
+}
+
+function rollingWindow(start, days, label) {
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+  return {
+    mode: "flexible",
+    label: label || "Data flexivel",
+    shortLabel: days <= 31 ? "30 dias" : days >= 170 ? "6 meses" : "3 meses",
+    start,
+    end,
+    months: monthsBetween(start, end),
+    eventHint: "eventos reais buscados dentro da janela flexivel"
+  };
+}
+
+function namedMonthWindow(months, label, eventHint) {
+  return {
+    mode: "flexible",
+    label: label || "Data flexivel",
+    shortLabel: label?.replace("Data flexÃ­vel: ", "").replace("Data flexivel: ", "") || "Janela flexivel",
+    start: null,
+    end: null,
+    months,
+    eventHint
+  };
+}
+
+function monthsBetween(start, end) {
+  const months = [];
+  const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+  const limit = new Date(end.getFullYear(), end.getMonth(), 1);
+  while (cursor <= limit && months.length < 12) {
+    months.push(cursor.getMonth() + 1);
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return unique(months);
+}
+
+function matchingLiveEvents(events, window) {
+  if (!Array.isArray(events) || !events.length) return [];
+  return events.filter(item => {
+    const date = parseDateValue(item.start || item.end);
+    if (!date) return false;
+    if (window.start && window.end) return date >= window.start && date <= window.end;
+    return window.months.includes(date.getMonth() + 1);
+  });
+}
+
+function eventShortLabel(event) {
+  const date = parseDateValue(event.start || event.end);
+  const dateLabel = date ? `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}` : "data a validar";
+  const title = String(event.title || "evento local");
+  return `${dateLabel} ${title.length > 46 ? `${title.slice(0, 43)}...` : title}`;
+}
+
+function shortTravelWindowLabel(window) {
+  return window.shortLabel || window.label || "Data aberta";
+}
+
+function parseDateValue(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function monthName(month) {
+  return ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"][month - 1] || "mes";
+}
+
+function genericClimateForMonth(month) {
+  if ([12, 1, 2, 3].includes(month)) return "calor, chuva de verao e maior demanda em praias";
+  if ([6, 7, 8].includes(month)) return "clima mais seco/frio; serra lota e encarece";
+  if ([4, 5, 9, 10].includes(month)) return "transicao boa para custo-beneficio e menos lotacao";
+  return "primavera/verao: calor cresce e chuva pode aparecer";
+}
+
+function genericClimateForMonthRange(months) {
+  if (months.some(month => [12, 1, 2].includes(month))) return "inclui meses quentes: bom para agua, pior para pico de preco";
+  if (months.some(month => [6, 7, 8].includes(month))) return "inclui inverno/ferias: serra valoriza, destinos lotam mais";
+  return "janela flexivel favorece comparar clima, tarifa e lotacao";
+}
+
+function destinationClimateLabel(recommendation, bestHotel, months) {
+  const slug = bestHotel.destinationSlug || recommendation.key || "";
+  const firstMonth = months[0] || new Date().getMonth() + 1;
+  const beach = isBeachDestination(bestHotel) || /praia|guaruja|forte|galinhas|maragogi|maceio|litoral/i.test(slug);
+  const mountain = /gramado|campos|jordan|serra/i.test(slug);
+  const park = /orlando|beto|olimpia|rio-quente/i.test(slug);
+  if (mountain) {
+    if ([6, 7, 8].includes(firstMonth)) return "frio/alta procura na serra";
+    if ([12, 1, 2, 3].includes(firstMonth)) return "serra mais amena, chuva de verao possivel";
+    return "serra com clima ameno e melhor para passeios";
+  }
+  if (beach) {
+    if ([4, 5, 6, 7].includes(firstMonth)) return "praia com maior risco de chuva em parte do Nordeste";
+    if ([12, 1, 2].includes(firstMonth)) return "calor forte e alta demanda";
+    return "boa chance de praia, checar mar e chuva";
+  }
+  if (park) {
+    if ([12, 1, 2, 7].includes(firstMonth)) return "parques mais cheios; programe pausas";
+    if ([6, 7, 8, 9].includes(firstMonth) && slug.includes("orlando")) return "calor/chuvas em Orlando, com filas sazonais";
+    return "parques pedem ritmo leve e plano B";
+  }
+  if ([12, 1, 2, 3].includes(firstMonth)) return "interior quente, chuva de verao possivel";
+  if ([6, 7, 8].includes(firstMonth)) return "interior mais seco/frio pela manha";
+  return "clima geralmente mais ameno e previsivel";
 }
 
 function estimateOneWayKm(recommendation, bestHotel, googleCoverage) {
