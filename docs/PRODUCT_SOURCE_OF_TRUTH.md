@@ -24,7 +24,9 @@ Funcionalidades que fazem parte do produto e são mantidas:
 - **Destinos em alta** — vitrine de destinos em destaque.
 - **Ranking / score de destinos** — ordenação por adequação familiar (`destination_scores`, `destination_family_fit`).
 - **Cards de destino com galerias reais** — imagens e conteúdo turístico curado.
+- **Family Trip Score visível no front** — destinos mostram score 0–100, selo Ouro/Prata/Bronze, risco de perrengue e Family Infrastructure Score.
 - **Explorador de hotéis** — hotéis por destino, com estrelas, nota de hóspedes e fotos.
+- **Padrão Família para hotéis** — a lista de hotéis bloqueia opções que falham requisitos mínimos do perfil e exibe Stay Score, Baby Comfort e Infrastructure.
 - **Calendário familiar** — feriados nacionais e janelas de férias escolares.
 - **Captura de lead pós-resultado** — formulário de contato/interesse aparece depois que a família já recebeu valor.
 - **Tracking de comportamento** — eventos, leads e cliques em hotéis via Supabase REST com publishable key pública e RLS.
@@ -160,8 +162,8 @@ Essas tabelas separam dados de API (`api_data`/`raw_api_data`), curadoria humana
 ## 8. Fluxos principais
 
 1. **Perfil rápido → diagnóstico.** Visitante informa quem vai viajar, idades, quartos, pet e janela de viagem sem deixar contato (`#diagnostico`) → responde 7 perguntas estratégicas.
-2. **Diagnóstico → 3 cidades.** Site gera perfil → mostra somente as 3 melhores cidades primeiro (`#recomendacoes`), com orçamento, sazonalidade, gastronomia, atrações familiares e galerias reais.
-3. **Cidade → hospedagem.** Visitante escolhe uma cidade → abre hotéis qualificados e links de disponibilidade (`#ranking`, `#hoteis`); cliques são rastreados (`concierge_hotel_clicks`).
+2. **Diagnóstico → 3 cidades.** Site gera perfil → mostra somente as 3 melhores cidades primeiro (`#recomendacoes`), com Family Trip Score, selo Ouro/Prata/Bronze, orçamento, sazonalidade, gastronomia, atrações familiares e galerias reais.
+3. **Cidade → hospedagem.** Visitante escolhe uma cidade → abre apenas hotéis que passam no Padrão Família, com scores de estadia, bebê e infraestrutura, além de links de disponibilidade (`#ranking`, `#hoteis`); cliques são rastreados (`concierge_hotel_clicks`).
 4. **Conversão.** Visitante deixa contato apenas se quiser ajuda curada (`#lead` → `concierge_leads`, estágio `lead_requested`).
 5. **Compartilhamento.** Resultado do diagnóstico compartilhável (`#resultado`, `#compartilhar`).
 6. **Atualização de dados (backend).** Sincronização semanal re-popula nota Google, hotéis, tempo de carro e movimento via funções de sync (ver Pendências: agendamento aguarda aprovação na tela).

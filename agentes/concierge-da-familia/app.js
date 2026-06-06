@@ -1,11 +1,11 @@
-import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=ux-consultor-v1-20260606";
-import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=ux-consultor-v1-20260606";
-import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=ux-consultor-v1-20260606";
-import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=ux-consultor-v1-20260606";
-import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=ux-consultor-v1-20260606";
-import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=ux-consultor-v1-20260606";
-import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=ux-consultor-v1-20260606";
-import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=ux-consultor-v1-20260606";
+import { conciergeDestinations } from "./src/data/conciergeFamilyDestinations.js?v=family-score-v1-20260606";
+import { conciergeHotels } from "./src/data/conciergeFamilyHotels.js?v=family-score-v1-20260606";
+import { conciergeHotelAdditions } from "./src/data/conciergeFamilyHotelAdditions.js?v=family-score-v1-20260606";
+import { conciergeDestinationImages } from "./src/data/conciergeDestinationImages.js?v=family-score-v1-20260606";
+import { conciergeDestinationExperience } from "./src/data/conciergeDestinationExperience.js?v=family-score-v1-20260606";
+import { conciergeDestinationGalleries } from "./src/data/conciergeDestinationGalleries.js?v=family-score-v1-20260606";
+import { conciergeQuizQuestions } from "./src/data/conciergeFamilyQuiz.js?v=family-score-v1-20260606";
+import { conciergeCalendar } from "./src/data/conciergeFamilyCalendar.js?v=family-score-v1-20260606";
 
 const WHATSAPP_NUMBER = "5511956607921";
 const state = {
@@ -77,6 +77,7 @@ function defaultHotelFilters() {
 function render() {
   app.innerHTML = `
     ${ConciergeHeroSection()}
+    ${!state.result ? ConciergeLiveDataSection() : ""}
     ${!state.result ? ConciergeHowItWorksSection() : ""}
     ${!state.result ? PopularFamilyDestinationsSection() : ""}
     ${state.result ? ConciergeDiagnosisResult(state.result) : ""}
@@ -91,23 +92,22 @@ function render() {
 async function loadLiveConciergeData() {
   if (!supabaseConfig.url || !supabaseConfig.anonKey || liveConciergeData.loading || liveConciergeData.loaded) return;
   liveConciergeData.loading = true;
-  try {
-    const [summaries, mapPoints, hotelCards] = await Promise.all([
-      fetchSupabaseRows("destination_stay_summary", "slug,destination_name,state,google_top_place,google_rating,google_ratings_total,family_summary,sp_distance_text,sp_drive_minutes,sp_drive_text,sp_drive_text_traffic,movimento_level,event_count,total_predicted_attendance,top_events,holiday_windows,bookable_hotels,avg_guest_rating,top_hotels"),
-      fetchSupabaseRows("destination_map_points", "slug,destination_name,state,latitude,longitude,google_rating,sp_drive_text,sp_drive_minutes,sp_distance_text,movimento_level,bookable_hotels"),
-      fetchSupabaseRows("destination_hotel_cards", "destination_slug,destination_name,liteapi_id,hotel_name,stars,liteapi_rating,review_count,address,main_photo,thumbnail,latitude,longitude,description")
-    ]);
-    liveConciergeData.summariesBySlug = new Map(summaries.map(item => [item.slug, item]));
-    liveConciergeData.mapPointsBySlug = new Map(mapPoints.map(item => [item.slug, item]));
-    liveConciergeData.hotelCardsBySlug = groupBy(hotelCards, item => item.destination_slug);
-    liveConciergeData.loaded = true;
-    liveConciergeData.error = null;
-    render();
-  } catch (error) {
-    liveConciergeData.error = error.message;
-  } finally {
-    liveConciergeData.loading = false;
-  }
+  const requests = await Promise.allSettled([
+    fetchSupabaseRows("destination_stay_summary", "slug,destination_name,state,google_top_place,google_rating,google_ratings_total,family_summary,sp_distance_text,sp_drive_minutes,sp_drive_text,sp_drive_text_traffic,movimento_level,event_count,total_predicted_attendance,top_events,holiday_windows,bookable_hotels,avg_guest_rating,top_hotels"),
+    fetchSupabaseRows("destination_map_points", "slug,destination_name,state,latitude,longitude,google_rating,sp_drive_text,sp_drive_minutes,sp_distance_text,movimento_level,bookable_hotels"),
+    fetchSupabaseRows("destination_hotel_cards", "destination_slug,destination_name,liteapi_id,hotel_name,stars,liteapi_rating,review_count,address,main_photo,thumbnail,latitude,longitude,description")
+  ]);
+  const [summaries, mapPoints, hotelCards] = requests.map(result => result.status === "fulfilled" ? result.value : []);
+  liveConciergeData.summariesBySlug = new Map(summaries.map(item => [item.slug, item]));
+  liveConciergeData.mapPointsBySlug = new Map(mapPoints.map(item => [item.slug, item]));
+  liveConciergeData.hotelCardsBySlug = groupBy(hotelCards, item => item.destination_slug);
+  liveConciergeData.loaded = true;
+  liveConciergeData.error = requests
+    .filter(result => result.status === "rejected")
+    .map(result => result.reason?.message || "Falha em fonte viva")
+    .join(" · ");
+  liveConciergeData.loading = false;
+  render();
 }
 
 async function fetchSupabaseRows(table, select) {
@@ -189,6 +189,46 @@ function ConciergeHowItWorksSection() {
         `).join("")}
       </div>
     </section>
+  `;
+}
+
+function ConciergeLiveDataSection() {
+  const summaries = [...liveConciergeData.summariesBySlug.values()];
+  const routeCount = summaries.filter(item => item.sp_drive_minutes).length;
+  const googleCount = summaries.filter(item => item.google_rating).length;
+  const hotelCount = summaries.reduce((sum, item) => sum + (Number(item.bookable_hotels) || 0), 0);
+  const calmCount = summaries.filter(item => item.movimento_level === "tranquilo").length;
+  const status = liveConciergeData.loading
+    ? "Carregando dados vivos..."
+    : summaries.length
+      ? `${summaries.length} destinos com sinais reais no Supabase`
+      : "Dados vivos em validação";
+  return `
+    <section class="section live-data-home" id="dados-vivos">
+      <div class="live-data-strip">
+        <div>
+          <span class="badge subtle">Dados que entram na decisão</span>
+          <h2>Não é só opinião: o diagnóstico cruza sinais reais.</h2>
+          <p>${escapeHtml(status)}${liveConciergeData.error ? ` · algumas fontes estão pendentes sem bloquear a experiência` : ""}</p>
+        </div>
+        <div class="live-data-metrics" aria-label="Cobertura de dados vivos">
+          ${LiveDataMetric("Google", googleCount, "notas e avaliações")}
+          ${LiveDataMetric("Rotas", routeCount, "tempo saindo de SP")}
+          ${LiveDataMetric("Hotéis", hotelCount, "opções bookable")}
+          ${LiveDataMetric("Movimento", calmCount, "destinos tranquilos")}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function LiveDataMetric(label, value, detail) {
+  return `
+    <div class="live-data-metric">
+      <strong>${numberLabel(value, 0)}</strong>
+      <span>${escapeHtml(label)}</span>
+      <small>${escapeHtml(detail)}</small>
+    </div>
   `;
 }
 
@@ -578,21 +618,28 @@ function DestinationRecommendationCard(recommendation, index) {
   const active = state.selectedDestinationKey === recommendation.key;
   const experience = experienceForRecommendation(recommendation);
   const liveSummary = liveSummaryForRecommendation(recommendation);
+  const familyScore = destinationFamilyScore(recommendation, liveSummary, experience);
   return `
     <article class="recommendation-card ${active ? "active" : ""}">
       <div class="recommendation-rank">
         <span>${index + 1}</span>
-        <strong>${recommendation.score.toFixed(1)}</strong>
+        <strong>${familyScore.score}</strong>
+        <small>/100</small>
       </div>
       ${DestinationPhotoGallery(recommendation)}
       <div class="recommendation-copy">
-        <span class="eyebrow">${escapeHtml(recommendation.familyFit)}</span>
+        <div class="family-score-line">
+          ${FamilyMedalBadge(familyScore)}
+          <span class="eyebrow">${escapeHtml(recommendation.familyFit)}</span>
+        </div>
         <h3>${escapeHtml(recommendation.name)}</h3>
         <p>${escapeHtml(recommendation.reason)}</p>
         <button class="button primary hotel-availability-cta" data-action="select-destination-recommendation" data-destination-key="${escapeAttr(recommendation.key)}">
           ${active ? "Hotéis e disponibilidade abertos abaixo" : `Ver hotéis e disponibilidade em ${escapeHtml(recommendation.shortName)}`}
         </button>
+        ${FamilyDecisionSummary(familyScore)}
         ${liveSummary ? LiveDestinationSignals(liveSummary) : ""}
+        ${FamilyInfrastructurePanel(recommendation, liveSummary, experience)}
         <div class="decision-lens">
           <div>
             <b>Orçamento</b>
@@ -613,6 +660,41 @@ function DestinationRecommendationCard(recommendation, index) {
         </div>
       </div>
     </article>
+  `;
+}
+
+function FamilyMedalBadge(score) {
+  return `<span class="family-medal ${escapeAttr(score.medal)}">${escapeHtml(score.label)}</span>`;
+}
+
+function FamilyDecisionSummary(score) {
+  return `
+    <div class="family-score-summary">
+      <div><b>Family Trip Score</b><span>${score.score}/100 · ${escapeHtml(score.verdict)}</span></div>
+      <div><b>Risco de perrengue</b><span>${escapeHtml(score.riskLabel)}</span></div>
+    </div>
+  `;
+}
+
+function FamilyInfrastructurePanel(recommendation, liveSummary, experience) {
+  const score = familyInfrastructureScore(recommendation, liveSummary, experience);
+  const restaurantCount = experience?.restaurants?.length || 0;
+  const attractionCount = experience?.attractions?.length || 0;
+  const hotelCount = Number(liveSummary?.bookable_hotels) || recommendation.hotels.length;
+  return `
+    <div class="family-infra-panel">
+      <div>
+        <b>Family Infrastructure Score</b>
+        <strong>${score}/100</strong>
+      </div>
+      <p>${escapeHtml(familyInfrastructureCopy(score, liveSummary))}</p>
+      <div class="infra-grid">
+        <span><b>${hotelCount}</b> hospedagens analisadas</span>
+        <span><b>${restaurantCount}</b> restaurantes familiares</span>
+        <span><b>${attractionCount}</b> atrações locais</span>
+        <span><b>${liveSummary?.sp_drive_text_traffic || liveSummary?.sp_drive_text || "rota em validação"}</b> saindo de SP</span>
+      </div>
+    </div>
   `;
 }
 
@@ -637,6 +719,60 @@ function LiveDestinationSignals(summary) {
       ${summary.family_summary ? `<p>${escapeHtml(summary.family_summary)}</p>` : ""}
     </div>
   `;
+}
+
+function destinationFamilyScore(recommendation, liveSummary, experience) {
+  let score = Math.round((recommendation.score || 0) * 10);
+  const drive = Number(liveSummary?.sp_drive_minutes || recommendation.bestHotel?.driveTimeFromSaoPaulo || 0);
+  const google = Number(liveSummary?.google_rating || 0);
+  const avgGuest = Number(liveSummary?.avg_guest_rating || 0);
+  const events = Number(liveSummary?.event_count || 0);
+  const hotels = Number(liveSummary?.bookable_hotels || recommendation.hotels.length || 0);
+  if (drive && drive <= 90) score += 8;
+  else if (drive && drive <= 150) score += 4;
+  else if (drive && drive > 240) score -= 10;
+  if (google >= 4.7) score += 7;
+  else if (google >= 4.4) score += 4;
+  else if (google && google < 4.1) score -= 8;
+  if (avgGuest >= 9) score += 5;
+  else if (avgGuest >= 8.5) score += 3;
+  if (liveSummary?.movimento_level === "tranquilo") score += 4;
+  if (events > 50 || liveSummary?.movimento_level === "movimentado") score -= 4;
+  if (hotels >= 5) score += 3;
+  if ((experience?.restaurants?.length || 0) >= 3) score += 2;
+  if ((experience?.attractions?.length || 0) >= 3) score += 2;
+  score = Math.max(0, Math.min(100, score));
+  const medal = score >= 84 ? "gold" : score >= 72 ? "silver" : score >= 60 ? "bronze" : "not-recommended";
+  return {
+    score,
+    medal,
+    label: medal === "gold" ? "Padrão Ouro" : medal === "silver" ? "Padrão Prata" : medal === "bronze" ? "Padrão Bronze" : "Não recomendar",
+    verdict: medal === "gold" ? "excelente escolha" : medal === "silver" ? "boa escolha com poucos alertas" : medal === "bronze" ? "viável, exige planejamento" : "fora do padrão família",
+    riskLabel: drive > 240 ? "alto pela logística" : events > 50 ? "moderado por movimento local" : "baixo a moderado"
+  };
+}
+
+function familyInfrastructureScore(recommendation, liveSummary, experience) {
+  let score = 58;
+  const drive = Number(liveSummary?.sp_drive_minutes || recommendation.bestHotel?.driveTimeFromSaoPaulo || 0);
+  if (drive && drive <= 90) score += 12;
+  else if (drive && drive <= 150) score += 8;
+  else if (drive && drive > 240) score -= 10;
+  score += Math.min(10, (Number(liveSummary?.bookable_hotels) || recommendation.hotels.length || 0) * 2);
+  score += Math.min(8, (experience?.restaurants?.length || 0) * 3);
+  score += Math.min(8, (experience?.attractions?.length || 0) * 3);
+  if (liveSummary?.movimento_level === "tranquilo") score += 6;
+  if (liveSummary?.movimento_level === "movimentado") score -= 4;
+  if (recommendation.bestHotel?.worksOnRainyDay) score += 5;
+  if (recommendation.bestHotel?.allInclusive || recommendation.bestHotel?.hasKitchenette) score += 4;
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function familyInfrastructureCopy(score, liveSummary) {
+  if (score >= 84) return "Boa estrutura para família: há sinais fortes de logística, hospedagem e plano B para reduzir perrengue.";
+  if (score >= 70) return "Estrutura familiar boa, com alguns pontos para validar antes da reserva.";
+  if (liveSummary?.movimento_level === "movimentado") return "Estrutura útil, mas o movimento local pede atenção a horários, filas e reservas.";
+  return "Estrutura em validação: use esta opção com planejamento extra e confira apoio próximo.";
 }
 
 function DestinationExperiencePreview(experience) {
@@ -852,6 +988,7 @@ function hotelMapPosition(id) {
 }
 
 function RankedHotelCard(hotel, index) {
+  const approval = hotel.familyApproval || familyApprovalForHotel(hotel);
   return `
     <article class="ranking-row">
       <span class="rank-number">${index + 1}</span>
@@ -860,6 +997,12 @@ function RankedHotelCard(hotel, index) {
         <div class="ranking-title">
           <h3>${escapeHtml(hotel.name)}</h3>
           <span>${escapeHtml(hotel.destination)}</span>
+        </div>
+        <div class="hotel-family-approval">
+          ${FamilyMedalBadge(approval)}
+          <span>Stay Score ${approval.score}/100</span>
+          <span>Baby Comfort ${approval.babyComfort}/100</span>
+          <span>Infra ${approval.infrastructure}/100</span>
         </div>
         <p>${escapeHtml(hotel.verdict)}</p>
         <div class="tags compact-tags">
@@ -870,10 +1013,11 @@ function RankedHotelCard(hotel, index) {
           ${hotel.allInclusive ? "<span>all inclusive</span>" : ""}
           ${hotel.worksOnRainyDay ? "<span>plano B chuva</span>" : ""}
         </div>
+        ${HotelApprovalExplanation(approval)}
         ${hotel.rankingNotes.length ? `<small>${escapeHtml(hotel.rankingNotes.join(" · "))}</small>` : ""}
         <div class="availability-actions">
           <a class="button primary compact-button" href="${escapeAttr(hotel.officialSiteUrl || hotel.sourceUrl)}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="official" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Ver disponibilidade</a>
-          <a class="button secondary compact-button" href="${escapeAttr(hotel.bookingUrl || bookingSearchUrl(hotel))}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="booking" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Buscar no Booking</a>
+          <a class="button secondary compact-button" href="${escapeAttr(hotel.bookingUrl || bookingSearchUrl(hotel))}" target="_blank" rel="noopener" data-track="hotel_availability_click" data-source="booking" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Ver disponibilidade na Booking</a>
           ${hotel.sourceUrl ? `<a class="source-link" href="${escapeAttr(hotel.sourceUrl)}" target="_blank" rel="noopener" data-track="hotel_source_click" data-source="curation" data-hotel-id="${escapeAttr(hotel.id)}" data-hotel-name="${escapeAttr(hotel.name)}" data-destination="${escapeAttr(hotel.destination)}">Fonte da curadoria</a>` : ""}
         </div>
       </div>
@@ -888,8 +1032,8 @@ function RankedHotelCard(hotel, index) {
 function EmptyHotelState() {
   return `
     <div class="empty-state">
-      <strong>Nenhum hotel com estes filtros.</strong>
-      <p>Remova algum critério ou limpe os filtros para voltar à curadoria completa.</p>
+      <strong>Nenhum hotel aprovado com estes filtros.</strong>
+      <p>O Padrão Família bloqueia hospedagens que não cumprem requisitos mínimos do perfil informado. Remova algum critério ou troque o destino.</p>
       <button class="button secondary" data-action="reset-hotel-filters">Limpar filtros</button>
     </div>
   `;
@@ -989,7 +1133,11 @@ function rankHotelsForAnswers() {
       adjustedScore: Math.max(0, Math.min(10, Math.round(adjustedScore * 10) / 10)),
       rankingNotes: rankingNotes.slice(0, 2)
     };
-  }).sort((a, b) => b.adjustedScore - a.adjustedScore || b.score - a.score);
+  }).map(hotel => ({
+    ...hotel,
+    familyApproval: familyApprovalForHotel(hotel)
+  })).filter(hotel => hotel.familyApproval.minimumPassed)
+    .sort((a, b) => b.adjustedScore - a.adjustedScore || b.familyApproval.score - a.familyApproval.score || b.score - a.score);
 }
 
 function getFilteredRankedHotels() {
@@ -1031,6 +1179,63 @@ function matchesAmenity(hotel, filter) {
     kitchen: hotel.hasKitchenette
   };
   return Boolean(checks[filter]);
+}
+
+function familyApprovalForHotel(hotel) {
+  const answers = state.answers || {};
+  const must = arrayAnswer(answers.comfort_needs);
+  const concerns = arrayAnswer(answers.avoid_risks);
+  const childAges = state.intake?.childAges || [];
+  const hasBaby = childAges.some(age => /0 a 12 meses|1 a 2 anos/i.test(age)) || state.intake?.childAge === "0 a 12 meses";
+  const failures = [];
+  const hasFamilyStructure = Boolean(
+    hotel.copaBaby || hotel.copaBaby24h || hotel.kidsClub || hotel.kidsPool || hotel.heatedPool ||
+    hotel.allInclusive || hotel.worksOnRainyDay || hotel.hasKitchenette || hotel.recreation
+  );
+  if ((hotel.adjustedScore || hotel.score || 0) < 7.2) failures.push("score familiar baixo");
+  if (!hasFamilyStructure) failures.push("sem estrutura familiar mínima validada");
+  if (must.includes("Copa baby") && !hotel.copaBaby && !hotel.copaBaby24h) failures.push("não atende copa baby");
+  if (must.includes("Copa baby 24h") && !hotel.copaBaby24h) failures.push("não atende copa baby 24h");
+  if (must.includes("Kids club") && !hotel.kidsClub) failures.push("não atende kids club");
+  if (must.includes("Kitchenette/cozinha") && !hotel.hasKitchenette) failures.push("sem cozinha/kitchenette validada");
+  if (hasBaby && hotel.transferMinutes > 120) failures.push("traslado longo demais para bebê");
+  if (concerns.includes("Estrada cansativa") && hotel.driveTimeFromSaoPaulo > 260) failures.push("estrada cansativa demais");
+  const base = Math.round((hotel.adjustedScore || hotel.score || 0) * 10);
+  const infrastructure = Math.max(0, Math.min(100, 48
+    + (hotel.kidsClub ? 12 : 0)
+    + (hotel.kidsPool ? 9 : 0)
+    + (hotel.heatedPool ? 7 : 0)
+    + (hotel.worksOnRainyDay ? 10 : 0)
+    + (hotel.allInclusive || hotel.hasKitchenette ? 8 : 0)
+    + (hotel.copaBaby || hotel.copaBaby24h ? 10 : 0)));
+  const babyComfort = Math.max(0, Math.min(100, 42
+    + (hotel.copaBaby ? 18 : 0)
+    + (hotel.copaBaby24h ? 14 : 0)
+    + (hotel.hasKitchenette ? 12 : 0)
+    + (hotel.heatedPool ? 8 : 0)
+    + (travelBurden(hotel) <= 120 ? 10 : travelBurden(hotel) > 240 ? -12 : 2)));
+  const score = Math.max(0, Math.min(100, Math.round((base * 0.5) + (infrastructure * 0.3) + (babyComfort * 0.2))));
+  const medal = failures.length ? "not-recommended" : score >= 86 ? "gold" : score >= 74 ? "silver" : "bronze";
+  return {
+    minimumPassed: failures.length === 0 && score >= 58,
+    failures,
+    score,
+    infrastructure,
+    babyComfort,
+    medal,
+    label: medal === "gold" ? "Padrão Ouro" : medal === "silver" ? "Padrão Prata" : medal === "bronze" ? "Padrão Bronze" : "Reprovado",
+    verdict: medal === "gold" ? "excelente para famílias" : medal === "silver" ? "bom, com poucos alertas" : medal === "bronze" ? "viável, exige planejamento" : "não atende o Padrão Família"
+  };
+}
+
+function HotelApprovalExplanation(approval) {
+  if (!approval.minimumPassed) return "";
+  const text = approval.medal === "gold"
+    ? "Aprovado porque combina estrutura infantil, conforto dos pais e menor risco operacional para a viagem."
+    : approval.medal === "silver"
+      ? "Aprovado, mas vale validar detalhes como berço, horários e política de refeições antes de reservar."
+      : "Viável, desde que a família aceite alguns pontos de planejamento antes da reserva.";
+  return `<p class="approval-copy">${escapeHtml(text)}</p>`;
 }
 
 function travelBurden(hotel) {
