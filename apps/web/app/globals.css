@@ -1228,6 +1228,87 @@ select {
   line-height: 1.38;
 }
 
+.admin-hotel-list {
+  display: grid;
+  gap: .55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .75rem;
+  background: #f8fafc;
+}
+
+.admin-hotel-list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.admin-hotel-list-head b {
+  font-weight: 950;
+}
+
+.admin-hotel-list-head span,
+.admin-hotel-warning {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 850;
+}
+
+.admin-hotel-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+  max-height: 18rem;
+  overflow: auto;
+  padding-right: .15rem;
+}
+
+.admin-hotel-card {
+  display: grid;
+  gap: .22rem;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .62rem;
+  color: var(--foreground);
+  background: #fff;
+  text-align: left;
+}
+
+.admin-hotel-card:hover,
+.admin-hotel-card.is-selected {
+  border-color: rgba(15, 91, 215, .5);
+  background: #eff6ff;
+}
+
+.admin-hotel-card b {
+  overflow: hidden;
+  font-size: .86rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-hotel-card span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 820;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-empty-hotels {
+  border: 1px dashed rgba(161, 92, 7, .28);
+  border-radius: var(--radius);
+  padding: .75rem;
+  color: #7c2d12;
+  background: #fff7ed;
+  font-size: .84rem;
+  font-weight: 800;
+}
+
 .admin-question-section {
   display: grid;
   gap: .75rem;
@@ -1480,6 +1561,7 @@ select {
   .admin-question-grid,
   .admin-question-grid.compact,
   .admin-choice-grid,
+  .admin-hotel-cards,
   .admin-score-grid {
     grid-template-columns: 1fr;
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Camera, CheckCircle2, Hotel, Loader2, Lock, Search, Send, ShieldCheck } from "lucide-react";
 
 const choiceGroups = [
@@ -78,6 +78,7 @@ export default function AdminFamilyCurationForm() {
   const [query, setQuery] = useState("");
   const [destinationId, setDestinationId] = useState("");
   const [hotelId, setHotelId] = useState("");
+  const [hotelOptions, setHotelOptions] = useState({ status: "idle", items: [], warning: "" });
   const [isPending, startTransition] = useTransition();
 
   const destinations = catalog?.destinations || [];
@@ -90,7 +91,8 @@ export default function AdminFamilyCurationForm() {
       .filter((hotel) => hotel.destinationId === selectedDestination.id || normalize(hotel.city) === normalize(selectedDestination.name))
       .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt-BR"));
   }, [hotels, selectedDestination]);
-  const selectedHotel = hotels.find((hotel) => hotel.id === hotelId) || null;
+  const activeHotelOptions = hotelOptions.items.length ? hotelOptions.items : destinationHotels;
+  const selectedHotel = activeHotelOptions.find((hotel) => hotel.id === hotelId) || null;
   const filteredHotels = useMemo(() => {
     const needle = normalize(query);
     return hotels
@@ -112,6 +114,44 @@ export default function AdminFamilyCurationForm() {
       )
       .slice(0, 140);
   }, [destinations, filteredHotels, query]);
+  const hotelListItems = query && filteredHotels.length ? mergeHotels(activeHotelOptions, filteredHotels) : activeHotelOptions;
+
+  useEffect(() => {
+    if (!catalog || !selectedDestination?.id || !password) return;
+    let cancelled = false;
+    setHotelOptions({ status: "loading", items: destinationHotels, warning: "" });
+    fetch(`/api/admin/family-curation/hotels?destinationId=${encodeURIComponent(selectedDestination.id)}`, {
+      headers: { "x-admin-password": password, accept: "application/json" }
+    })
+      .then((response) => response.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (!json.ok) {
+          setHotelOptions({ status: "error", items: destinationHotels, warning: json.message || "Nao consegui carregar hoteis." });
+          return;
+        }
+        setHotelOptions({
+          status: "ready",
+          items: json.hotels || [],
+          warning: (json.warnings || []).join(" ")
+        });
+      })
+      .catch((error) => {
+        if (!cancelled) setHotelOptions({ status: "error", items: destinationHotels, warning: error.message || "Nao consegui carregar hoteis." });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [catalog, selectedDestination?.id, password]);
+
+  useEffect(() => {
+    if (!query || !filteredDestinations.length) return;
+    const currentStillVisible = filteredDestinations.some((destination) => destination.id === destinationId);
+    if (!currentStillVisible) {
+      setDestinationId(filteredDestinations[0].id);
+      setHotelId("");
+    }
+  }, [query, filteredDestinations, destinationId]);
 
   function unlock(event) {
     event.preventDefault();
@@ -128,6 +168,7 @@ export default function AdminFamilyCurationForm() {
       setCatalog(json);
       setDestinationId(json.destinations?.[0]?.id || "");
       setHotelId("");
+      setHotelOptions({ status: "idle", items: [], warning: "" });
       setLoginStatus({ type: "success", message: `${json.destinations?.length || 0} destinos e ${json.hotels?.length || 0} hoteis carregados.` });
     });
   }
@@ -220,6 +261,15 @@ export default function AdminFamilyCurationForm() {
           </label>
         </div>
 
+        <HotelPickList
+          destination={selectedDestination}
+          hotels={hotelListItems}
+          selectedHotelId={selectedHotel?.id || ""}
+          status={hotelOptions.status}
+          warning={hotelOptions.warning}
+          onSelect={selectHotel}
+        />
+
         <KnownFacts destination={selectedDestination} hotel={selectedHotel} />
       </section>
 
@@ -301,9 +351,51 @@ export default function AdminFamilyCurationForm() {
 
   function selectHotel(nextHotelId) {
     setHotelId(nextHotelId);
-    const nextHotel = hotels.find((hotel) => hotel.id === nextHotelId);
+    const nextHotel = [...hotels, ...activeHotelOptions, ...filteredHotels].find((hotel) => hotel.id === nextHotelId);
     if (nextHotel?.destinationId) setDestinationId(nextHotel.destinationId);
   }
+}
+
+function HotelPickList({ destination, hotels, selectedHotelId, status, warning, onSelect }) {
+  const visibleHotels = dedupeHotels(hotels).slice(0, 18);
+  return (
+    <div className="admin-hotel-list">
+      <div className="admin-hotel-list-head">
+        <b>Hotéis para {destination?.name || "o destino"}</b>
+        <span>{status === "loading" ? "carregando..." : `${visibleHotels.length} opcoes`}</span>
+      </div>
+      {visibleHotels.length ? (
+        <div className="admin-hotel-cards">
+          <button
+            className={`admin-hotel-card ${!selectedHotelId ? "is-selected" : ""}`}
+            type="button"
+            onClick={() => onSelect("")}
+          >
+            <b>Avaliar só o destino</b>
+            <span>sem hotel especifico</span>
+          </button>
+          {visibleHotels.map((hotel) => (
+            <button
+              className={`admin-hotel-card ${hotel.id === selectedHotelId ? "is-selected" : ""}`}
+              type="button"
+              key={hotel.id}
+              onClick={() => onSelect(hotel.id)}
+            >
+              <b>{hotel.name}</b>
+              <span>
+                {[hotel.city, hotel.rating ? `nota ${hotel.rating}` : "", hotel.reviewCount ? `${hotel.reviewCount} reviews` : "", sourceLabel(hotel.source)].filter(Boolean).join(" · ")}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="admin-empty-hotels">
+          Nenhum hotel cadastrado ainda para este destino. Use o campo "Outro hotel" ou aguarde a busca Google ao vivo.
+        </div>
+      )}
+      {warning ? <small className="admin-hotel-warning">{warning}</small> : null}
+    </div>
+  );
 }
 
 function KnownFacts({ destination, hotel }) {
@@ -350,4 +442,27 @@ function StatusMessage({ status }) {
 
 function normalize(value) {
   return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function mergeHotels(...groups) {
+  return dedupeHotels(groups.flat().filter(Boolean));
+}
+
+function dedupeHotels(hotels = []) {
+  const seen = new Set();
+  const unique = [];
+  for (const hotel of hotels) {
+    const key = normalize(`${hotel.name}|${hotel.city}`);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(hotel);
+  }
+  return unique;
+}
+
+function sourceLabel(source = "") {
+  if (source === "google_places_live") return "Google";
+  if (source === "supabase_card") return "card";
+  if (source === "supabase") return "banco";
+  return "";
 }
