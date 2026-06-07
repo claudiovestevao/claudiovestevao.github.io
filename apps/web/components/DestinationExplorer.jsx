@@ -72,7 +72,7 @@ export default function DestinationExplorer({ initialResult }) {
             <button
               className="map-pin"
               key={destination.slug}
-              style={pinStyle(destination, visiblePins)}
+              style={pinStyle(destination, visiblePins, index)}
               type="button"
               title={`${destination.name}, ${destination.stateCode}`}
               onClick={() => setQuery(destination.name)}
@@ -150,9 +150,19 @@ function DestinationRow({ destination }) {
   );
 }
 
-function pinStyle(destination, destinations) {
+function pinStyle(destination, destinations, index) {
   const lats = destinations.map((item) => Number(item.latitude)).filter(Number.isFinite);
   const lngs = destinations.map((item) => Number(item.longitude)).filter(Number.isFinite);
+  const lat = Number(destination.latitude);
+  const lng = Number(destination.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || lats.length < 2 || lngs.length < 2) {
+    const column = index % 4;
+    const row = Math.floor(index / 4);
+    return {
+      left: `${14 + column * 22}%`,
+      top: `${24 + row * 24}%`
+    };
+  }
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);
@@ -160,7 +170,7 @@ function pinStyle(destination, destinations) {
   const latRange = Math.max(.001, maxLat - minLat);
   const lngRange = Math.max(.001, maxLng - minLng);
   return {
-    left: `${10 + ((Number(destination.longitude) - minLng) / lngRange) * 80}%`,
-    top: `${88 - ((Number(destination.latitude) - minLat) / latRange) * 76}%`
+    left: `${10 + ((lng - minLng) / lngRange) * 80}%`,
+    top: `${88 - ((lat - minLat) / latRange) * 76}%`
   };
 }
