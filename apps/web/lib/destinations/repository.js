@@ -12,6 +12,8 @@ import {
 
 export async function searchDestinations(params) {
   if (hasServerSupabase()) {
+    const familyView = await searchSupabaseFamilyViewDestinations(params);
+    if (familyView.ok) return familyView;
     const existing = await searchSupabaseExistingDestinations(params);
     if (existing.ok) return existing;
     const live = await searchSupabaseDestinations(params);
@@ -44,6 +46,12 @@ export async function searchDestinations(params) {
 export async function getDestinationCatalogStats() {
   if (hasServerSupabase()) {
     const client = getSupabaseServerClient();
+    const familyView = await client
+      .from("vw_destinations_for_sp_families")
+      .select("slug", { count: "exact", head: true });
+    if (!familyView.error && Number.isFinite(familyView.count)) {
+      return { source: "supabase_family_view", count: familyView.count };
+    }
     const existing = await client
       .from("destinations")
       .select("slug", { count: "exact", head: true })
@@ -65,6 +73,98 @@ export async function getDestinationCatalogStats() {
     }
   }
   return { source: "static_catalog_1001", count: familyDestinationCatalog1001Meta.count };
+}
+
+async function searchSupabaseFamilyViewDestinations(params) {
+  const client = getSupabaseServerClient();
+  if (!client) return { ok: false, error: "Supabase client unavailable" };
+
+  const { data, error, count } = await client
+    .from("vw_destinations_for_sp_families")
+    .select("*", { count: "exact" })
+    .order("overall_score", { ascending: false })
+    .order("mvp_priority", { ascending: true })
+    .limit(500);
+
+  if (error) {
+    console.warn("[family-concierge] Supabase family view search failed", {
+      code: error.code,
+      message: error.message
+    });
+    return { ok: false, source: "supabase_family_view", error: error.message };
+  }
+
+  const destinationIds = [...new Set((data || []).map((row) => row.destination_id).filter(Boolean))];
+  const coordinatesById = await fetchDestinationCoordinates(client, destinationIds);
+  const normalized = (data || []).map((destination) => normalizeFamilyViewDestination(destination, coordinatesById));
+  const destinations = filterStaticDestinations(normalized, params);
+
+  return {
+    ok: true,
+    source: "supabase_family_view",
+    destinations,
+    facets: destinationFacets(normalized),
+    totalKnown: count || normalized.length
+  };
+}
+
+async function fetchDestinationCoordinates(client, destinationIds) {
+  if (!destinationIds.length) return new Map();
+  const { data, error } = await client
+    .from("destinations")
+    .select("id,latitude,longitude,macro_region,short_description")
+    .in("id", destinationIds)
+    .limit(500);
+
+  if (error) {
+    console.warn("[family-concierge] Supabase destination coordinate lookup failed", {
+      code: error.code,
+      message: error.message
+    });
+    return new Map();
+  }
+
+  return new Map((data || []).map((destination) => [destination.id, destination]));
+}
+
+function normalizeFamilyViewDestination(destination, coordinatesById) {
+  const coordinates = coordinatesById.get(destination.destination_id) || {};
+  const score = Number(destination.overall_score || 0);
+  const tags = [
+    ...(destination.top_tags || []),
+    ...(destination.destination_types || []),
+    destination.best_transport_mode_from_sp,
+    destination.estimated_total_minutes_from_sp
+      ? `${Math.round(destination.estimated_total_minutes_from_sp / 60)}h desde SP`
+      : ""
+  ].filter(Boolean);
+
+  return normalizeDestination({
+    slug: destination.slug,
+    name: destination.name,
+    stateCode: destination.state,
+    stateName: destination.state,
+    country: destination.country || "Brasil",
+    macroRegion: coordinates.macro_region || "",
+    latitude: coordinates.latitude,
+    longitude: coordinates.longitude,
+    rank: destination.mvp_priority || 999,
+    familyScore: Math.round(score * 10),
+    destinationType: destination.destination_types?.[0] || "regional_family_base",
+    curationLevel: destination.is_placeholder ? "family_destination_candidate" : "known_family_destination",
+    recommendationReadiness: destination.is_placeholder ? "needs_hotel_and_place_validation" : "ready_for_editorial_review",
+    minimumFamilyRequirementsPassed: false,
+    tags,
+    idealAges: destination.ideal_age_ranges || [],
+    travelModes: [
+      destination.best_transport_mode_from_sp,
+      destination.estimated_total_minutes_from_sp
+        ? `${destination.estimated_total_minutes_from_sp} min desde SP`
+        : ""
+    ].filter(Boolean),
+    bestFor: destination.family_summary || coordinates.short_description || "",
+    attentionPoints: destination.main_attention_points || []
+  });
 }
 
 async function searchSupabaseDestinations(params) {
