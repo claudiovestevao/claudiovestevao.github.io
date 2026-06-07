@@ -371,8 +371,10 @@ function seasonalityScore(destination, profile, indexes) {
   if (!seasons.length) return clamp(destination.is_mvp_priority ? 7.1 : 6.4);
   const scores = seasons.map((row) => {
     let score = 7;
-    if (row.fit_for_babies === true) score += kind.isBaby ? 1 : 0.35;
-    if (row.fit_for_babies === false && kind.isBaby) score -= 0.9;
+    const babyFit = String(row.fit_for_babies ?? "").toLowerCase();
+    if (row.fit_for_babies === true || babyFit === "excellent") score += kind.isBaby ? 1 : 0.35;
+    if (babyFit === "good") score += kind.isBaby ? 0.55 : 0.2;
+    if ((row.fit_for_babies === false || babyFit === "poor" || babyFit === "avoid") && kind.isBaby) score -= 0.9;
     const crowd = String(row.crowd_level || "").toLowerCase();
     if (crowd.includes("low") || crowd.includes("baixa")) score += 0.4;
     if (crowd.includes("high") || crowd.includes("alta")) score -= kind.isBaby ? 0.75 : 0.35;
