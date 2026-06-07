@@ -196,7 +196,7 @@ export default function AdminFamilyCurationForm() {
         return;
       }
       form.reset();
-      setStatus({ type: "success", message: `Salvo. ID ${json.id}. Fotos: ${json.photos}. Pode catalogar o proximo.` });
+      setStatus({ type: "success", message: `Salvo e atualizado no banco de dados. ID ${json.id}. Fotos: ${json.photos}. Pode catalogar o proximo.` });
     });
   }
 
@@ -360,6 +360,7 @@ export default function AdminFamilyCurationForm() {
         </button>
       </section>
 
+      {status.message ? <StatusToast status={status} onClose={() => setStatus({ type: "idle", message: "" })} /> : null}
       {status.message ? <StatusMessage status={status} /> : null}
     </form>
   );
@@ -488,6 +489,16 @@ function StatusMessage({ status }) {
     <div className={`admin-status ${status.type}`}>
       {status.type === "success" ? <CheckCircle2 size={18} /> : <Lock size={18} />}
       {status.message}
+    </div>
+  );
+}
+
+function StatusToast({ status, onClose }) {
+  return (
+    <div className={`admin-toast ${status.type}`} role="status" aria-live="polite">
+      {status.type === "success" ? <CheckCircle2 size={18} /> : <Lock size={18} />}
+      <span>{status.message}</span>
+      <button type="button" onClick={onClose} aria-label="Fechar aviso">OK</button>
     </div>
   );
 }
