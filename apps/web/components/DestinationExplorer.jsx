@@ -402,6 +402,7 @@ function DestinationSummary({ destination }) {
 
       <ScoreBreakdown scores={destination.categoryScores} />
       <StayOptions options={destination.stayOptions} />
+      <GoogleLivePanel destination={destination} />
 
       <div className="attention-list">
         {(destination.attentionPoints || []).slice(0, 3).map((point) => (
@@ -419,6 +420,81 @@ function DestinationSummary({ destination }) {
           Ver no mapa
         </a>
       </div>
+    </div>
+  );
+}
+
+function GoogleLivePanel({ destination }) {
+  const [state, setState] = useState({ status: "loading", data: null, error: "" });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: "loading", data: null, error: "" });
+    fetch(`/api/google/destination?slug=${encodeURIComponent(destination.slug)}`, {
+      headers: { accept: "application/json" }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (cancelled) return;
+        setState(data.ok ? { status: "ready", data, error: "" } : { status: "error", data: null, error: data.message || "Google indisponível" });
+      })
+      .catch((error) => {
+        if (!cancelled) setState({ status: "error", data: null, error: error.message || "Google indisponível" });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [destination.slug]);
+
+  if (state.status === "loading") {
+    return (
+      <div className="google-live-card is-loading">
+        <Loader2 className="spin" size={15} />
+        Atualizando dados Google ao vivo...
+      </div>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <div className="google-live-card is-error">
+        <ShieldCheck size={15} />
+        Dados Google ao vivo indisponíveis agora.
+      </div>
+    );
+  }
+
+  const place = state.data?.place;
+  const route = state.data?.route;
+  if (!place) return null;
+
+  return (
+    <div className="google-live-card">
+      <div className="google-live-head">
+        <span className="ui-badge">Google ao vivo</span>
+        <small>{place.name}</small>
+      </div>
+      <div className="google-live-facts">
+        <span><Star size={13} /> {place.rating || "-"} · {formatCompact(place.userRatingCount)} avaliações</span>
+        <span><Car size={13} /> {route?.status === "OK" ? `${route.distanceKm} km · ${route.driveText}` : "rota em validação"}</span>
+      </div>
+      {place.photos?.length ? (
+        <div className="google-photo-grid">
+          {place.photos.filter((photo) => photo.photoUri).slice(0, 3).map((photo, index) => (
+            <img src={photo.photoUri} alt={`${place.name} no Google ${index + 1}`} key={`${photo.photoUri}-${index}`} loading="lazy" />
+          ))}
+        </div>
+      ) : null}
+      {place.reviews?.length ? (
+        <div className="google-review-list">
+          {place.reviews.slice(0, 3).map((review, index) => (
+            <a href={review.googleMapsUri || review.authorUri || place.googleMapsUri} target="_blank" rel="noreferrer" key={`${review.authorName}-${index}`}>
+              <b>{review.rating || "-"}★ {review.authorName || "Avaliação Google"}</b>
+              <span>{review.text}</span>
+            </a>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -541,6 +617,12 @@ function formatScore(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return "-";
   return numeric.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+}
+
+function formatCompact(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "-";
+  return numeric >= 1000 ? `${(numeric / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k` : numeric.toLocaleString("pt-BR");
 }
 
 function escapeHtml(value) {
