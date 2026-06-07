@@ -9,8 +9,8 @@ export function normalizeDestination(destination) {
     stateName: destination.stateName || destination.state_name,
     country: destination.country || "Brasil",
     macroRegion: destination.macroRegion || destination.macro_region || "",
-    latitude: Number(destination.latitude),
-    longitude: Number(destination.longitude),
+    latitude: cleanNumber(destination.latitude),
+    longitude: cleanNumber(destination.longitude),
     rank: Number(destination.rank || 9999),
     familyScore: Number(destination.familyScore || destination.family_score || 0),
     destinationType: destination.destinationType || destination.destination_type || "regional_family_base",
@@ -84,6 +84,12 @@ function clampLimit(value) {
   const numeric = Number.parseInt(value || DEFAULT_DESTINATION_LIMIT, 10);
   if (!Number.isFinite(numeric)) return DEFAULT_DESTINATION_LIMIT;
   return Math.max(1, Math.min(MAX_DESTINATION_LIMIT, numeric));
+}
+
+function cleanNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
 }
 
 function removeAccents(value) {
