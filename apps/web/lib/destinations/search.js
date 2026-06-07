@@ -81,7 +81,7 @@ export function filterStaticDestinations(destinations, params) {
     .map(normalizeDestination)
     .filter(destination => !params.state || destination.stateCode === params.state)
     .filter(destination => !params.type || destination.destinationType === params.type)
-    .filter(destination => !params.curationLevel || destination.curationLevel === params.curationLevel)
+    .filter(destination => curationMatches(destination, params.curationLevel))
     .filter(destination => {
       if (!query) return true;
       const haystack = removeAccents([
@@ -96,6 +96,18 @@ export function filterStaticDestinations(destinations, params) {
     })
     .sort((a, b) => b.familyScore - a.familyScore || a.rank - b.rank || a.name.localeCompare(b.name, "pt-BR"))
     .slice(0, params.limit);
+}
+
+function curationMatches(destination, curationLevel) {
+  if (!curationLevel) return true;
+  if (curationLevel === "family_destination_candidate") {
+    return destination.curationLevel === "family_destination_candidate";
+  }
+  const label = removeAccents(destination.scoreLabel || "").toLowerCase();
+  if (curationLevel === "ouro") return label.includes("ouro");
+  if (curationLevel === "prata") return label.includes("prata");
+  if (curationLevel === "bronze") return label.includes("bronze");
+  return destination.curationLevel === curationLevel;
 }
 
 export function destinationFacets(destinations) {

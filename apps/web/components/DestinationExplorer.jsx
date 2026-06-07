@@ -27,15 +27,12 @@ const SAO_PAULO_CENTER = [-23.55052, -46.63331];
 export default function DestinationExplorer({ initialResult }) {
   const [mode, setMode] = useState("explore");
   const [query, setQuery] = useState("");
-  const [stateCode, setStateCode] = useState("");
-  const [type, setType] = useState("");
   const [curationLevel, setCurationLevel] = useState("");
   const [result, setResult] = useState(initialResult);
   const [selectedSlug, setSelectedSlug] = useState(initialResult?.destinations?.[0]?.slug || "");
   const [isPending, startTransition] = useTransition();
 
   const destinations = result?.destinations || [];
-  const facets = result?.facets || { states: [], types: [], curationLevels: [] };
   const selectedDestination = useMemo(
     () => destinations.find((destination) => destination.slug === selectedSlug) || destinations[0],
     [destinations, selectedSlug]
@@ -49,8 +46,6 @@ export default function DestinationExplorer({ initialResult }) {
     event.preventDefault();
     const params = new URLSearchParams({
       q: query,
-      state: stateCode,
-      type,
       curationLevel,
       limit: "48"
     });
@@ -86,6 +81,13 @@ export default function DestinationExplorer({ initialResult }) {
       {mode === "explore" ? (
         <>
           <form className="command-bar" onSubmit={submit}>
+            <div className="origin-pill" aria-label="Origem da viagem">
+              <MapPin size={16} aria-hidden="true" />
+              <span>
+                <small>Origem</small>
+                <b>São Paulo-SP</b>
+              </span>
+            </div>
             <label className="command-search">
               <Search size={18} aria-hidden="true" />
               <input
@@ -94,13 +96,13 @@ export default function DestinationExplorer({ initialResult }) {
                 placeholder="Buscar destino, serra, praia, pousada..."
               />
             </label>
-            <SelectField label="UF" value={stateCode} onChange={setStateCode} options={facets.states} />
-            <SelectField label="Perfil" value={type} onChange={setType} options={facets.types} />
             <label className="ui-select">
               <span><SlidersHorizontal size={14} /> Curadoria</span>
               <select value={curationLevel} onChange={(event) => setCurationLevel(event.target.value)}>
                 <option value="">Todos</option>
-                <option value="known_family_destination">Validados</option>
+                <option value="ouro">Ouro</option>
+                <option value="prata">Prata</option>
+                <option value="bronze">Bronze</option>
                 <option value="family_destination_candidate">Candidatos</option>
               </select>
             </label>
@@ -152,6 +154,10 @@ function MapExperience({ destinations, mapDestinations, selectedDestination, set
             selectedSlug={selectedDestination?.slug}
             onSelect={setSelectedSlug}
           />
+          <div className="map-origin-badge">
+            <MapPin size={15} />
+            Saindo de São Paulo-SP
+          </div>
           <div className="map-status">
             <strong>{destinations.length}</strong>
             <span>destinos filtrados</span>
