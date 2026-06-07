@@ -27,6 +27,7 @@ const SAO_PAULO_CENTER = [-23.55052, -46.63331];
 export default function DestinationExplorer({ initialResult }) {
   const [mode, setMode] = useState("explore");
   const [query, setQuery] = useState("");
+  const [tripMoment, setTripMoment] = useState("");
   const [curationLevel, setCurationLevel] = useState("");
   const [result, setResult] = useState(initialResult);
   const [selectedSlug, setSelectedSlug] = useState(initialResult?.destinations?.[0]?.slug || "");
@@ -46,6 +47,7 @@ export default function DestinationExplorer({ initialResult }) {
     event.preventDefault();
     const params = new URLSearchParams({
       q: query,
+      moment: tripMoment,
       curationLevel,
       limit: "48"
     });
@@ -95,6 +97,20 @@ export default function DestinationExplorer({ initialResult }) {
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar destino, serra, praia, pousada..."
               />
+            </label>
+            <label className="ui-select">
+              <span><CalendarDays size={14} /> Momento</span>
+              <select value={tripMoment} onChange={(event) => setTripMoment(event.target.value)}>
+                <option value="">Qualquer época</option>
+                <option value="weekend_short">Fim de semana curto</option>
+                <option value="carnival">Carnaval</option>
+                <option value="june_festivals">Junho / festas juninas</option>
+                <option value="winter">Inverno / julho</option>
+                <option value="flowers">Flores / primavera</option>
+                <option value="christmas_lights">Natal / luzes</option>
+                <option value="long_weekend">4 a 6 dias</option>
+                <option value="long_vacation">Férias 15+ dias</option>
+              </select>
             </label>
             <label className="ui-select">
               <span><SlidersHorizontal size={14} /> Curadoria</span>

@@ -319,7 +319,7 @@ select {
 
 .command-bar {
   display: grid;
-  grid-template-columns: minmax(150px, .55fr) minmax(280px, 1.5fr) minmax(150px, .55fr) auto;
+  grid-template-columns: minmax(145px, .5fr) minmax(250px, 1.2fr) minmax(180px, .75fr) minmax(150px, .58fr) auto;
   gap: .6rem;
   align-items: flex-end;
   padding: .75rem;
