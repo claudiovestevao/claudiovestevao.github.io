@@ -12,10 +12,10 @@ import {
 
 export async function searchDestinations(params) {
   if (hasServerSupabase()) {
-    const live = await searchSupabaseDestinations(params);
-    if (live.ok) return live;
     const existing = await searchSupabaseExistingDestinations(params);
     if (existing.ok) return existing;
+    const live = await searchSupabaseDestinations(params);
+    if (live.ok) return live;
   }
   if (!appConfig.useStaticFallback) {
     return {
@@ -40,18 +40,18 @@ export async function searchDestinations(params) {
 export async function getDestinationCatalogStats() {
   if (hasServerSupabase()) {
     const client = getSupabaseServerClient();
-    const { count, error } = await client
-      .from("family_destination_catalog_1001")
-      .select("slug", { count: "exact", head: true });
-    if (!error && Number.isFinite(count)) {
-      return { source: "supabase", count };
-    }
     const existing = await client
       .from("destinations")
       .select("slug", { count: "exact", head: true })
       .eq("is_active", true);
     if (!existing.error && Number.isFinite(existing.count)) {
       return { source: "supabase_destinations", count: existing.count };
+    }
+    const { count, error } = await client
+      .from("family_destination_catalog_1001")
+      .select("slug", { count: "exact", head: true });
+    if (!error && Number.isFinite(count)) {
+      return { source: "supabase", count };
     }
   }
   return { source: "static_catalog_1001", count: familyDestinationCatalog1001Meta.count };
