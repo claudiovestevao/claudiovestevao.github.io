@@ -16,6 +16,10 @@ export async function searchDestinations(params) {
     if (existing.ok) return existing;
     const live = await searchSupabaseDestinations(params);
     if (live.ok) return live;
+    console.warn("[family-concierge] Supabase destination sources unavailable", {
+      existingError: existing.error,
+      catalogError: live.error
+    });
   }
   if (!appConfig.useStaticFallback) {
     return {
@@ -46,6 +50,12 @@ export async function getDestinationCatalogStats() {
       .eq("is_active", true);
     if (!existing.error && Number.isFinite(existing.count)) {
       return { source: "supabase_destinations", count: existing.count };
+    }
+    if (existing.error) {
+      console.warn("[family-concierge] Supabase destinations stats failed", {
+        code: existing.error.code,
+        message: existing.error.message
+      });
     }
     const { count, error } = await client
       .from("family_destination_catalog_1001")
@@ -78,6 +88,10 @@ async function searchSupabaseDestinations(params) {
 
   const { data, error } = await query;
   if (error) {
+    console.warn("[family-concierge] Supabase family_destination_catalog_1001 search failed", {
+      code: error.code,
+      message: error.message
+    });
     return { ok: false, source: "supabase", error: error.message };
   }
 
@@ -105,6 +119,10 @@ async function searchSupabaseExistingDestinations(params) {
     .limit(500);
 
   if (error) {
+    console.warn("[family-concierge] Supabase destinations search failed", {
+      code: error.code,
+      message: error.message
+    });
     return { ok: false, source: "supabase_destinations", error: error.message };
   }
 
