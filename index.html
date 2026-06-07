@@ -4,253 +4,167 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Claudio Code | Hub de Agentes</title>
-  <meta name="description" content="Hub de agentes do Claudio Code para experiências digitais, orçamento familiar e roteiros kids-friendly.">
+  <meta name="description" content="Agentes digitais da Claudio Code, com destaque para o Concierge da Família.">
   <style>
     :root{
-      --ink:#17111d;
-      --cream:#fff9f2;
-      --rose:#f06292;
-      --gold:#f5c842;
-      --lilac:#b57bee;
-      --mint:#3dbf8a;
-      --muted:rgba(255,255,255,.72);
+      --background:#f8fafc;
+      --foreground:#0f172a;
+      --card:#fff;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --primary:#0f5bd7;
+      --accent:#f4b740;
+      --radius:8px;
     }
     *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
     body{
       margin:0;
       min-height:100vh;
+      color:var(--foreground);
+      background:var(--background);
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:var(--cream);
-      background:
-        radial-gradient(circle at 18% 12%,rgba(245,200,66,.2),transparent 18rem),
-        radial-gradient(circle at 80% 8%,rgba(181,123,238,.24),transparent 18rem),
-        radial-gradient(circle at 58% 72%,rgba(61,191,138,.16),transparent 20rem),
-        linear-gradient(135deg,#0b0711,#21112e 58%,#110a18);
     }
-    body::before{
-      content:'';
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background-image:radial-gradient(circle,rgba(255,255,255,.16) 1px,transparent 1px);
-      background-size:34px 34px;
-      mask-image:linear-gradient(180deg,rgba(0,0,0,.65),transparent 75%);
+    a{color:inherit}
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(14px);
     }
-    main{
-      width:min(1120px,100%);
-      margin:0 auto;
-      padding:clamp(2rem,5vw,4.6rem) 1rem 2.4rem;
-    }
-    .hero{
-      min-height:28vh;
-      display:grid;
-      align-content:center;
-      gap:1rem;
-      padding:1.2rem 0 2rem;
-    }
-    .eyebrow{
-      width:max-content;
-      max-width:100%;
-      padding:.42rem .8rem;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.14);
-      color:#ffe47a;
-      font-weight:900;
-      font-size:.78rem;
-      letter-spacing:.02em;
-    }
-    h1{
-      margin:0;
-      max-width:760px;
-      font-size:clamp(2.15rem,6.6vw,4.6rem);
-      line-height:1;
-      letter-spacing:0;
-    }
-    .hero p{
-      max-width:680px;
-      margin:0;
-      color:var(--muted);
-      font-size:clamp(1rem,2.5vw,1.22rem);
-      line-height:1.45;
-    }
-    .agents{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:1rem;
-      margin-top:1rem;
-    }
-    .agent{
-      min-height:246px;
-      display:flex;
-      flex-direction:column;
-      gap:.9rem;
-      padding:1.15rem;
-      border-radius:18px;
-      background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
-      border:1px solid rgba(255,255,255,.14);
-      box-shadow:0 24px 70px rgba(0,0,0,.22);
-      text-decoration:none;
-      color:inherit;
-      position:relative;
-      overflow:hidden;
-    }
-    .agent::after{
-      content:'';
-      position:absolute;
-      inset:auto -20% -34% -20%;
-      height:52%;
-      background:radial-gradient(circle at 50% 0,rgba(255,255,255,.12),transparent 62%);
-      pointer-events:none;
-    }
-    .agent.primary{
-      background:
-        linear-gradient(145deg,rgba(240,98,146,.26),rgba(245,200,66,.08)),
-        linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
-      border-color:rgba(245,200,66,.34);
-    }
-    .agent-top{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
-    .icon{
-      width:58px;height:58px;
-      display:grid;
-      place-items:center;
-      border-radius:16px;
-      background:rgba(255,255,255,.12);
-      font-size:1.9rem;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
-    }
-    .status{
-      padding:.3rem .62rem;
-      border-radius:999px;
-      background:rgba(255,255,255,.1);
-      color:rgba(255,255,255,.76);
-      font-size:.72rem;
-      font-weight:900;
-    }
-    .status.live{background:rgba(61,191,138,.18);color:#bff0da}
-    .agent h2{margin:.25rem 0 0;font-size:1.42rem;line-height:1.08}
-    .agent p{margin:0;color:var(--muted);line-height:1.42}
-    .agent ul{
-      display:flex;
-      flex-wrap:wrap;
-      gap:.42rem;
-      padding:0;
-      margin:.15rem 0 0;
-      list-style:none;
-      color:rgba(255,255,255,.78);
-      font-size:.82rem;
-    }
-    .agent li{
-      padding:.28rem .52rem;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-    }
-    .agent li::before{content:''}
-    .cta{
-      margin-top:auto;
-      width:max-content;
-      max-width:100%;
+    .wrap{width:min(1120px,100%);margin:0 auto;padding:0 1rem}
+    .topbar{height:56px;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .brand{display:inline-flex;align-items:center;gap:.55rem;font-weight:900;text-decoration:none}
+    .brand span{display:grid;place-items:center;width:2rem;height:2rem;border-radius:var(--radius);color:#fff;background:var(--primary)}
+    .button{
       display:inline-flex;
       align-items:center;
-      gap:.45rem;
-      padding:.78rem 1rem;
+      justify-content:center;
+      min-height:2.35rem;
+      border-radius:var(--radius);
+      padding:.55rem .85rem;
+      color:#fff;
+      background:var(--primary);
+      text-decoration:none;
+      font-weight:850;
+      line-height:1;
+    }
+    main{padding:2.8rem 0 3rem}
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(280px,380px);
+      gap:1rem;
+      align-items:end;
+      margin-bottom:1.25rem;
+    }
+    .badge{
+      display:inline-flex;
+      width:max-content;
+      max-width:100%;
+      border:1px solid rgba(15,91,215,.15);
       border-radius:999px;
-      background:linear-gradient(135deg,var(--gold),var(--rose));
-      color:var(--ink);
-      font-weight:950;
+      padding:.28rem .62rem;
+      color:var(--primary);
+      background:#eff6ff;
+      font-size:.78rem;
+      font-weight:850;
     }
-    .disabled .cta{
-      background:rgba(255,255,255,.09);
-      color:rgba(255,255,255,.64);
+    h1{max-width:780px;margin:.9rem 0 0;font-size:clamp(2.15rem,5vw,4.6rem);line-height:.98;letter-spacing:0}
+    .hero p{max-width:620px;margin:.9rem 0 0;color:var(--muted);font-size:1.04rem;line-height:1.5}
+    .hero-action{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:.75rem;
+      align-items:center;
+      border:1px solid rgba(15,91,215,.28);
+      border-radius:var(--radius);
+      padding:1rem;
+      background:var(--card);
+      box-shadow:0 12px 34px rgba(15,91,215,.08);
+      text-decoration:none;
     }
-    footer{
-      margin-top:2rem;
-      color:rgba(255,255,255,.54);
-      font-size:.9rem;
-      text-align:center;
+    .hero-action b{display:block}
+    .hero-action small{display:block;margin-top:.18rem;color:var(--muted);font-weight:750}
+    .hero-action span:last-child{color:var(--primary);font-size:1.3rem;font-weight:950}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8rem}
+    .card{
+      display:grid;
+      gap:1rem;
+      min-height:210px;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:1rem;
+      background:var(--card);
+      color:var(--foreground);
+      text-decoration:none;
     }
-    @media (max-width:1080px){
-      .agents{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .card.primary{border-color:rgba(15,91,215,.42);box-shadow:0 12px 34px rgba(15,91,215,.1)}
+    .card.muted{pointer-events:none;opacity:.68}
+    .card-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+    .icon{font-size:1.45rem}
+    .status{border:1px solid rgba(15,91,215,.15);border-radius:999px;padding:.24rem .54rem;color:var(--primary);background:#eff6ff;font-size:.74rem;font-weight:850}
+    h2{margin:0 0 .35rem;font-size:1.08rem;font-weight:900}
+    .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.45}
+    .link{margin-top:auto;color:var(--primary);font-weight:900}
+    footer{padding:1.3rem 0;color:var(--muted);font-size:.88rem}
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
-    @media (max-width:720px){
-      .agents{grid-template-columns:1fr}
-      .agent{min-height:auto}
+    @media (max-width:620px){
+      main{padding-top:1.2rem}
+      .grid{grid-template-columns:1fr}
+      .card{min-height:auto}
     }
   </style>
 </head>
 <body>
-  <main>
+  <header>
+    <div class="wrap topbar">
+      <a class="brand" href="/"><span>C</span>Claudio Code</a>
+      <a class="button" href="/concierge-da-familia/">Concierge da Família</a>
+    </div>
+  </header>
+  <main class="wrap">
     <section class="hero">
-      <div class="eyebrow">Claudio Code · Hub de Agentes</div>
-      <h1>Agentes digitais para decisões do dia a dia.</h1>
-      <p>Escolha uma experiência pronta. Sem manual, sem excesso.</p>
+      <div>
+        <span class="badge">Claudio Code · agentes</span>
+        <h1>Produtos digitais prontos para operar.</h1>
+        <p>Comece pelo Concierge da Família: destinos, mapa, score e dados reais em uma experiência simples.</p>
+      </div>
+      <a class="hero-action" href="/concierge-da-familia/">
+        <span>
+          <b>Abrir Concierge da Família</b>
+          <small>Explorar destinos no mapa</small>
+        </span>
+        <span>→</span>
+      </a>
     </section>
 
-    <section class="agents" aria-label="Agentes disponíveis">
-      <a class="agent primary" href="/agentes/concierge-da-familia/">
-        <div class="agent-top">
-          <div class="icon">✈️</div>
-          <span class="status live">MVP SP</span>
-        </div>
-        <h2>Concierge da Família</h2>
-        <p>Mapa e diagnóstico para escolher destinos familiares saindo de São Paulo.</p>
-        <ul>
-          <li>mapa</li>
-          <li>bebês e crianças</li>
-          <li>hotéis aprovados</li>
-        </ul>
-        <span class="cta">Planejar viagem da família →</span>
+    <section class="grid" aria-label="Agentes disponíveis">
+      <a class="card primary" href="/concierge-da-familia/">
+        <div class="card-top"><span class="icon">⌖</span><span class="status">No ar</span></div>
+        <div><h2>Concierge da Família</h2><p>Mapa inteligente para escolher destinos familiares com menos perrengue.</p></div>
+        <span class="link">Abrir →</span>
       </a>
-
-      <a class="agent" href="/festa-viva/">
-        <div class="agent-top">
-          <div class="icon">🎉</div>
-          <span class="status live">no ar</span>
-        </div>
-        <h2>Agente Festeiro</h2>
-        <p>Convite, convidados e experiência digital da festa em um só fluxo.</p>
-        <ul>
-          <li>convite</li>
-          <li>RSVP</li>
-          <li>memórias</li>
-        </ul>
-        <span class="cta">Conheça agora →</span>
+      <a class="card muted" href="#">
+        <div class="card-top"><span class="icon">◷</span><span class="status">Em breve</span></div>
+        <div><h2>Agente Festeiro</h2><p>Festas, convites e RSVP com operação mais simples.</p></div>
+        <span class="link">Em breve →</span>
       </a>
-
-      <article class="agent disabled">
-        <div class="agent-top">
-          <div class="icon">📊</div>
-          <span class="status">em construção</span>
-        </div>
-        <h2>Agente Economics</h2>
-        <p>Orçamento familiar, metas e escolhas financeiras com clareza.</p>
-        <ul>
-          <li>orçamento</li>
-          <li>metas</li>
-          <li>prioridades</li>
-        </ul>
-        <span class="cta">Em breve</span>
-      </article>
-
-      <article class="agent disabled">
-        <div class="agent-top">
-          <div class="icon">🧭</div>
-          <span class="status">em construção</span>
-        </div>
-        <h2>Agente KidSquare</h2>
-        <p>Mapa de lugares, programas e eventos bons para crianças.</p>
-        <ul>
-          <li>lugares</li>
-          <li>eventos</li>
-          <li>roteiros leves</li>
-        </ul>
-        <span class="cta">Em breve</span>
-      </article>
-
+      <a class="card muted" href="#">
+        <div class="card-top"><span class="icon">◇</span><span class="status">Em breve</span></div>
+        <div><h2>Agente Economics</h2><p>Decisões de orçamento familiar com clareza.</p></div>
+        <span class="link">Em breve →</span>
+      </a>
+      <a class="card muted" href="#">
+        <div class="card-top"><span class="icon">✦</span><span class="status">Em breve</span></div>
+        <div><h2>KidSquare</h2><p>Lugares kids-friendly para a rotina da família.</p></div>
+        <span class="link">Em breve →</span>
+      </a>
     </section>
-
-    <footer>claudiocode.dev</footer>
   </main>
+  <footer class="wrap">claudiocode.dev · produtos digitais com dados reais</footer>
 </body>
 </html>
