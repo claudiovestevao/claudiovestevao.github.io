@@ -7,19 +7,24 @@ import {
   Car,
   ChevronRight,
   CloudSun,
+  Compass,
   HeartHandshake,
   Hotel,
   Loader2,
   MapPin,
+  MessageCircle,
   Search,
   ShieldCheck,
   SlidersHorizontal,
-  Star
+  Star,
+  Users,
+  Wallet
 } from "lucide-react";
 
 const SAO_PAULO_CENTER = [-23.55052, -46.63331];
 
 export default function DestinationExplorer({ initialResult }) {
+  const [mode, setMode] = useState("explore");
   const [query, setQuery] = useState("");
   const [stateCode, setStateCode] = useState("");
   const [type, setType] = useState("");
@@ -60,31 +65,85 @@ export default function DestinationExplorer({ initialResult }) {
 
   return (
     <section className="explorer-shell" aria-label="Explorador de destinos familiares">
-      <form className="command-bar" onSubmit={submit}>
-        <label className="command-search">
-          <Search size={18} aria-hidden="true" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar destino, serra, praia, pousada..."
-          />
-        </label>
-        <SelectField label="UF" value={stateCode} onChange={setStateCode} options={facets.states} />
-        <SelectField label="Perfil" value={type} onChange={setType} options={facets.types} />
-        <label className="ui-select">
-          <span><SlidersHorizontal size={14} /> Curadoria</span>
-          <select value={curationLevel} onChange={(event) => setCurationLevel(event.target.value)}>
-            <option value="">Todos</option>
-            <option value="known_family_destination">Validados</option>
-            <option value="family_destination_candidate">Candidatos</option>
-          </select>
-        </label>
-        <button className="ui-button primary" disabled={isPending}>
-          {isPending ? <Loader2 className="spin" size={16} /> : <Search size={16} />}
-          Explorar
-        </button>
-      </form>
+      <div className="mode-header" aria-label="Escolha como descobrir destinos">
+        <ModeButton
+          active={mode === "explore"}
+          description="Quero navegar livremente pelos destinos."
+          icon={Compass}
+          label="Explorar no mapa"
+          onClick={() => setMode("explore")}
+        />
+        <ModeButton
+          active={mode === "assistant"}
+          description="Quero 3 sugestões rápidas para minha família."
+          icon={MessageCircle}
+          label="Assistente"
+          onClick={() => setMode("assistant")}
+        />
+      </div>
 
+      {mode === "explore" ? (
+        <>
+          <form className="command-bar" onSubmit={submit}>
+            <label className="command-search">
+              <Search size={18} aria-hidden="true" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar destino, serra, praia, pousada..."
+              />
+            </label>
+            <SelectField label="UF" value={stateCode} onChange={setStateCode} options={facets.states} />
+            <SelectField label="Perfil" value={type} onChange={setType} options={facets.types} />
+            <label className="ui-select">
+              <span><SlidersHorizontal size={14} /> Curadoria</span>
+              <select value={curationLevel} onChange={(event) => setCurationLevel(event.target.value)}>
+                <option value="">Todos</option>
+                <option value="known_family_destination">Validados</option>
+                <option value="family_destination_candidate">Candidatos</option>
+              </select>
+            </label>
+            <button className="ui-button primary" disabled={isPending}>
+              {isPending ? <Loader2 className="spin" size={16} /> : <Search size={16} />}
+              Explorar
+            </button>
+          </form>
+
+          <MapExperience
+            destinations={destinations}
+            mapDestinations={mapDestinations}
+            selectedDestination={selectedDestination}
+            setSelectedSlug={setSelectedSlug}
+          />
+        </>
+      ) : (
+        <AssistantExperience
+          destinations={destinations}
+          onSelectDestination={(slug) => {
+            setSelectedSlug(slug);
+            setMode("explore");
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function ModeButton({ active, description, icon: Icon, label, onClick }) {
+  return (
+    <button className={`mode-card ${active ? "is-active" : ""}`} type="button" onClick={onClick}>
+      <Icon size={20} />
+      <span>
+        <b>{label}</b>
+        <small>{description}</small>
+      </span>
+    </button>
+  );
+}
+
+function MapExperience({ destinations, mapDestinations, selectedDestination, setSelectedSlug }) {
+  return (
+    <>
       <div className="explorer-layout">
         <div className="map-stage">
           <DestinationMap
@@ -119,7 +178,114 @@ export default function DestinationExplorer({ initialResult }) {
           </button>
         ))}
       </div>
-    </section>
+    </>
+  );
+}
+
+function AssistantExperience({ destinations, onSelectDestination }) {
+  const [childrenProfile, setChildrenProfile] = useState("mixed");
+  const [travelEffort, setTravelEffort] = useState("short");
+  const [budget, setBudget] = useState("comfort");
+
+  const recommendations = useMemo(() => {
+    return destinations
+      .map((destination) => ({
+        destination,
+        assistantScore: assistantScore(destination, { childrenProfile, travelEffort, budget })
+      }))
+      .sort((a, b) => b.assistantScore - a.assistantScore || b.destination.familyScore - a.destination.familyScore)
+      .slice(0, 3);
+  }, [destinations, childrenProfile, travelEffort, budget]);
+
+  return (
+    <div className="assistant-layout">
+      <div className="assistant-panel">
+        <span className="ui-badge"><MessageCircle size={14} /> Assistente da Família</span>
+        <h2>Me diga o básico. Eu corto o excesso.</h2>
+        <p>Responda três escolhas e veja os destinos mais coerentes agora.</p>
+
+        <QuickChoice
+          icon={Users}
+          label="Quem vai?"
+          value={childrenProfile}
+          onChange={setChildrenProfile}
+          options={[
+            { value: "baby", label: "Bebê no grupo" },
+            { value: "mixed", label: "Crianças pequenas" },
+            { value: "older", label: "Crianças maiores" }
+          ]}
+        />
+        <QuickChoice
+          icon={Car}
+          label="Deslocamento"
+          value={travelEffort}
+          onChange={setTravelEffort}
+          options={[
+            { value: "short", label: "Quero fácil" },
+            { value: "medium", label: "Até 4h ok" },
+            { value: "flight", label: "Pode ter voo" }
+          ]}
+        />
+        <QuickChoice
+          icon={Wallet}
+          label="Estilo"
+          value={budget}
+          onChange={setBudget}
+          options={[
+            { value: "smart", label: "Custo esperto" },
+            { value: "comfort", label: "Conforto" },
+            { value: "premium", label: "Premium" }
+          ]}
+        />
+      </div>
+
+      <div className="assistant-results">
+        <div className="assistant-results-head">
+          <div>
+            <span className="ui-badge">Top 3</span>
+            <h3>Eu começaria por aqui</h3>
+          </div>
+          <small>Abra qualquer sugestão no mapa para comparar hotéis e localização.</small>
+        </div>
+
+        {recommendations.map(({ destination }, index) => (
+          <button
+            className="assistant-recommendation"
+            key={destination.slug}
+            type="button"
+            onClick={() => onSelectDestination(destination.slug)}
+          >
+            <span className="rank">{index + 1}</span>
+            <span className="recommendation-copy">
+              <b>{destination.name}, {destination.stateCode}</b>
+              <small>{recommendationReason(destination, { childrenProfile, travelEffort, budget })}</small>
+            </span>
+            <span className="recommendation-score">{destination.familyScore}</span>
+            <ChevronRight size={18} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function QuickChoice({ icon: Icon, label, value, onChange, options }) {
+  return (
+    <fieldset className="quick-choice">
+      <legend><Icon size={15} /> {label}</legend>
+      <div>
+        {options.map((option) => (
+          <button
+            className={value === option.value ? "is-selected" : ""}
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
@@ -326,6 +492,42 @@ function EmptyState() {
       <p className="summary-copy">Ajuste os filtros para descobrir destinos familiares curados.</p>
     </div>
   );
+}
+
+function assistantScore(destination, preferences) {
+  let score = Number(destination.familyScore || 0);
+  const text = [
+    destination.name,
+    destination.macroRegion,
+    destination.destinationType,
+    ...(destination.tags || []),
+    ...(destination.travelModes || []),
+    ...(destination.stayOptions || []).map((option) => option.label)
+  ].join(" ").toLowerCase();
+
+  if (preferences.childrenProfile === "baby") {
+    score += Number(destination.categoryScores?.structure || 0) * 1.8;
+    if (text.includes("resort") || text.includes("hotel fazenda")) score += 4;
+  }
+  if (preferences.childrenProfile === "older" && (text.includes("parque") || text.includes("aventura") || text.includes("praia"))) score += 5;
+  if (preferences.travelEffort === "short" && (text.includes("sp") || text.includes("desde sp") || destination.stateCode === "SP")) score += 8;
+  if (preferences.travelEffort === "flight" && destination.stateCode !== "SP") score += 5;
+  if (preferences.budget === "smart" && (text.includes("pousada") || text.includes("apart") || text.includes("casa"))) score += 5;
+  if (preferences.budget === "premium" && (text.includes("resort") || text.includes("premium"))) score += 5;
+  return score;
+}
+
+function recommendationReason(destination, preferences) {
+  if (preferences.travelEffort === "short" && destination.stateCode === "SP") {
+    return "Boa primeira triagem quando a prioridade é reduzir deslocamento.";
+  }
+  if (preferences.childrenProfile === "baby") {
+    return "Combina melhor quando rotina, estrutura e pausas importam mais que roteiro cheio.";
+  }
+  if (preferences.budget === "smart") {
+    return "Vale comparar estadias alternativas antes de fechar hotel.";
+  }
+  return destination.bestFor || "Bom equilíbrio entre estrutura familiar e logística.";
 }
 
 function shortScoreLabel(label = "") {
