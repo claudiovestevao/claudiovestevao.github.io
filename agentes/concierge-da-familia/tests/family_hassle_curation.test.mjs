@@ -18,12 +18,17 @@ test("family hassle curation enriches every catalog destination", () => {
 test("hard destinations are explicit about baby and toddler risk", () => {
   const lencois = applyFamilyHassleCuration({ slug: "lencois-ba", name: "Lencois", familyScore: 82 });
   const jalapao = applyFamilyHassleCuration({ slug: "jalapao-to", name: "Jalapao", familyScore: 82 });
+  const liveJalapao = applyFamilyHassleCuration({ slug: "palmas-jalapao", name: "Palmas / Jalapao", familyScore: 82 });
+  const liveLencois = applyFamilyHassleCuration({ slug: "lencois-maranhenses", name: "Lencois Maranhenses", familyScore: 82 });
 
   assert.equal(lencois.familyHassleLevel, "alto");
   assert.equal(lencois.avoidWithBaby, true);
   assert.equal(jalapao.familyHassleLevel, "muito_alto");
   assert.equal(jalapao.requires4x4, true);
   assert.equal(jalapao.bestMinimumAge, 8);
+  assert.equal(liveJalapao.familyHassleLevel, "muito_alto");
+  assert.equal(liveLencois.familyHassleLevel, "alto");
+  assert.equal(liveLencois.avoidWithBaby, true);
 });
 
 test("family fit score penalizes perrengue for babies", () => {

@@ -213,6 +213,38 @@ export const curatedFamilyHassleBySlug = {
   })
 };
 
+curatedFamilyHassleBySlug["bonito"] = curatedFamilyHassleBySlug["bonito-ms"];
+curatedFamilyHassleBySlug["sao-miguel-dos-milagres"] = curatedFamilyHassleBySlug["sao-miguel-dos-milagres-al"];
+curatedFamilyHassleBySlug["urubici"] = curatedFamilyHassleBySlug["urubici-sc"];
+curatedFamilyHassleBySlug["alter-do-chao"] = curatedFamilyHassleBySlug["alter-do-chao-pa"];
+curatedFamilyHassleBySlug["pucon"] = curatedFamilyHassleBySlug["pucon-chile"];
+curatedFamilyHassleBySlug["palmas-jalapao"] = curatedFamilyHassleBySlug["jalapao-to"];
+curatedFamilyHassleBySlug["chapada-diamantina"] = curatedFamilyHassleBySlug["lencois-ba"];
+curatedFamilyHassleBySlug["lencois-maranhenses"] = hard({
+  bestMinimumAge: 5,
+  avoidWithBaby: true,
+  avoidWithToddler: true,
+  heatWarning: true,
+  boatWarning: true,
+  honestSummary: "Lencois Maranhenses e um dos destinos mais bonitos do Brasil, mas a logistica de lagoas, sol, areia e passeios longos pode pesar com bebe.",
+  shortHassleAlert: "Visual inesquecivel, mas areia, sol e deslocamento cansam.",
+  mainHassles: ["calor e sol", "areia e 4x4", "passeios longos", "pouca sombra", "rotina de sono dificil"],
+  semPerrengueStrategy: "Escolha base confortavel, evite horario de sol forte e faca poucos passeios, com pausas reais entre eles.",
+  betterAlternatives: ["sao-miguel-dos-milagres", "piranhas-al", "bonito"]
+});
+curatedFamilyHassleBySlug["chapada-dos-veadeiros"] = curatedFamilyHassleBySlug["alto-paraiso-de-goias-go"];
+curatedFamilyHassleBySlug["chapada-dos-guimaraes"] = hard({
+  bestMinimumAge: 6,
+  avoidWithBaby: true,
+  avoidWithToddler: true,
+  heatWarning: true,
+  honestSummary: "Chapada dos Guimaraes e linda e mais acessivel que alguns destinos remotos, mas ainda envolve calor, mirantes, trilhas e carro.",
+  shortHassleAlert: "Natureza forte, melhor com criancas que caminham bem.",
+  mainHassles: ["calor", "mirantes e trilhas", "carro necessario", "pouca sombra em alguns passeios"],
+  semPerrengueStrategy: "Fique em base unica, faca mirantes curtos e deixe trilhas longas para criancas maiores.",
+  betterAlternatives: ["bonito", "ponta-grossa-pr", "urubici"]
+});
+
 export function applyFamilyHassleCuration(destination = {}) {
   const key = String(destination.slug || "").toLowerCase();
   const curated = curatedFamilyHassleBySlug[key] || inferHassle(destination);
