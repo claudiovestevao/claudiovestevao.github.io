@@ -1283,6 +1283,34 @@ select {
   line-height: 1.38;
 }
 
+.known-hotel-facts {
+  display: grid;
+  gap: .45rem;
+  min-width: 0;
+}
+
+.known-hotel-facts div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.known-hotel-facts a,
+.known-hotel-facts div span {
+  display: inline-flex;
+  max-width: 100%;
+  border: 1px solid rgba(15, 91, 215, .18);
+  border-radius: 999px;
+  padding: .24rem .5rem;
+  color: var(--primary);
+  background: #eff6ff;
+  font-size: .76rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
 .admin-hotel-list {
   display: grid;
   gap: .55rem;

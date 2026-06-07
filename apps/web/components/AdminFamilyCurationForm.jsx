@@ -58,7 +58,6 @@ const scoreFields = [
   ["toddlerScore", "3-5 anos"],
   ["kidsScore", "6-10 anos"],
   ["strollerScore", "Carrinho"],
-  ["rainScore", "Chuva"],
   ["parentRestScore", "Descanso dos pais"],
   ["overallFamilyScore", "Geral"]
 ];
@@ -446,7 +445,23 @@ function KnownFacts({ destination, hotel }) {
       <div>
         <b>{hotel?.name || "Sem hotel selecionado"}</b>
         <span>{hotel ? [hotel.stars ? `${hotel.stars} estrelas` : "", hotel.rating ? `nota ${hotel.rating}` : "", hotel.reviewCount ? `${hotel.reviewCount} reviews` : ""].filter(Boolean).join(" · ") : "Voce pode avaliar apenas o destino."}</span>
-        <p>{hotel?.description || hotel?.address || "Escolha um hotel da lista ou informe outro manualmente."}</p>
+        {hotel ? <HotelFactSummary hotel={hotel} /> : <p>Escolha um hotel da lista ou informe outro manualmente.</p>}
+      </div>
+    </div>
+  );
+}
+
+function HotelFactSummary({ hotel }) {
+  const site = extractFirstUrl(hotel.description, /Site:\s*(https?:\/\/\S+)/i);
+  const maps = extractFirstUrl(hotel.description, /Google Maps:\s*(https?:\/\/\S+)/i);
+  const phone = extractText(hotel.description, /Telefone:\s*([^\.]+)/i);
+  return (
+    <div className="known-hotel-facts">
+      {hotel.address ? <p>{hotel.address}</p> : null}
+      <div>
+        {site ? <a href={site} target="_blank" rel="noreferrer">Site oficial</a> : null}
+        {maps ? <a href={maps} target="_blank" rel="noreferrer">Google Maps</a> : null}
+        {phone ? <span>{phone}</span> : null}
       </div>
     </div>
   );
@@ -479,6 +494,16 @@ function StatusMessage({ status }) {
 
 function normalize(value) {
   return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function extractFirstUrl(value, pattern) {
+  const match = String(value || "").match(pattern);
+  return match?.[1]?.replace(/[),.]+$/, "") || "";
+}
+
+function extractText(value, pattern) {
+  const match = String(value || "").match(pattern);
+  return match?.[1]?.trim() || "";
 }
 
 function compactKey(value) {
