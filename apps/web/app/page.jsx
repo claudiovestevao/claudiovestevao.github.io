@@ -5,30 +5,30 @@ const agents = [
   {
     href: "/concierge-da-familia",
     title: "Concierge da Família",
-    status: "Next.js MVP",
-    text: "Descoberta de destinos por mapa, dados reais e curadoria familiar.",
+    status: "No ar",
+    text: "Mapa inteligente para escolher destinos familiares com menos perrengue.",
     icon: Map,
     primary: true
   },
   {
     href: "#",
     title: "Agente Festeiro",
-    status: "No ar",
-    text: "Convites, RSVP e experiências digitais para festas.",
+    status: "Em breve",
+    text: "Festas, convites e RSVP com operação mais simples.",
     icon: CalendarDays
   },
   {
     href: "#",
     title: "Agente Economics",
-    status: "Em construção",
-    text: "Orçamento familiar, metas e prioridades.",
+    status: "Em breve",
+    text: "Decisões de orçamento familiar com clareza.",
     icon: PiggyBank
   },
   {
     href: "#",
     title: "KidSquare",
-    status: "Em construção",
-    text: "Mapa de lugares e programas kids-friendly.",
+    status: "Em breve",
+    text: "Lugares kids-friendly para a rotina da família.",
     icon: Sparkles
   }
 ];
@@ -37,40 +37,49 @@ export default function HomePage() {
   return (
     <main className="app-shell">
       <Topbar />
-      <section className="container product-hero">
-        <div className="d-flex flex-column gap-3">
-          <span className="badge-soft align-self-start">Claudio Code · agentes</span>
-          <h1 className="hero-title">Experiências digitais com stack de produto.</h1>
-          <p className="hero-copy">
-            Next.js, Supabase e APIs server-side para transformar protótipos em produtos operáveis.
-          </p>
+      <section className="container product-hero home-hero">
+        <div className="home-hero-grid">
+          <div className="d-flex flex-column gap-3">
+            <span className="ui-badge align-self-start">Claudio Code · agentes</span>
+            <h1 className="hero-title">Produtos digitais prontos para operar.</h1>
+            <p className="hero-copy">
+              Comece pelo Concierge da Família: destinos, mapa, score e dados reais em uma experiência simples.
+            </p>
+          </div>
+          <Link className="hero-action" href="/concierge-da-familia">
+            <Map size={22} />
+            <span>
+              <b>Abrir Concierge da Família</b>
+              <small>Explorar destinos no mapa</small>
+            </span>
+            <ArrowRight size={18} />
+          </Link>
         </div>
       </section>
       <section className="container pb-5">
-        <div className="row g-3">
+        <div className="agent-grid">
           {agents.map((agent) => {
             const Icon = agent.icon;
             return (
-              <div className="col-12 col-md-6 col-xl-3" key={agent.title}>
-                <Link
-                  aria-disabled={!agent.primary}
-                  className={`surface d-grid gap-3 h-100 p-3 text-decoration-none ${agent.primary ? "border-primary" : "pe-none opacity-75"}`}
-                  href={agent.href}
-                  tabIndex={agent.primary ? undefined : -1}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <Icon size={26} className="text-primary" />
-                    <span className="badge-soft">{agent.status}</span>
-                  </div>
-                  <div>
-                    <h2 className="h5 fw-black mb-2">{agent.title}</h2>
-                    <p className="text-secondary mb-0">{agent.text}</p>
-                  </div>
-                  <span className="fw-bold text-primary mt-auto">
-                    {agent.primary ? "Abrir" : "Em breve"} <ArrowRight size={16} />
-                  </span>
-                </Link>
-              </div>
+              <Link
+                aria-disabled={!agent.primary}
+                className={`agent-card ${agent.primary ? "is-primary" : "is-muted"}`}
+                href={agent.href}
+                key={agent.title}
+                tabIndex={agent.primary ? undefined : -1}
+              >
+                <div className="d-flex align-items-center justify-content-between gap-2">
+                  <Icon size={24} />
+                  <span className="ui-badge">{agent.status}</span>
+                </div>
+                <div>
+                  <h2>{agent.title}</h2>
+                  <p>{agent.text}</p>
+                </div>
+                <span className="agent-link">
+                  {agent.primary ? "Abrir" : "Em breve"} <ArrowRight size={16} />
+                </span>
+              </Link>
             );
           })}
         </div>
@@ -87,7 +96,7 @@ function Topbar() {
           <span aria-hidden="true">C</span>
           Claudio Code
         </Link>
-        <Link className="btn btn-sm btn-primary fw-bold" href="/concierge-da-familia">
+        <Link className="ui-button primary compact" href="/concierge-da-familia">
           Concierge da Família
         </Link>
       </div>
