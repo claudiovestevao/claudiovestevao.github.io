@@ -90,7 +90,7 @@ export async function POST(request) {
   const { error: uploadError } = await client.storage.from(BUCKET).upload(
     jsonPath,
     Buffer.from(JSON.stringify(submission, null, 2), "utf8"),
-    { contentType: "application/json; charset=utf-8", upsert: false }
+    { contentType: "application/json", upsert: false }
   );
 
   if (uploadError) {
