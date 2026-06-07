@@ -20,6 +20,7 @@ import {
   Users,
   Wallet
 } from "lucide-react";
+import { calculateFamilyFitScore } from "../../../agentes/concierge-da-familia/src/data/familyHassleCuration.js";
 
 const SAO_PAULO_CENTER = [-23.55052, -46.63331];
 
@@ -173,7 +174,7 @@ function MapExperience({ destinations, mapDestinations, selectedDestination, set
             <span className="score-dot">{destination.familyScore}</span>
             <span>
               <b>{destination.name}</b>
-              <small>{destination.stateCode} · {shortScoreLabel(destination.scoreLabel)}</small>
+              <small>{destination.stateCode} · {shortScoreLabel(destination.scoreLabel)} · {hassleLabel(destination.familyHassleLevel)}</small>
             </span>
           </button>
         ))}
@@ -260,6 +261,7 @@ function AssistantExperience({ destinations, onSelectDestination }) {
               <b>{destination.name}, {destination.stateCode}</b>
               <small>{recommendationReason(destination, { childrenProfile, travelEffort, budget })}</small>
             </span>
+            <FamilyHassleBadge destination={destination} compact />
             <span className="recommendation-score">{destination.familyScore}</span>
             <ChevronRight size={18} />
           </button>
@@ -396,11 +398,16 @@ function DestinationSummary({ destination }) {
       </div>
 
       <div className="summary-section">
-        <BadgeLine icon={Star} label={destination.scoreLabel || "Curadoria familiar"} />
-        <p className="summary-copy">{destination.bestFor || "Boa opção para famílias quando a hospedagem e o deslocamento combinam com a idade das crianças."}</p>
+        <div className="summary-badges">
+          <BadgeLine icon={Star} label={destination.scoreLabel || "Curadoria familiar"} />
+          <FamilyHassleBadge destination={destination} />
+        </div>
+        <p className="summary-copy">{destination.honestSummary || destination.bestFor || "Boa opção para famílias quando a hospedagem e o deslocamento combinam com a idade das crianças."}</p>
       </div>
 
       <ScoreBreakdown scores={destination.categoryScores} />
+      <FamilyHasslePanel destination={destination} />
+      <SemPerrengueStrategy destination={destination} />
       <StayOptions options={destination.stayOptions} />
       <GoogleLivePanel destination={destination} />
 
@@ -420,6 +427,51 @@ function DestinationSummary({ destination }) {
           Ver no mapa
         </a>
       </div>
+    </div>
+  );
+}
+
+function FamilyHassleBadge({ destination, compact = false }) {
+  const level = destination.familyHassleLevel || "moderado";
+  return (
+    <span className={`hassle-badge hassle-${level} ${compact ? "is-compact" : ""}`}>
+      Perrengue: {hassleLabel(level)}
+      {!compact && Number.isFinite(Number(destination.bestMinimumAge)) ? ` · ${destination.bestMinimumAge}+` : ""}
+    </span>
+  );
+}
+
+function FamilyHasslePanel({ destination }) {
+  const hassles = (destination.mainHassles || []).slice(0, 4);
+  const tips = (destination.hassleMitigationTips || []).slice(0, 4);
+  if (!hassles.length && !tips.length) return null;
+  return (
+    <div className="hassle-panel">
+      <div>
+        <h3>O que pode dar perrengue</h3>
+        <ul>
+          {hassles.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      </div>
+      <div>
+        <h3>Como reduzir a dor de cabeca</h3>
+        <ul>
+          {tips.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function SemPerrengueStrategy({ destination }) {
+  if (!destination.semPerrengueStrategy && !destination.shortHassleAlert) return null;
+  return (
+    <div className="sem-perrengue-card">
+      <b>Roteiro Sem Perrengue</b>
+      <p>{destination.semPerrengueStrategy || destination.shortHassleAlert}</p>
+      <span>
+        Ritmo {destination.recommendedTripPace || "leve"} · max. {destination.maxActivitiesPerDayWithKids || 1} atividade principal/dia
+      </span>
     </div>
   );
 }
@@ -531,6 +583,7 @@ function ScoreBreakdown({ scores }) {
   const items = [
     { key: "logistics", label: "Logística", icon: Car },
     { key: "structure", label: "Estrutura", icon: Baby },
+    { key: "hassle", label: "Sem perrengue", icon: ShieldCheck },
     { key: "seasonality", label: "Época", icon: CalendarDays },
     { key: "rainyDay", label: "Chuva", icon: CloudSun },
     { key: "safety", label: "Saúde", icon: ShieldCheck },
@@ -571,7 +624,12 @@ function EmptyState() {
 }
 
 function assistantScore(destination, preferences) {
-  let score = Number(destination.familyScore || 0);
+  let score = calculateFamilyFitScore(destination.familyScore, destination, {
+    youngestChildAge: preferences.childrenProfile === "baby" ? 1 : preferences.childrenProfile === "mixed" ? 4 : 8,
+    travelEffort: preferences.travelEffort,
+    budget: preferences.budget,
+    restFirst: preferences.childrenProfile === "baby"
+  });
   const text = [
     destination.name,
     destination.macroRegion,
@@ -584,16 +642,26 @@ function assistantScore(destination, preferences) {
   if (preferences.childrenProfile === "baby") {
     score += Number(destination.categoryScores?.structure || 0) * 1.8;
     if (text.includes("resort") || text.includes("hotel fazenda")) score += 4;
+    if (destination.avoidWithBaby) score -= 18;
   }
+  if (preferences.childrenProfile === "mixed" && destination.avoidWithToddler) score -= 12;
   if (preferences.childrenProfile === "older" && (text.includes("parque") || text.includes("aventura") || text.includes("praia"))) score += 5;
   if (preferences.travelEffort === "short" && (text.includes("sp") || text.includes("desde sp") || destination.stateCode === "SP")) score += 8;
+  if (preferences.travelEffort === "short" && ["alto", "muito_alto"].includes(destination.familyHassleLevel)) score -= 10;
   if (preferences.travelEffort === "flight" && destination.stateCode !== "SP") score += 5;
   if (preferences.budget === "smart" && (text.includes("pousada") || text.includes("apart") || text.includes("casa"))) score += 5;
+  if (preferences.budget === "smart" && ["alto", "muito_alto"].includes(destination.familyHassleLevel)) score -= 5;
   if (preferences.budget === "premium" && (text.includes("resort") || text.includes("premium"))) score += 5;
   return score;
 }
 
 function recommendationReason(destination, preferences) {
+  if (preferences.childrenProfile === "baby" && destination.avoidWithBaby) {
+    return "Destino bonito, mas eu so consideraria com bebe em versao muito leve.";
+  }
+  if (["alto", "muito_alto"].includes(destination.familyHassleLevel)) {
+    return destination.shortHassleAlert || "Pode encantar, mas pede estrategia clara para nao cansar a familia.";
+  }
   if (preferences.travelEffort === "short" && destination.stateCode === "SP") {
     return "Boa primeira triagem quando a prioridade é reduzir deslocamento.";
   }
@@ -611,6 +679,16 @@ function shortScoreLabel(label = "") {
   if (label.includes("Prata")) return "Prata";
   if (label.includes("Bronze")) return "Bronze";
   return "Em curadoria";
+}
+
+function hassleLabel(level = "") {
+  const labels = {
+    baixo: "Baixo",
+    moderado: "Moderado",
+    alto: "Alto",
+    muito_alto: "Muito alto"
+  };
+  return labels[level] || "Moderado";
 }
 
 function formatScore(value) {

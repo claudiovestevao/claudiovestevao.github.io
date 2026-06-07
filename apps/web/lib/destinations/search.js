@@ -1,8 +1,10 @@
+import { applyFamilyHassleCuration } from "../../../../agentes/concierge-da-familia/src/data/familyHassleCuration.js";
+
 export const DEFAULT_DESTINATION_LIMIT = 24;
 export const MAX_DESTINATION_LIMIT = 80;
 
 export function normalizeDestination(destination) {
-  return {
+  return applyFamilyHassleCuration({
     slug: destination.slug,
     name: destination.name,
     stateCode: destination.stateCode || destination.state_code,
@@ -26,8 +28,42 @@ export function normalizeDestination(destination) {
     idealAges: destination.idealAges || destination.ideal_ages || [],
     travelModes: destination.travelModes || destination.travel_modes || [],
     bestFor: destination.bestFor || destination.best_for || "",
-    attentionPoints: destination.attentionPoints || destination.attention_points || []
-  };
+    attentionPoints: destination.attentionPoints || destination.attention_points || [],
+    familyHassleLevel: destination.familyHassleLevel || destination.family_hassle_level,
+    hassleScore: destination.hassleScore || destination.hassle_score,
+    babyFriendlinessScore: destination.babyFriendlinessScore || destination.baby_friendliness_score,
+    toddlerFriendlinessScore: destination.toddlerFriendlinessScore || destination.toddler_friendliness_score,
+    kids610FriendlinessScore: destination.kids610FriendlinessScore || destination.kids_6_10_friendliness_score,
+    teenFriendlinessScore: destination.teenFriendlinessScore || destination.teen_friendliness_score,
+    bestMinimumAge: destination.bestMinimumAge ?? destination.best_minimum_age,
+    avoidWithBaby: destination.avoidWithBaby ?? destination.avoid_with_baby,
+    avoidWithToddler: destination.avoidWithToddler ?? destination.avoid_with_toddler,
+    requiresCar: destination.requiresCar ?? destination.requires_car,
+    requires4x4: destination.requires4x4 ?? destination.requires_4x4,
+    requiresPrivateGuide: destination.requiresPrivateGuide ?? destination.requires_private_guide,
+    strollerFriendly: destination.strollerFriendly ?? destination.stroller_friendly,
+    babyCarrierRecommended: destination.babyCarrierRecommended ?? destination.baby_carrier_recommended,
+    napFriendly: destination.napFriendly ?? destination.nap_friendly,
+    medicalStructureWarning: destination.medicalStructureWarning ?? destination.medical_structure_warning,
+    longDriveWarning: destination.longDriveWarning ?? destination.long_drive_warning,
+    boatWarning: destination.boatWarning ?? destination.boat_warning,
+    altitudeWarning: destination.altitudeWarning ?? destination.altitude_warning,
+    heatWarning: destination.heatWarning ?? destination.heat_warning,
+    coldWarning: destination.coldWarning ?? destination.cold_warning,
+    rainWarning: destination.rainWarning ?? destination.rain_warning,
+    limitedFoodOptionsWarning: destination.limitedFoodOptionsWarning ?? destination.limited_food_options_warning,
+    mainHassles: destination.mainHassles || destination.main_hassles || [],
+    hassleMitigationTips: destination.hassleMitigationTips || destination.hassle_mitigation_tips || [],
+    semPerrengueStrategy: destination.semPerrengueStrategy || destination.sem_perrengue_strategy || "",
+    recommendedTripPace: destination.recommendedTripPace || destination.recommended_trip_pace || "",
+    maxActivitiesPerDayWithKids: destination.maxActivitiesPerDayWithKids || destination.max_activities_per_day_with_kids,
+    recommendedLodgingLocation: destination.recommendedLodgingLocation || destination.recommended_lodging_location || "",
+    whenToAvoid: destination.whenToAvoid || destination.when_to_avoid || [],
+    whenItWorksWell: destination.whenItWorksWell || destination.when_it_works_well || [],
+    honestSummary: destination.honestSummary || destination.honest_summary || "",
+    shortHassleAlert: destination.shortHassleAlert || destination.short_hassle_alert || "",
+    betterAlternatives: destination.betterAlternatives || destination.better_alternatives || []
+  });
 }
 
 export function parseDestinationSearchParams(searchParams = {}) {

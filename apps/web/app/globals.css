@@ -535,11 +535,61 @@ select {
   padding-top: 1rem;
 }
 
+.summary-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  align-items: center;
+}
+
 .badge-line {
   justify-self: start;
   color: var(--success);
   background: #ecfdf3;
   border-color: rgba(19, 131, 75, .18);
+}
+
+.hassle-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .28rem .62rem;
+  font-size: .78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.hassle-badge.is-compact {
+  justify-self: start;
+  min-height: 1.65rem;
+  padding: .22rem .48rem;
+  font-size: .7rem;
+}
+
+.hassle-baixo {
+  border-color: rgba(19, 131, 75, .22);
+  color: #11643c;
+  background: #ecfdf3;
+}
+
+.hassle-moderado {
+  border-color: rgba(161, 92, 7, .24);
+  color: #8a4b05;
+  background: #fff7ed;
+}
+
+.hassle-alto {
+  border-color: rgba(185, 28, 28, .22);
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.hassle-muito_alto {
+  border-color: rgba(88, 28, 135, .2);
+  color: #581c87;
+  background: #faf5ff;
 }
 
 .score-grid {
@@ -570,6 +620,63 @@ select {
 .score-tile b {
   color: var(--foreground);
   font-weight: 950;
+}
+
+.hassle-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+
+.hassle-panel > div,
+.sem-perrengue-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .65rem;
+  background: #fff;
+}
+
+.hassle-panel h3 {
+  margin: 0 0 .42rem;
+  font-size: .82rem;
+  font-weight: 950;
+}
+
+.hassle-panel ul {
+  display: grid;
+  gap: .25rem;
+  margin: 0;
+  padding-left: 1rem;
+  color: var(--muted);
+  font-size: .77rem;
+  font-weight: 760;
+  line-height: 1.32;
+}
+
+.sem-perrengue-card {
+  display: grid;
+  gap: .34rem;
+  border-color: rgba(15, 91, 215, .18);
+  background: #eff6ff;
+}
+
+.sem-perrengue-card b {
+  color: var(--primary);
+  font-size: .86rem;
+  font-weight: 950;
+}
+
+.sem-perrengue-card p {
+  color: var(--foreground);
+  font-size: .83rem;
+  font-weight: 760;
+  line-height: 1.38;
+}
+
+.sem-perrengue-card span {
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 850;
 }
 
 .stay-options {
@@ -896,7 +1003,7 @@ select {
 
 .assistant-recommendation {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   gap: .75rem;
   align-items: center;
   min-width: 0;
@@ -1025,6 +1132,7 @@ select {
   .results-strip,
   .google-live-facts,
   .score-grid,
+  .hassle-panel,
   .summary-actions {
     grid-template-columns: 1fr;
   }
@@ -1043,6 +1151,10 @@ select {
 
   .assistant-recommendation svg {
     display: none;
+  }
+
+  .assistant-recommendation .hassle-badge {
+    grid-column: 2 / -1;
   }
 
   .real-map,
