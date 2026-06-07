@@ -82,6 +82,7 @@ export default function AdminFamilyCurationForm() {
 
   const destinations = catalog?.destinations || [];
   const hotels = catalog?.hotels || [];
+  const destinationById = useMemo(() => new Map(destinations.map((destination) => [destination.id, destination])), [destinations]);
   const selectedDestination = destinations.find((destination) => destination.id === destinationId) || destinations[0] || null;
   const destinationHotels = useMemo(() => {
     if (!selectedDestination) return [];
@@ -89,13 +90,28 @@ export default function AdminFamilyCurationForm() {
       .filter((hotel) => hotel.destinationId === selectedDestination.id || normalize(hotel.city) === normalize(selectedDestination.name))
       .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt-BR"));
   }, [hotels, selectedDestination]);
-  const selectedHotel = destinationHotels.find((hotel) => hotel.id === hotelId) || destinationHotels[0] || null;
+  const selectedHotel = hotels.find((hotel) => hotel.id === hotelId) || null;
+  const filteredHotels = useMemo(() => {
+    const needle = normalize(query);
+    return hotels
+      .filter((hotel) => {
+        const destination = destinationById.get(hotel.destinationId);
+        return !needle || normalize(`${hotel.name} ${hotel.city} ${hotel.address} ${destination?.name || ""} ${destination?.state || ""}`).includes(needle);
+      })
+      .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt-BR"))
+      .slice(0, 160);
+  }, [hotels, destinationById, query]);
   const filteredDestinations = useMemo(() => {
     const needle = normalize(query);
+    const matchingHotelDestinationIds = new Set(filteredHotels.map((hotel) => hotel.destinationId).filter(Boolean));
     return destinations
-      .filter((destination) => !needle || normalize(`${destination.name} ${destination.state} ${destination.summary}`).includes(needle))
+      .filter((destination) =>
+        !needle ||
+        matchingHotelDestinationIds.has(destination.id) ||
+        normalize(`${destination.name} ${destination.state} ${destination.summary}`).includes(needle)
+      )
       .slice(0, 140);
-  }, [destinations, query]);
+  }, [destinations, filteredHotels, query]);
 
   function unlock(event) {
     event.preventDefault();
@@ -174,7 +190,7 @@ export default function AdminFamilyCurationForm() {
           </div>
           <label className="admin-search">
             <Search size={16} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar destino" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar destino ou hotel" />
           </label>
         </div>
 
@@ -189,10 +205,12 @@ export default function AdminFamilyCurationForm() {
           </label>
           <label>
             Hotel/resort/pousada do banco
-            <select value={selectedHotel?.id || ""} onChange={(event) => setHotelId(event.target.value)}>
+            <select value={selectedHotel?.id || ""} onChange={(event) => selectHotel(event.target.value)}>
               <option value="">Sem hotel especifico / avaliar destino</option>
-              {destinationHotels.map((hotel) => (
-                <option value={hotel.id} key={hotel.id}>{hotel.name}</option>
+              {(query ? filteredHotels : destinationHotels).map((hotel) => (
+                <option value={hotel.id} key={hotel.id}>
+                  {hotel.name}{hotel.city ? ` · ${hotel.city}` : ""}{destinationById.get(hotel.destinationId)?.state ? `, ${destinationById.get(hotel.destinationId).state}` : ""}
+                </option>
               ))}
             </select>
           </label>
@@ -280,6 +298,12 @@ export default function AdminFamilyCurationForm() {
       {status.message ? <StatusMessage status={status} /> : null}
     </form>
   );
+
+  function selectHotel(nextHotelId) {
+    setHotelId(nextHotelId);
+    const nextHotel = hotels.find((hotel) => hotel.id === nextHotelId);
+    if (nextHotel?.destinationId) setDestinationId(nextHotel.destinationId);
+  }
 }
 
 function KnownFacts({ destination, hotel }) {
