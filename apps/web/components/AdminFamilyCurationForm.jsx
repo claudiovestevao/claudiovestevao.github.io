@@ -1,194 +1,329 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Camera, CheckCircle2, Hotel, Loader2, Lock, Send, ShieldCheck } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Camera, CheckCircle2, Hotel, Loader2, Lock, Search, Send, ShieldCheck } from "lucide-react";
 
-const sections = [
+const choiceGroups = [
   {
-    title: "Identificacao da experiencia",
-    fields: [
-      ["respondentName", "Quem esta respondendo?", "ex.: Claudio, Flavia"],
-      ["respondentRole", "Olhar principal", "ex.: pai, mae, casal, avo/avo"],
-      ["destinationName", "Destino/cidade", "ex.: Atibaia, Bonito, Pucón"],
-      ["propertyName", "Hotel, resort, pousada ou chale", "nome exato se lembrar"],
-      ["propertyWebsite", "Site ou Booking/Google do hotel", "link opcional"],
-      ["visitPeriod", "Quando voces foram?", "mes/ano, feriado, ferias, baixa temporada"],
-      ["travelParty", "Quem viajou?", "adultos, criancas e idades na epoca"],
-      ["roomType", "Tipo de quarto", "standard, familia, conjugado, chale, villa"]
+    title: "Sono e rotina",
+    questions: [
+      ["cribReality", "Berco/cama extra", ["ja estava pronto e era bom", "bom, mas precisei pedir", "improvisado/ruim", "nao usei/nao sei"]],
+      ["blackoutNoise", "Sono no quarto", ["otimo para soneca", "ok com ajustes", "barulhento/claro", "ruim para rotina"]],
+      ["roomLayout", "Layout com crianca", ["funcionou muito bem", "funcionou razoavel", "apertado/confuso", "nao recomendo"]],
+      ["napFriendly", "Soneca no meio do dia", ["facil de respeitar", "possivel com planejamento", "dificil", "quase impossivel"]]
     ]
   },
   {
-    title: "Sono e rotina de bebe/crianca",
-    fields: [
-      ["cribReality", "O berco era bom de verdade?", "tamanho, colchao, estado, foi montado antes?"],
-      ["blackoutNoise", "Quarto ajudava no sono?", "blackout, barulho, corredor, musica, gerador, obra"],
-      ["roomLayout", "Layout funcionava para crianca dormir?", "cama perto do berco, divisoria, varanda, tomada, banheiro"],
-      ["napReality", "Dava para respeitar soneca?", "distancia ate piscina/restaurante, barulho diurno, flexibilidade"],
-      ["bathBabySetup", "Banho e troca foram faceis?", "banheira, bancada, chuveiro, piso, espaco para fralda"]
+    title: "Comida e sobrevivencia",
+    questions: [
+      ["babyFoodSupport", "Papinha/mamadeira", ["estrutura excelente", "quebra galho", "tem que se virar", "nao serve para bebe"]],
+      ["restaurantWithKids", "Restaurante com crianca", ["tranquilo", "ok fora do pico", "espera/estresse", "ruim com crianca"]],
+      ["kidsMenuQuality", "Menu infantil", ["bom de verdade", "basico aceitavel", "fraco", "nao percebi"]],
+      ["earlyFood", "Horarios de comida", ["compatíveis com crianca", "precisa ajustar", "jantar tarde/dificil", "sem apoio"]]
     ]
   },
   {
-    title: "Alimentacao sem drama",
-    fields: [
-      ["babyFoodSupport", "Tinha apoio real para papinha/mamadeira?", "microondas, copa baby, mixer, lava mamadeira, leite"],
-      ["restaurantWithKids", "Restaurante era tranquilo com crianca?", "cadeirao, espera, barulho, espaco kids perto, horario"],
-      ["kidsMenuQuality", "Menu infantil era bom ou so batata e nuggets?", "opcoes saudaveis, frutas, arroz/feijao, alergias"],
-      ["earlyFood", "Tinha comida no horario da crianca?", "cafe cedo, jantar cedo, room service, lanches"],
-      ["outsideFood", "Da para comer fora sem perrengue?", "restaurantes proximos, mercado, farmacia, delivery"]
+    title: "Lazer, piscina e chuva",
+    questions: [
+      ["poolSafety", "Piscina infantil", ["segura e boa", "boa com supervisao", "fria/funda/pouca sombra", "nao adequada"]],
+      ["kidsClubTruth", "Kids club/monitoria", ["excelente", "bom para algumas idades", "limitado", "nao tinha/nao confiaria"]],
+      ["rainPlan", "Se chover", ["salva a viagem", "tem plano B parcial", "fica limitado", "estraga bastante"]],
+      ["beachOrNatureAccess", "Praia/natureza com crianca", ["muito facil", "ok com cuidado", "puxado", "nao indicado"]]
     ]
   },
   {
-    title: "Piscina, praia e lazer infantil",
-    fields: [
-      ["poolReality", "Piscina era realmente boa para crianca?", "profundidade, aquecida, sombra, piso, salva-vidas"],
-      ["babyPool", "Bebe pequeno aproveita?", "piscina rasa, agua quente, sombra, barulho, fraldario perto"],
-      ["beachAccess", "Se tinha praia: acesso era facil?", "areia, escada, carrinho, mar calmo, barraca, ducha"],
-      ["kidsClubTruth", "Kids club funcionava de verdade?", "idade minima, pais ficam junto, equipe, horario, atividades"],
-      ["rainPlan", "Se chover, salva a viagem?", "brinquedoteca coberta, sala de jogos, cinema, monitoria indoor"]
+    title: "Logistica invisivel",
+    questions: [
+      ["strollerReality", "Carrinho de bebe", ["circula bem", "da para usar com trechos ruins", "melhor mochila", "impossivel"]],
+      ["walkingFatigue", "Distancias internas", ["curtas", "medias", "cansa pais", "muito puxado"]],
+      ["arrivalCheckin", "Chegada/check-in", ["suave", "ok", "demorado", "perrengue"]],
+      ["medicalComfort", "Farmacia/hospital/sinal", ["me senti seguro", "ok", "me preocupou", "nao sei"]]
     ]
   },
   {
-    title: "Logistica que site nenhum conta",
-    fields: [
-      ["strollerReality", "Carrinho de bebe circula bem?", "rampa, elevador, pedra, areia, grama, distancias"],
-      ["walkingFatigue", "Quanto os pais andam por dia?", "quarto-restaurante-piscina, subidas, carrinho no colo"],
-      ["parkingArrival", "Chegada/check-in foi suave?", "fila, manobrista, mala, quarto pronto, recepcao com crianca cansada"],
-      ["medicalNearby", "Emergencia seria simples?", "farmacia, hospital, pediatra, sinal de celular, estrada a noite"],
-      ["hiddenCosts", "Custos escondidos ou chatos", "estacionamento, recreacao paga, bebidas, passeio obrigatorio"]
-    ]
-  },
-  {
-    title: "Seguranca e perrengues invisiveis",
-    fields: [
-      ["safetyConcerns", "Algo te deixou inseguro?", "varanda, tomada, escada, piscina aberta, rio, animais, mosquito"],
-      ["hygieneReality", "Limpeza para familia exigente", "quarto, banheiro, restaurante, cadeirao, brinquedoteca"],
-      ["staffEmpathy", "Equipe entendia familia com crianca?", "resolveram rapido, tinham paciencia, anteciparam necessidades"],
-      ["worstPerrengue", "Qual foi o maior perrengue real?", "o que quase estragou ou cansou demais"],
-      ["magicMoment", "Qual detalhe encantou as criancas/pais?", "algo que fez voces pensarem: valeu a pena"]
-    ]
-  },
-  {
-    title: "Veredito de curadoria",
-    fields: [
-      ["bestAge", "Melhor idade para aproveitar", "0+, 2+, 4+, 6+, 8+ e por que"],
-      ["avoidAge", "Para qual idade voce evitaria?", "bebe de colo, toddler, crianca agitada, etc."],
-      ["familyProfileFit", "Para qual familia combina?", "descanso, aventura, resort, gastronomia, economia, luxo"],
-      ["semPerrengueTip", "Se fosse indicar para amigos, qual seria a estrategia sem perrengue?", "o que reservar, evitar, pedir antes"],
-      ["bookingQuestion", "Que pergunta obrigatoria fariamos ao hotel antes de reservar?", "a pergunta que evita dor de cabeca"]
+    title: "Veredito",
+    questions: [
+      ["bestAge", "Melhor idade", ["0+ bebe", "2+ toddler", "4+ crianca pequena", "6+ caminha bem", "8+ aventura"]],
+      ["avoidAge", "Eu evitaria para", ["nao evitaria", "bebe de colo", "2-3 anos", "crianca agitada", "familia que quer descanso"]],
+      ["familyProfileFit", "Combina mais com", ["descanso", "resort/praticidade", "natureza leve", "aventura", "gastronomia/cidade"]],
+      ["wouldRecommend", "Indicaria para amigos?", ["sim, sem medo", "sim, com ressalvas", "so para perfil especifico", "nao indicaria"]]
     ]
   }
 ];
 
-const scores = [
-  ["sleepScore", "Sono/rotina"],
-  ["foodScore", "Alimentacao"],
+const scoreFields = [
+  ["sleepScore", "Sono"],
+  ["foodScore", "Comida"],
   ["babyScore", "Bebe 0-2"],
-  ["toddlerScore", "Crianca 3-5"],
-  ["kidsScore", "Crianca 6-10"],
-  ["strollerScore", "Carrinho/acesso"],
-  ["rainScore", "Plano de chuva"],
+  ["toddlerScore", "3-5 anos"],
+  ["kidsScore", "6-10 anos"],
+  ["strollerScore", "Carrinho"],
+  ["rainScore", "Chuva"],
   ["parentRestScore", "Descanso dos pais"],
-  ["overallFamilyScore", "Nota familia geral"]
+  ["overallFamilyScore", "Geral"]
+];
+
+const textFields = [
+  ["worstPerrengue", "Maior perrengue real", "O que quase estragou, cansou demais ou voce avisaria outro pai/mae?"],
+  ["magicMoment", "Momento que fez valer a pena", "Qual detalhe encantou a familia ou as criancas?"],
+  ["semPerrengueTip", "Estrategia sem perrengue", "Se eu fosse seu amigo, qual seria o jeito certo de fazer essa viagem?"],
+  ["bookingQuestion", "Pergunta obrigatoria antes de reservar", "A pergunta que voce faria ao hotel para evitar dor de cabeca."]
 ];
 
 export default function AdminFamilyCurationForm() {
+  const [password, setPassword] = useState("");
+  const [catalog, setCatalog] = useState(null);
+  const [loginStatus, setLoginStatus] = useState({ type: "idle", message: "" });
   const [status, setStatus] = useState({ type: "idle", message: "" });
+  const [query, setQuery] = useState("");
+  const [destinationId, setDestinationId] = useState("");
+  const [hotelId, setHotelId] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const destinations = catalog?.destinations || [];
+  const hotels = catalog?.hotels || [];
+  const selectedDestination = destinations.find((destination) => destination.id === destinationId) || destinations[0] || null;
+  const destinationHotels = useMemo(() => {
+    if (!selectedDestination) return [];
+    return hotels
+      .filter((hotel) => hotel.destinationId === selectedDestination.id || normalize(hotel.city) === normalize(selectedDestination.name))
+      .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt-BR"));
+  }, [hotels, selectedDestination]);
+  const selectedHotel = destinationHotels.find((hotel) => hotel.id === hotelId) || destinationHotels[0] || null;
+  const filteredDestinations = useMemo(() => {
+    const needle = normalize(query);
+    return destinations
+      .filter((destination) => !needle || normalize(`${destination.name} ${destination.state} ${destination.summary}`).includes(needle))
+      .slice(0, 140);
+  }, [destinations, query]);
+
+  function unlock(event) {
+    event.preventDefault();
+    setLoginStatus({ type: "idle", message: "" });
+    startTransition(async () => {
+      const response = await fetch("/api/admin/family-curation", {
+        headers: { "x-admin-password": password, accept: "application/json" }
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok || !json.ok) {
+        setLoginStatus({ type: "error", message: json.message || "Nao consegui abrir o admin." });
+        return;
+      }
+      setCatalog(json);
+      setDestinationId(json.destinations?.[0]?.id || "");
+      setHotelId("");
+      setLoginStatus({ type: "success", message: `${json.destinations?.length || 0} destinos e ${json.hotels?.length || 0} hoteis carregados.` });
+    });
+  }
 
   function submit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
+    data.set("password", password);
+    data.set("destinationId", selectedDestination?.id || "");
+    data.set("destinationSlug", selectedDestination?.slug || "");
+    data.set("destinationName", selectedDestination?.name || "");
+    data.set("propertyId", selectedHotel?.id || "");
+    data.set("propertyName", selectedHotel?.name || data.get("manualPropertyName") || "");
+    data.set("knownDestinationContext", JSON.stringify(selectedDestination || {}));
+    data.set("knownHotelContext", JSON.stringify(selectedHotel || {}));
     setStatus({ type: "idle", message: "" });
 
     startTransition(async () => {
-      const response = await fetch("/api/admin/family-curation", {
-        method: "POST",
-        body: data
-      });
+      const response = await fetch("/api/admin/family-curation", { method: "POST", body: data });
       const json = await response.json().catch(() => ({}));
       if (!response.ok || !json.ok) {
         setStatus({ type: "error", message: json.message || "Nao consegui salvar a curadoria." });
         return;
       }
       form.reset();
-      setStatus({ type: "success", message: `Curadoria salva. ID ${json.id}. Fotos: ${json.photos}.` });
+      setStatus({ type: "success", message: `Salvo. ID ${json.id}. Fotos: ${json.photos}. Pode catalogar o proximo.` });
     });
+  }
+
+  if (!catalog) {
+    return (
+      <form className="admin-login-card" onSubmit={unlock}>
+        <div>
+          <span className="ui-badge"><Lock size={14} /> Admin</span>
+          <h2>Entrar na curadoria</h2>
+          <p>Depois da senha, eu carrego destinos e hoteis que ja existem no banco. Voce so completa o que nenhum site sabe.</p>
+        </div>
+        <label>
+          Senha admin
+          <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" inputMode="numeric" autoFocus required placeholder="senha" />
+        </label>
+        <button className="ui-button primary" disabled={isPending}>
+          {isPending ? <Loader2 className="spin" size={16} /> : <Lock size={16} />}
+          Abrir formulario
+        </button>
+        {loginStatus.message ? <StatusMessage status={loginStatus} /> : null}
+      </form>
+    );
   }
 
   return (
     <form className="admin-curation-form" onSubmit={submit}>
-      <section className="admin-access-card">
-        <div>
-          <span className="ui-badge"><Lock size={14} /> Admin</span>
-          <h2>Curadoria que so familia real sabe responder</h2>
-          <p>Preencha sem pressa. O objetivo e capturar detalhe pratico: sono, comida, carrinho, piscina, chuva, equipe e perrengues invisiveis.</p>
+      <section className="admin-picker-panel">
+        <div className="admin-picker-head">
+          <div>
+            <span className="ui-badge"><Hotel size={14} /> 1 local por vez</span>
+            <h2>Escolha destino e hotel</h2>
+            <p>{loginStatus.message}</p>
+          </div>
+          <label className="admin-search">
+            <Search size={16} />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar destino" />
+          </label>
         </div>
-        <label>
-          Senha admin
-          <input name="password" type="password" inputMode="numeric" required placeholder="senha" />
-        </label>
+
+        <div className="admin-picker-grid">
+          <label>
+            Destino
+            <select value={selectedDestination?.id || ""} onChange={(event) => { setDestinationId(event.target.value); setHotelId(""); }}>
+              {filteredDestinations.map((destination) => (
+                <option value={destination.id} key={destination.id}>{destination.name}, {destination.state}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Hotel/resort/pousada do banco
+            <select value={selectedHotel?.id || ""} onChange={(event) => setHotelId(event.target.value)}>
+              <option value="">Sem hotel especifico / avaliar destino</option>
+              {destinationHotels.map((hotel) => (
+                <option value={hotel.id} key={hotel.id}>{hotel.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Outro hotel, se nao estiver na lista
+            <input name="manualPropertyName" placeholder="nome do hotel/pousada/resort" />
+          </label>
+        </div>
+
+        <KnownFacts destination={selectedDestination} hotel={selectedHotel} />
       </section>
 
-      {sections.map((section) => (
-        <section className="admin-question-section" key={section.title}>
-          <h3>{section.title}</h3>
-          <div className="admin-question-grid">
-            {section.fields.map(([name, label, placeholder]) => (
-              <label key={name}>
-                {label}
-                <textarea name={name} placeholder={placeholder} rows={name.includes("Summary") ? 5 : 3} />
-              </label>
+      <section className="admin-question-section">
+        <h3>Contexto da sua visita</h3>
+        <div className="admin-question-grid compact">
+          <label>Quem responde?<input name="respondentName" placeholder="Claudio, Flavia..." /></label>
+          <label>Quando foram?<input name="visitPeriod" placeholder="mes/ano, feriado, ferias..." /></label>
+          <label>Quem viajou?<input name="travelParty" placeholder="2 adultos, criancas e idades" /></label>
+          <ChoiceField name="visitType" label="Tipo de experiencia" options={["fiquei hospedado", "day use", "visitei para conhecer", "ainda nao fui, mas tenho info confiavel"]} />
+        </div>
+      </section>
+
+      {choiceGroups.map((group) => (
+        <section className="admin-question-section" key={group.title}>
+          <h3>{group.title}</h3>
+          <div className="admin-choice-grid">
+            {group.questions.map(([name, label, options]) => (
+              <ChoiceField key={name} name={name} label={label} options={options} />
             ))}
           </div>
         </section>
       ))}
 
       <section className="admin-question-section">
-        <h3>Notas internas de curadoria</h3>
+        <h3>Notas rapidas</h3>
         <div className="admin-score-grid">
-          {scores.map(([name, label]) => (
+          {scoreFields.map(([name, label]) => (
             <label key={name}>
               {label}
-              <input name={name} type="number" min="0" max="10" step="0.5" placeholder="0 a 10" />
+              <select name={name} defaultValue="">
+                <option value="">sem nota</option>
+                {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((score) => <option value={score} key={score}>{score}</option>)}
+              </select>
             </label>
           ))}
         </div>
       </section>
 
       <section className="admin-question-section">
-        <h3>Fotos reais da familia</h3>
+        <h3>Texto so onde importa</h3>
+        <div className="admin-question-grid">
+          {textFields.map(([name, label, placeholder]) => (
+            <label key={name}>
+              {label}
+              <textarea name={name} placeholder={placeholder} rows={3} />
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="admin-question-section">
+        <h3>Fotos reais</h3>
         <div className="admin-photo-box">
           <Camera size={22} />
           <div>
-            <b>Suba fotos que ajudem a curadoria</b>
-            <p>Boas fotos: quarto, berco, banheiro, copa baby, piscina infantil, brinquedoteca, restaurante, acesso com carrinho, praia/estrutura e qualquer perrengue real.</p>
+            <b>Fotos que ajudam mais que foto bonita</b>
+            <p>Quarto, berco, banheiro, copa baby, piscina infantil, brinquedoteca, acesso com carrinho, restaurante e perrengues reais.</p>
           </div>
           <input name="photos" type="file" accept="image/*" multiple />
         </div>
         <label className="admin-wide-field">
-          Observacoes sobre as fotos
-          <textarea name="photoNotes" rows={4} placeholder="ex.: foto 1 mostra berco; foto 2 mostra distancia da piscina; foto 3 mostra escada ruim para carrinho" />
+          Legenda das fotos
+          <textarea name="photoNotes" rows={3} placeholder="ex.: foto 1 = berco; foto 2 = escada ruim para carrinho; foto 3 = piscina infantil" />
         </label>
       </section>
 
       <section className="admin-submit-bar">
-        <div>
-          <ShieldCheck size={18} />
-          <span>Salva em area privada no Supabase Storage. Nada disso aparece publicamente sem curadoria.</span>
-        </div>
+        <div><ShieldCheck size={18} /><span>As respostas ficam privadas ate virarem curadoria editorial.</span></div>
         <button className="ui-button primary" disabled={isPending}>
           {isPending ? <Loader2 className="spin" size={16} /> : <Send size={16} />}
-          Salvar curadoria
+          Salvar e ir para o proximo
         </button>
       </section>
 
-      {status.message ? (
-        <div className={`admin-status ${status.type}`}>
-          {status.type === "success" ? <CheckCircle2 size={18} /> : <Lock size={18} />}
-          {status.message}
-        </div>
-      ) : null}
+      {status.message ? <StatusMessage status={status} /> : null}
     </form>
   );
+}
+
+function KnownFacts({ destination, hotel }) {
+  return (
+    <div className="known-facts">
+      <div>
+        <b>{destination?.name || "Destino"}</b>
+        <span>{[destination?.state, destination?.country].filter(Boolean).join(" · ")}</span>
+        <p>{destination?.summary || "Sem resumo editorial no banco ainda."}</p>
+      </div>
+      <div>
+        <b>{hotel?.name || "Sem hotel selecionado"}</b>
+        <span>{hotel ? [hotel.stars ? `${hotel.stars} estrelas` : "", hotel.rating ? `nota ${hotel.rating}` : "", hotel.reviewCount ? `${hotel.reviewCount} reviews` : ""].filter(Boolean).join(" · ") : "Voce pode avaliar apenas o destino."}</span>
+        <p>{hotel?.description || hotel?.address || "Escolha um hotel da lista ou informe outro manualmente."}</p>
+      </div>
+    </div>
+  );
+}
+
+function ChoiceField({ name, label, options }) {
+  return (
+    <fieldset className="admin-choice-field">
+      <legend>{label}</legend>
+      <div>
+        {options.map((option) => (
+          <label key={option}>
+            <input name={name} type="radio" value={option} />
+            <span>{option}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function StatusMessage({ status }) {
+  return (
+    <div className={`admin-status ${status.type}`}>
+      {status.type === "success" ? <CheckCircle2 size={18} /> : <Lock size={18} />}
+      {status.message}
+    </div>
+  );
+}
+
+function normalize(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }

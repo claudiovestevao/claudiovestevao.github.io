@@ -1098,6 +1098,8 @@ select {
   gap: .9rem;
 }
 
+.admin-login-card,
+.admin-picker-panel,
 .admin-access-card,
 .admin-question-section,
 .admin-submit-bar,
@@ -1108,6 +1110,15 @@ select {
   box-shadow: 0 10px 30px rgba(15, 23, 42, .05);
 }
 
+.admin-login-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px) auto;
+  gap: 1rem;
+  align-items: end;
+  padding: 1rem;
+}
+
+.admin-login-card h2,
 .admin-access-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
@@ -1117,6 +1128,7 @@ select {
 }
 
 .admin-access-card h2,
+.admin-login-card h2,
 .admin-question-section h3 {
   margin: .5rem 0 .35rem;
   font-weight: 950;
@@ -1132,6 +1144,90 @@ select {
   line-height: 1.45;
 }
 
+.admin-login-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.admin-picker-panel {
+  display: grid;
+  gap: .85rem;
+  padding: 1rem;
+}
+
+.admin-picker-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 1rem;
+  align-items: end;
+}
+
+.admin-picker-head h2 {
+  margin: .5rem 0 .25rem;
+  font-weight: 950;
+}
+
+.admin-picker-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .88rem;
+  font-weight: 780;
+}
+
+.admin-picker-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr .9fr;
+  gap: .75rem;
+}
+
+.admin-search {
+  position: relative;
+}
+
+.admin-search svg {
+  position: absolute;
+  left: .72rem;
+  bottom: .82rem;
+  color: var(--muted);
+}
+
+.admin-search input {
+  padding-left: 2.25rem;
+}
+
+.known-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+
+.known-facts > div {
+  display: grid;
+  gap: .22rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .75rem;
+  background: #f8fafc;
+}
+
+.known-facts b {
+  font-weight: 950;
+}
+
+.known-facts span {
+  color: var(--primary);
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.known-facts p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.38;
+}
+
 .admin-question-section {
   display: grid;
   gap: .75rem;
@@ -1144,6 +1240,16 @@ select {
 }
 
 .admin-question-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.admin-question-grid.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-choice-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .75rem;
@@ -1165,7 +1271,9 @@ select {
 }
 
 .admin-curation-form input,
-.admin-curation-form textarea {
+.admin-curation-form textarea,
+.admin-curation-form select,
+.admin-login-card input {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--border);
@@ -1185,10 +1293,58 @@ select {
 }
 
 .admin-curation-form input:focus,
-.admin-curation-form textarea:focus {
+.admin-curation-form textarea:focus,
+.admin-curation-form select:focus,
+.admin-login-card input:focus {
   outline: 0;
   border-color: rgba(15, 91, 215, .55);
   box-shadow: 0 0 0 4px var(--ring);
+}
+
+.admin-choice-field {
+  display: grid;
+  gap: .45rem;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0;
+  padding: .65rem;
+  background: #fff;
+}
+
+.admin-choice-field legend {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  color: var(--foreground);
+  font-size: .84rem;
+  font-weight: 950;
+}
+
+.admin-choice-field div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.admin-choice-field label {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  min-height: 1.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .28rem .55rem;
+  color: var(--muted);
+  background: #f8fafc;
+  font-size: .76rem;
+  font-weight: 850;
+}
+
+.admin-choice-field input {
+  width: auto;
+  accent-color: var(--primary);
 }
 
 .admin-photo-box {
@@ -1281,6 +1437,10 @@ select {
   .home-hero-grid,
   .explorer-layout,
   .assistant-layout,
+  .admin-login-card,
+  .admin-picker-head,
+  .admin-picker-grid,
+  .known-facts,
   .admin-access-card,
   .admin-photo-box,
   .admin-submit-bar {
@@ -1318,6 +1478,8 @@ select {
   }
 
   .admin-question-grid,
+  .admin-question-grid.compact,
+  .admin-choice-grid,
   .admin-score-grid {
     grid-template-columns: 1fr;
   }

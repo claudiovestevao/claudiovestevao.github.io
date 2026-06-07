@@ -9,6 +9,97 @@ const BUCKET = "family-curation-uploads";
 const MAX_PHOTOS = 12;
 const MAX_PHOTO_BYTES = 12 * 1024 * 1024;
 
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const password = clean(request.headers.get("x-admin-password") || searchParams.get("password"));
+  if (!password || password !== appConfig.familyCurationAdminPassword) {
+    return NextResponse.json({ ok: false, message: "Senha de admin invalida." }, { status: 401 });
+  }
+
+  const client = getSupabaseServerClient();
+  if (!client || !appConfig.supabaseServiceRoleKey) {
+    return NextResponse.json({ ok: false, message: "Supabase service role nao configurado no servidor." }, { status: 503 });
+  }
+
+  const [destinationsResult, hotelsResult, hotelCardsResult] = await Promise.all([
+    client
+      .from("destinations")
+      .select("id,slug,name,city,state,country,short_description,family_summary,latitude,longitude,is_mvp_priority,mvp_priority,destination_types")
+      .eq("is_active", true)
+      .order("is_mvp_priority", { ascending: false })
+      .order("mvp_priority", { ascending: true })
+      .order("name", { ascending: true })
+      .limit(500),
+    client
+      .from("destination_hotels")
+      .select("id,destination_id,name,address,city,country,latitude,longitude,liteapi_id")
+      .limit(1000),
+    client
+      .from("destination_hotel_cards")
+      .select("destination_slug,destination_name,liteapi_id,hotel_name,stars,liteapi_rating,review_count,address,main_photo,thumbnail,latitude,longitude,description")
+      .limit(1000)
+  ]);
+
+  if (destinationsResult.error) {
+    return NextResponse.json({
+      ok: false,
+      message: `Falha ao carregar destinos: ${destinationsResult.error.message}`
+    }, { status: 502 });
+  }
+
+  const cardsByLiteApi = new Map((hotelCardsResult.data || [])
+    .filter((card) => card.liteapi_id)
+    .map((card) => [String(card.liteapi_id), card]));
+  const cardsByName = new Map((hotelCardsResult.data || [])
+    .map((card) => [`${slugify(card.destination_slug || card.destination_name)}|${slugify(card.hotel_name)}`, card]));
+
+  const destinations = (destinationsResult.data || []).map((destination) => ({
+    id: destination.id,
+    slug: destination.slug,
+    name: destination.city || destination.name,
+    state: destination.state,
+    country: destination.country || "Brasil",
+    summary: destination.family_summary || destination.short_description || "",
+    latitude: destination.latitude,
+    longitude: destination.longitude,
+    isPriority: Boolean(destination.is_mvp_priority),
+    destinationTypes: destination.destination_types || []
+  }));
+
+  const hotels = (hotelsResult.data || []).map((hotel) => {
+    const card = cardsByLiteApi.get(String(hotel.liteapi_id || "")) ||
+      cardsByName.get(`${slugify(hotel.city)}|${slugify(hotel.name)}`) ||
+      null;
+    return {
+      id: hotel.id,
+      destinationId: hotel.destination_id,
+      liteapiId: hotel.liteapi_id || card?.liteapi_id || "",
+      name: hotel.name || card?.hotel_name || "",
+      address: hotel.address || card?.address || "",
+      city: hotel.city || "",
+      country: hotel.country || "Brasil",
+      latitude: hotel.latitude || card?.latitude || null,
+      longitude: hotel.longitude || card?.longitude || null,
+      stars: card?.stars ?? null,
+      rating: card?.liteapi_rating ?? null,
+      reviewCount: card?.review_count ?? null,
+      description: card?.description || "",
+      image: card?.thumbnail || card?.main_photo || ""
+    };
+  });
+
+  return NextResponse.json({
+    ok: true,
+    source: "supabase_admin_prefill",
+    destinations,
+    hotels,
+    warnings: [
+      hotelsResult.error ? `destination_hotels indisponivel: ${hotelsResult.error.message}` : "",
+      hotelCardsResult.error ? `destination_hotel_cards indisponivel: ${hotelCardsResult.error.message}` : ""
+    ].filter(Boolean)
+  });
+}
+
 export async function POST(request) {
   const formData = await request.formData().catch(() => null);
   if (!formData) {
