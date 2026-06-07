@@ -21,6 +21,7 @@ export function normalizeDestination(destination) {
     scoreConfidence: destination.scoreConfidence || destination.score_confidence || "",
     categoryScores: normalizeCategoryScores(destination.categoryScores || destination.category_scores),
     fitSummary: normalizeFitSummary(destination.fitSummary || destination.fit_summary),
+    stayOptions: normalizeStayOptions(destination.stayOptions || destination.stay_options),
     tags: destination.tags || [],
     idealAges: destination.idealAges || destination.ideal_ages || [],
     travelModes: destination.travelModes || destination.travel_modes || [],
@@ -115,6 +116,18 @@ function normalizeFitSummary(summary = {}) {
     blockedProfiles: Number(summary.blockedProfiles || summary.blocked_profiles || 0),
     totalProfiles: Number(summary.totalProfiles || summary.total_profiles || 0)
   };
+}
+
+function normalizeStayOptions(options = []) {
+  if (!Array.isArray(options)) return [];
+  return options
+    .map((option) => ({
+      key: cleanString(option.key || option.property_type || option.tag_key),
+      label: cleanString(option.label || option.tag_label || option.property_type),
+      reason: cleanString(option.reason || option.recommendation_reason || ""),
+      source: cleanString(option.source || "")
+    }))
+    .filter((option) => option.key && option.label);
 }
 
 function removeAccents(value) {

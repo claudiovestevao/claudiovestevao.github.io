@@ -33,7 +33,7 @@ export default async function ConciergeFamilyPage() {
               <span className="badge-soft align-self-start">Next.js · Supabase-ready · 1001 destinos</span>
               <h1 className="hero-title">Descubra destinos familiares com dados, não achismo.</h1>
               <p className="hero-copy">
-                Mapa widescreen, busca server-side, catálogo nacional e pipeline de enriquecimento para Google Places, rotas, fotos, eventos e hotéis.
+                Mapa widescreen, busca server-side, catálogo nacional e pipeline de enriquecimento para Google Places, rotas, fotos, eventos e hospedagens.
               </p>
             </div>
           </div>

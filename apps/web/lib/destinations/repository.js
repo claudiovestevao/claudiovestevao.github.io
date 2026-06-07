@@ -95,11 +95,12 @@ async function searchSupabaseFamilyViewDestinations(params) {
   }
 
   const destinationIds = [...new Set((data || []).map((row) => row.destination_id).filter(Boolean))];
-  const [coordinatesById, scoresById] = await Promise.all([
+  const [coordinatesById, scoresById, stayOptionsById] = await Promise.all([
     fetchDestinationCoordinates(client, destinationIds),
-    fetchDestinationScoreSummaries(client, destinationIds)
+    fetchDestinationScoreSummaries(client, destinationIds),
+    fetchDestinationStayOptions(client, destinationIds)
   ]);
-  const normalized = (data || []).map((destination) => normalizeFamilyViewDestination(destination, coordinatesById, scoresById));
+  const normalized = (data || []).map((destination) => normalizeFamilyViewDestination(destination, coordinatesById, scoresById, stayOptionsById));
   const destinations = filterStaticDestinations(normalized, params);
 
   return {
@@ -221,7 +222,73 @@ function roundOne(value) {
   return Math.round(Number(value || 0) * 10) / 10;
 }
 
-function normalizeFamilyViewDestination(destination, coordinatesById, scoresById) {
+async function fetchDestinationStayOptions(client, destinationIds) {
+  if (!destinationIds.length) return new Map();
+  const [propertyResult, tagResult] = await Promise.all([
+    client
+      .from("destination_recommended_property_types")
+      .select("destination_id,property_type,recommendation_reason,attention_points")
+      .in("destination_id", destinationIds)
+      .limit(1000),
+    client
+      .from("destination_tags")
+      .select("destination_id,tag_key,tag_label,tag_category")
+      .in("destination_id", destinationIds)
+      .eq("tag_category", "hospedagem")
+      .limit(1000)
+  ]);
+
+  if (propertyResult.error || tagResult.error) {
+    console.warn("[family-concierge] Supabase stay option lookup failed", {
+      propertyError: propertyResult.error?.message,
+      tagError: tagResult.error?.message
+    });
+    return new Map();
+  }
+
+  const grouped = new Map();
+  for (const row of propertyResult.data || []) {
+    addStayOption(grouped, row.destination_id, {
+      key: row.property_type,
+      label: stayLabel(row.property_type),
+      reason: row.recommendation_reason || "",
+      source: "recommended_property_type"
+    });
+  }
+  for (const row of tagResult.data || []) {
+    addStayOption(grouped, row.destination_id, {
+      key: row.tag_key.replace(/^hospedagem_/, ""),
+      label: row.tag_label,
+      reason: "",
+      source: "stay_tag"
+    });
+  }
+  return grouped;
+}
+
+function addStayOption(grouped, destinationId, option) {
+  if (!grouped.has(destinationId)) grouped.set(destinationId, []);
+  const options = grouped.get(destinationId);
+  if (options.some((item) => item.key === option.key || item.label === option.label)) return;
+  options.push(option);
+}
+
+function stayLabel(propertyType = "") {
+  const labels = {
+    hotel: "Hotel",
+    resort: "Resort",
+    hotel_fazenda: "Hotel fazenda",
+    pousada: "Pousada",
+    apart_hotel: "Apart-hotel",
+    flat: "Flat",
+    chale: "Chalé",
+    cabana: "Cabana",
+    casa_temporada: "Casa de temporada"
+  };
+  return labels[propertyType] || propertyType;
+}
+
+function normalizeFamilyViewDestination(destination, coordinatesById, scoresById, stayOptionsById) {
   const coordinates = coordinatesById.get(destination.destination_id) || {};
   const scoreSummary = scoresById.get(destination.destination_id);
   const score = Number(scoreSummary?.familyScore || Math.round(Number(destination.overall_score || 0) * 10));
@@ -249,6 +316,7 @@ function normalizeFamilyViewDestination(destination, coordinatesById, scoresById
     scoreConfidence: scoreSummary?.scoreConfidence || "",
     fitSummary: scoreSummary?.fitSummary,
     categoryScores: scoreSummary?.categoryScores,
+    stayOptions: stayOptionsById.get(destination.destination_id) || [],
     destinationType: destination.destination_types?.[0] || "regional_family_base",
     curationLevel: destination.is_placeholder ? "family_destination_candidate" : "known_family_destination",
     recommendationReadiness: destination.is_placeholder ? "needs_hotel_and_place_validation" : "ready_for_editorial_review",

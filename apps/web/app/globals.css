@@ -251,6 +251,27 @@ a {
   font-weight: 950;
 }
 
+.stay-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .45rem;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+.stay-options b {
+  border: 1px solid rgba(168, 90, 0, .16);
+  border-radius: 999px;
+  padding: .18rem .48rem;
+  color: var(--terra);
+  background: #fff7ed;
+  font-size: .72rem;
+  font-weight: 900;
+}
+
 .badge-soft {
   border: 1px solid rgba(0, 87, 217, .14);
   border-radius: 999px;

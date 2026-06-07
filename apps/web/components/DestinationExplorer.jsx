@@ -105,7 +105,7 @@ export default function DestinationExplorer({ initialResult }) {
               Fonte: {result?.source} · catálogo conhecido: {Number(result?.totalKnown || 0).toLocaleString("pt-BR")}
             </div>
           </div>
-          <span className="badge-soft">Hotel aprovado continua sendo etapa separada</span>
+          <span className="badge-soft">Hospedagem aprovada continua sendo etapa separada</span>
         </div>
         <div>
           {destinations.slice(0, 10).map((destination) => (
@@ -151,6 +151,7 @@ function DestinationRow({ destination }) {
           {fitSummary?.totalProfiles ? ` · atende ${fitSummary.recommendedProfiles}/${fitSummary.totalProfiles} perfis familiares` : ""}
         </div>
         <ScoreBreakdown scores={destination.categoryScores} />
+        <StayOptions options={destination.stayOptions} />
         <div className="d-flex flex-wrap gap-1 mt-2">
           {(destination.tags || []).slice(0, 4).map((tag) => (
             <span className="badge-soft" key={tag}>{tag}</span>
@@ -165,6 +166,19 @@ function DestinationRow({ destination }) {
       >
         Ver mapa
       </a>
+    </div>
+  );
+}
+
+function StayOptions({ options }) {
+  const visibleOptions = (options || []).slice(0, 5);
+  if (!visibleOptions.length) return null;
+  return (
+    <div className="stay-options" aria-label="Tipos de hospedagem indicados">
+      <span>Estadias</span>
+      {visibleOptions.map((option) => (
+        <b key={`${option.key}-${option.label}`}>{option.label}</b>
+      ))}
     </div>
   );
 }

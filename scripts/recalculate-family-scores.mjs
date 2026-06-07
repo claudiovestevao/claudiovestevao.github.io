@@ -32,6 +32,7 @@ async function main() {
     seasonRows,
     riskRows,
     tagRows,
+    propertyTypeRows,
     hotelRows,
     placeRows,
     eventRows
@@ -45,6 +46,7 @@ async function main() {
     fetchAll("destination_seasonality"),
     fetchAll("destination_risk_factors"),
     fetchAll("destination_tags"),
+    fetchAll("destination_recommended_property_types"),
     fetchAll("destination_hotels"),
     fetchAll("destination_google_places"),
     fetchAll("destination_event_demand")
@@ -56,6 +58,7 @@ async function main() {
     seasonByDest: groupByDestination(seasonRows),
     riskByDest: groupByDestination(riskRows),
     tagByDest: groupByDestination(tagRows),
+    propertyTypesByDest: groupByDestination(propertyTypeRows),
     hotelsByDest: groupByDestination(hotelRows),
     placesByDest: groupByDestination(placeRows),
     eventsByDest: groupByDestination(eventRows)
@@ -239,7 +242,7 @@ function computeFit(destination, profile, score, indexes) {
   if (kind.isTinyBaby && destination.country && destination.country !== "Brasil") fit = "avoid";
   if (
     kind.wantsResort &&
-    !hasAny(types, ["resort", "hotel_fazenda", "resort_area"]) &&
+    !hasAny([...types, ...staySignals(destination, indexes).propertyTypes], ["resort", "hotel_fazenda", "resort_area"]) &&
     score.baby_structure_potential_score < 7.4
   ) {
     fit = fit === "excellent" ? "good" : fit === "good" ? "acceptable" : fit;
@@ -262,7 +265,7 @@ function computeFit(destination, profile, score, indexes) {
   if (kind.isBaby) conditions.push("confirmar ber\u00e7o, copa baby e quarto silencioso");
   if (kind.hasGrandparents) conditions.push("validar acessibilidade e dist\u00e2ncias internas");
   if (kind.avoidsAirport) conditions.push("priorizar rota sem aeroporto");
-  if (kind.wantsResort) conditions.push("comparar apenas hospedagens com recrea\u00e7\u00e3o e alimenta\u00e7\u00e3o pr\u00e1tica");
+  if (kind.wantsResort) conditions.push("comparar hospedagens com lazer, alimenta\u00e7\u00e3o pr\u00e1tica e rotina previs\u00edvel");
 
   return {
     fit_level: fit,
@@ -332,11 +335,17 @@ function structureScore(destination, profile, indexes) {
   const kind = profileKind(profile);
   const types = [...(destination.destination_types || []), destination.destination_scope || ""].map(String);
   const tags = (indexes.tagByDest.get(destination.id) || []).map((row) => `${row.tag_key} ${row.tag_label} ${row.tag_category}`);
+  const stays = staySignals(destination, indexes);
   const hotels = indexes.hotelsByDest.get(destination.id) || [];
   const places = indexes.placesByDest.get(destination.id) || [];
   let score = 6;
   if (hasAny(types, ["resort", "resort_area"])) score += 1.35;
   if (hasAny(types, ["hotel_fazenda", "campo"])) score += 0.95;
+  if (stays.hasFullService) score += 0.7;
+  if (stays.hasIndependentStay) score += kind.isBaby ? 0.35 : 0.55;
+  if (stays.hasPousada) score += kind.isBaby ? 0.2 : 0.45;
+  if (stays.hasKitchen) score += kind.isBaby || kind.isToddler ? 0.75 : 0.35;
+  if (stays.hasChaleOrCabana) score += kind.hasGrandparents ? -0.25 : 0.25;
   if (hasAny(types, ["praia"])) score += 0.35;
   if (hasAny(types, ["cidade"])) score += 0.2;
   if (hasAny(types, ["parque", "theme_park"])) score += kind.isOlderChild ? 1.1 : kind.isBaby ? -0.8 : 0.35;
@@ -351,7 +360,7 @@ function structureScore(destination, profile, indexes) {
   const familyReviewCount = places.reduce((sum, row) => sum + Number(row.family_review_count || 0), 0);
   if (familyReviewCount > 0) score += 0.25;
   if (destination.is_placeholder) score -= 0.7;
-  if (kind.wantsResort && !hasAny([...types, ...tags], ["resort", "hotel_fazenda", "hotel fazenda"])) score -= 1.1;
+  if (kind.wantsResort && !stays.hasFullService) score -= 0.8;
   if (kind.isBaby && score < 7) score -= 0.3;
   return clamp(score);
 }
@@ -388,9 +397,12 @@ function rainyDayScore(destination, profile, indexes) {
   const kind = profileKind(profile);
   const types = [...(destination.destination_types || []), destination.destination_scope || ""].map(String);
   const tags = (indexes.tagByDest.get(destination.id) || []).map((row) => `${row.tag_key} ${row.tag_label}`);
+  const stays = staySignals(destination, indexes);
   const seasons = indexes.seasonByDest.get(destination.id) || [];
   let score = 6.4;
   if (hasAny([...types, ...tags], ["resort", "hotel_fazenda", "funciona_com_chuva", "funciona com chuva", "cidade"])) score += 1.25;
+  if (stays.hasKitchen || stays.hasApartHotel) score += 0.45;
+  if (stays.hasChaleOrCabana && !kind.isBaby) score += 0.25;
   if (hasAny(types, ["praia"])) score -= 0.45;
   if (hasAny(types, ["ecoturismo", "natureza"])) score -= 0.55;
   const rainyNeed = seasons.filter((row) => row.rainy_day_plan_needed === true).length;
@@ -427,6 +439,7 @@ function safetyScore(destination, profile, indexes) {
 function parentComfortScore(destination, profile, scores, indexes) {
   const kind = profileKind(profile);
   const types = [...(destination.destination_types || []), destination.destination_scope || ""];
+  const stays = staySignals(destination, indexes);
   const access = chooseAccess(indexes.accessByDest.get(destination.id), profile);
   const events = indexes.eventsByDest.get(destination.id) || [];
   let score =
@@ -435,7 +448,9 @@ function parentComfortScore(destination, profile, scores, indexes) {
     scores.rainy * 0.14 +
     scores.safety * 0.16 +
     scores.seasonality * 0.1;
-  if (hasAny(types, ["resort", "hotel_fazenda", "resort_area"])) score += 0.65;
+  if (hasAny(types, ["resort", "hotel_fazenda", "resort_area"]) || stays.hasFullService) score += 0.65;
+  if (stays.hasKitchen) score += kind.isBaby || kind.isToddler ? 0.45 : 0.2;
+  if (stays.hasIndependentStay && !kind.isBaby) score += 0.25;
   if (hasAny(types, ["parque"]) && kind.isBaby) score -= 0.65;
   if (access?.car_needed_at_destination) score -= kind.hasGrandparents ? 0.55 : 0.25;
   if (access?.connection_or_transfer_needed) score -= kind.isBaby ? 0.45 : 0.2;
@@ -487,6 +502,7 @@ function profileKind(profile) {
 function agePlanFor(destination, profile) {
   const kind = profileKind(profile);
   const types = [...(destination.destination_types || []), destination.destination_scope || ""];
+  const stayText = JSON.stringify(types).toLowerCase();
   let minimumAgeMonths = 0;
   let idealAgeRanges = ["0-6m", "6-12m", "1-3y", "3-5y"];
   if (hasAny(types, ["parque", "theme_park"])) {
@@ -501,6 +517,9 @@ function agePlanFor(destination, profile) {
   } else if (hasAny(types, ["resort", "hotel_fazenda", "resort_area"])) {
     minimumAgeMonths = 0;
     idealAgeRanges = ["0-6m", "6-12m", "1-3y", "3-5y"];
+  } else if (stayText.includes("chale") || stayText.includes("cabana")) {
+    minimumAgeMonths = 12;
+    idealAgeRanges = ["1-3y", "3-5y"];
   }
   if (kind.isOlderChild) idealAgeRanges = ["3-5y"];
   if (kind.isToddler) idealAgeRanges = ["1-3y", "3-5y"];
@@ -534,6 +553,32 @@ function weightsFor(profile) {
   return { logistics: 0.24, structure: 0.25, seasonality: 0.1, rainy: 0.08, safety: 0.18, parentComfort: 0.15 };
 }
 
+function staySignals(destination, indexes) {
+  const propertyRows = indexes.propertyTypesByDest?.get(destination.id) || [];
+  const stayTags = (indexes.tagByDest.get(destination.id) || [])
+    .filter((row) => row.tag_category === "hospedagem")
+    .map((row) => `${row.tag_key} ${row.tag_label}`.toLowerCase());
+  const propertyTypes = propertyRows.map((row) => row.property_type);
+  const amenityText = propertyRows
+    .flatMap((row) => [
+      row.property_type,
+      ...(row.required_amenity_keys || []),
+      ...(row.preferred_amenity_keys || [])
+    ])
+    .join(" ")
+    .toLowerCase();
+  const text = `${propertyTypes.join(" ")} ${stayTags.join(" ")} ${amenityText}`;
+  return {
+    propertyTypes,
+    hasFullService: hasAny([text], ["resort", "hotel_fazenda", "pensao_completa", "recreacao"]),
+    hasIndependentStay: hasAny([text], ["pousada", "apart_hotel", "chale", "chal\u00e9", "cabana", "casa_temporada", "casa de temporada", "flat"]),
+    hasPousada: hasAny([text], ["pousada"]),
+    hasApartHotel: hasAny([text], ["apart_hotel", "flat"]),
+    hasKitchen: hasAny([text], ["cozinha", "apart_hotel", "flat", "casa_temporada", "casa de temporada"]),
+    hasChaleOrCabana: hasAny([text], ["chale", "chal\u00e9", "cabana"])
+  };
+}
+
 function confidence(destination, indexes) {
   const evidence = [
     (indexes.accessByDest.get(destination.id) || []).length > 0,
@@ -541,6 +586,7 @@ function confidence(destination, indexes) {
     (indexes.seasonByDest.get(destination.id) || []).length > 0,
     (indexes.riskByDest.get(destination.id) || []).length > 0,
     (indexes.tagByDest.get(destination.id) || []).length > 0,
+    (indexes.propertyTypesByDest.get(destination.id) || []).length > 0,
     (indexes.hotelsByDest.get(destination.id) || []).length > 0 || (indexes.placesByDest.get(destination.id) || []).length > 0,
     !destination.is_placeholder
   ].filter(Boolean).length;
