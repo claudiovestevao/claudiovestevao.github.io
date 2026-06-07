@@ -191,25 +191,27 @@ function MapExperience({ destinations, mapDestinations, selectedDestination, set
 
 function AssistantExperience({ destinations, onSelectDestination }) {
   const [childrenProfile, setChildrenProfile] = useState("mixed");
-  const [travelEffort, setTravelEffort] = useState("short");
+  const [travelEffort, setTravelEffort] = useState("medium");
+  const [tripStyle, setTripStyle] = useState("resort");
+  const [tripPace, setTripPace] = useState("rest");
   const [budget, setBudget] = useState("comfort");
 
   const recommendations = useMemo(() => {
     return destinations
       .map((destination) => ({
         destination,
-        assistantScore: assistantScore(destination, { childrenProfile, travelEffort, budget })
+        assistantScore: assistantScore(destination, { childrenProfile, travelEffort, tripStyle, tripPace, budget })
       }))
       .sort((a, b) => b.assistantScore - a.assistantScore || b.destination.familyScore - a.destination.familyScore)
       .slice(0, 3);
-  }, [destinations, childrenProfile, travelEffort, budget]);
+  }, [destinations, childrenProfile, travelEffort, tripStyle, tripPace, budget]);
 
   return (
     <div className="assistant-layout">
       <div className="assistant-panel">
         <span className="ui-badge"><MessageCircle size={14} /> Assistente da Família</span>
         <h2>Me diga o básico. Eu corto o excesso.</h2>
-        <p>Responda três escolhas e veja os destinos mais coerentes agora.</p>
+        <p>Responda escolhas simples e veja destinos mais coerentes agora.</p>
 
         <QuickChoice
           icon={Users}
@@ -231,6 +233,28 @@ function AssistantExperience({ destinations, onSelectDestination }) {
             { value: "short", label: "Quero fácil" },
             { value: "medium", label: "Até 4h ok" },
             { value: "flight", label: "Pode ter voo" }
+          ]}
+        />
+        <QuickChoice
+          icon={Compass}
+          label="Clima da viagem"
+          value={tripStyle}
+          onChange={setTripStyle}
+          options={[
+            { value: "resort", label: "Resort sem pensar" },
+            { value: "beach", label: "Praia e piscina" },
+            { value: "mountain", label: "Serra/natureza" }
+          ]}
+        />
+        <QuickChoice
+          icon={HeartHandshake}
+          label="Ritmo"
+          value={tripPace}
+          onChange={setTripPace}
+          options={[
+            { value: "rest", label: "Descansar" },
+            { value: "play", label: "Crianca gastar energia" },
+            { value: "explore", label: "Passear e comer bem" }
           ]}
         />
         <QuickChoice
@@ -265,7 +289,7 @@ function AssistantExperience({ destinations, onSelectDestination }) {
             <span className="rank">{index + 1}</span>
             <span className="recommendation-copy">
               <b>{destination.name}, {destination.stateCode}</b>
-              <small>{recommendationReason(destination, { childrenProfile, travelEffort, budget })}</small>
+              <small>{recommendationReason(destination, { childrenProfile, travelEffort, tripStyle, tripPace, budget })}</small>
             </span>
             <FamilyHassleBadge destination={destination} compact />
             <span className="recommendation-score">{destination.familyScore}</span>
@@ -640,24 +664,55 @@ function assistantScore(destination, preferences) {
     destination.name,
     destination.macroRegion,
     destination.destinationType,
+    destination.bestFor,
+    destination.honestSummary,
+    destination.shortHassleAlert,
     ...(destination.tags || []),
     ...(destination.travelModes || []),
     ...(destination.stayOptions || []).map((option) => option.label)
-  ].join(" ").toLowerCase();
+  ].join(" ");
+  const normalizedText = normalizeAssistantText(text);
 
   if (preferences.childrenProfile === "baby") {
     score += Number(destination.categoryScores?.structure || 0) * 1.8;
-    if (text.includes("resort") || text.includes("hotel fazenda")) score += 4;
+    if (hasAny(normalizedText, ["resort", "hotel fazenda", "pousada", "chale"])) score += 4;
     if (destination.avoidWithBaby) score -= 18;
   }
   if (preferences.childrenProfile === "mixed" && destination.avoidWithToddler) score -= 12;
-  if (preferences.childrenProfile === "older" && (text.includes("parque") || text.includes("aventura") || text.includes("praia"))) score += 5;
-  if (preferences.travelEffort === "short" && (text.includes("sp") || text.includes("desde sp") || destination.stateCode === "SP")) score += 8;
+  if (preferences.childrenProfile === "older" && hasAny(normalizedText, ["parque", "aventura", "praia", "trilha", "aquatico"])) score += 5;
+
+  if (preferences.tripStyle === "resort") {
+    if (hasAny(normalizedText, ["resort", "all inclusive", "hotel fazenda", "termas", "aguas quentes"])) score += 13;
+    if (hasAny(normalizedText, ["cidade historica", "urbano", "gastronomia"]) && !hasAny(normalizedText, ["resort", "hotel"])) score -= 5;
+  }
+  if (preferences.tripStyle === "beach") {
+    if (hasAny(normalizedText, ["praia", "litoral", "beach", "mar", "maceio", "maragogi", "japaratinga", "milagres", "galinhas", "forte", "natal", "guaruja"])) score += 15;
+    if (!hasAny(normalizedText, ["praia", "litoral", "beach", "mar"]) && destination.stateCode === "SP") score -= 10;
+  }
+  if (preferences.tripStyle === "mountain") {
+    if (hasAny(normalizedText, ["serra", "montanha", "campo", "frio", "chale", "natureza", "cunha", "goncalves", "gramado", "campos", "urubici"])) score += 14;
+    if (hasAny(normalizedText, ["praia", "litoral", "beach"])) score -= 8;
+  }
+
+  if (preferences.tripPace === "rest") {
+    if (["baixo", "moderado"].includes(destination.familyHassleLevel)) score += 5;
+    if (hasAny(normalizedText, ["resort", "pousada", "chale", "all inclusive", "descanso"])) score += 5;
+    if (["alto", "muito_alto"].includes(destination.familyHassleLevel)) score -= 10;
+  }
+  if (preferences.tripPace === "play") {
+    if (hasAny(normalizedText, ["parque", "kids", "crianca", "monitoria", "aquatico", "termas", "hot park", "beto", "olimpia", "rio quente"])) score += 12;
+  }
+  if (preferences.tripPace === "explore") {
+    if (hasAny(normalizedText, ["gastronomia", "cultura", "cidade", "centro", "historico", "passeio", "charme"])) score += 10;
+    if (hasAny(normalizedText, ["all inclusive"]) && !hasAny(normalizedText, ["cidade", "gastronomia"])) score -= 4;
+  }
+
+  if (preferences.travelEffort === "short" && destination.stateCode === "SP") score += 3;
   if (preferences.travelEffort === "short" && ["alto", "muito_alto"].includes(destination.familyHassleLevel)) score -= 10;
-  if (preferences.travelEffort === "flight" && destination.stateCode !== "SP") score += 5;
-  if (preferences.budget === "smart" && (text.includes("pousada") || text.includes("apart") || text.includes("casa"))) score += 5;
+  if (preferences.travelEffort === "flight" && destination.stateCode !== "SP") score += preferences.tripStyle === "beach" ? 9 : 5;
+  if (preferences.budget === "smart" && hasAny(normalizedText, ["pousada", "apart", "casa", "chale"])) score += 5;
   if (preferences.budget === "smart" && ["alto", "muito_alto"].includes(destination.familyHassleLevel)) score -= 5;
-  if (preferences.budget === "premium" && (text.includes("resort") || text.includes("premium"))) score += 5;
+  if (preferences.budget === "premium" && hasAny(normalizedText, ["resort", "premium", "all inclusive", "spa"])) score += 6;
   return score;
 }
 
@@ -667,6 +722,15 @@ function recommendationReason(destination, preferences) {
   }
   if (["alto", "muito_alto"].includes(destination.familyHassleLevel)) {
     return destination.shortHassleAlert || "Pode encantar, mas pede estrategia clara para nao cansar a familia.";
+  }
+  if (preferences.tripStyle === "beach") {
+    return destination.bestFor || "Entrou porque combina melhor com praia, piscina e rotina leve.";
+  }
+  if (preferences.tripStyle === "mountain") {
+    return destination.bestFor || "Combina com serra, natureza e um ritmo menos urbano.";
+  }
+  if (preferences.tripPace === "play") {
+    return destination.bestFor || "Boa para criança gastar energia sem depender de roteiro complicado.";
   }
   if (preferences.travelEffort === "short" && destination.stateCode === "SP") {
     return "Boa primeira triagem quando a prioridade é reduzir deslocamento.";
@@ -678,6 +742,17 @@ function recommendationReason(destination, preferences) {
     return "Vale comparar estadias alternativas antes de fechar hotel.";
   }
   return destination.bestFor || "Bom equilíbrio entre estrutura familiar e logística.";
+}
+
+function normalizeAssistantText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function hasAny(text, terms) {
+  return terms.some((term) => text.includes(term));
 }
 
 function shortScoreLabel(label = "") {
