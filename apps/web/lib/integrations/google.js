@@ -1,7 +1,7 @@
 const SAO_PAULO_CENTER = { latitude: -23.55052, longitude: -46.63331 };
 
 export function hasGoogleMaps() {
-  return Boolean(process.env.GOOGLE_MAPS_API_KEY);
+  return Boolean(getGoogleMapsKey());
 }
 
 export async function searchGooglePlacesText({ query, pageSize = 3, includedType = "" }) {
@@ -26,7 +26,7 @@ export async function searchGooglePlacesText({ query, pageSize = 3, includedType
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY,
+      "X-Goog-Api-Key": getGoogleMapsKey(),
       "X-Goog-FieldMask": fieldMask
     },
     body: JSON.stringify({
@@ -63,7 +63,7 @@ export async function getGooglePlaceDetails(placeId) {
 
   const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=pt-BR`, {
     headers: {
-      "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY,
+      "X-Goog-Api-Key": getGoogleMapsKey(),
       "X-Goog-FieldMask": fieldMask
     }
   });
@@ -75,7 +75,7 @@ export async function getGooglePlaceDetails(placeId) {
 export async function getGooglePlacePhotoUri(googlePhotoName, { maxWidthPx = 1200, maxHeightPx = 900 } = {}) {
   assertGoogleMaps();
   const params = new URLSearchParams({
-    key: process.env.GOOGLE_MAPS_API_KEY,
+    key: getGoogleMapsKey(),
     skipHttpRedirect: "true",
     maxWidthPx: String(maxWidthPx),
     maxHeightPx: String(maxHeightPx)
@@ -94,7 +94,7 @@ export async function computeGoogleRouteFromSp(destination) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY,
+      "X-Goog-Api-Key": getGoogleMapsKey(),
       "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.travelAdvisory,routes.viewport"
     },
     body: JSON.stringify({
@@ -181,9 +181,13 @@ export function normalizeGooglePlace(place = {}) {
 }
 
 function assertGoogleMaps() {
-  if (!process.env.GOOGLE_MAPS_API_KEY) {
+  if (!getGoogleMapsKey()) {
     throw Object.assign(new Error("GOOGLE_MAPS_API_KEY ausente no servidor."), { status: 503 });
   }
+}
+
+function getGoogleMapsKey() {
+  return String(process.env.GOOGLE_MAPS_API_KEY || "").replace(/^\uFEFF/, "").trim();
 }
 
 async function checkedJson(response, provider) {
