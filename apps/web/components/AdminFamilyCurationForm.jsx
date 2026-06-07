@@ -76,13 +76,14 @@ export default function AdminFamilyCurationForm() {
   const [loginStatus, setLoginStatus] = useState({ type: "idle", message: "" });
   const [status, setStatus] = useState({ type: "idle", message: "" });
   const [query, setQuery] = useState("");
+  const [destinationQuery, setDestinationQuery] = useState("");
   const [destinationId, setDestinationId] = useState("");
   const [hotelId, setHotelId] = useState("");
   const [hotelOptions, setHotelOptions] = useState({ status: "idle", items: [], warning: "" });
   const [isPending, startTransition] = useTransition();
 
-  const destinations = catalog?.destinations || [];
-  const hotels = catalog?.hotels || [];
+  const destinations = useMemo(() => sortDestinations(catalog?.destinations || []), [catalog?.destinations]);
+  const hotels = useMemo(() => sortHotels(catalog?.hotels || []), [catalog?.hotels]);
   const destinationById = useMemo(() => new Map(destinations.map((destination) => [destination.id, destination])), [destinations]);
   const selectedDestination = destinations.find((destination) => destination.id === destinationId) || destinations[0] || null;
   const destinationHotels = useMemo(() => {
@@ -104,16 +105,15 @@ export default function AdminFamilyCurationForm() {
       .slice(0, 160);
   }, [hotels, destinationById, query]);
   const filteredDestinations = useMemo(() => {
-    const needle = normalize(query);
+    const needle = normalize(destinationQuery || query);
     const matchingHotelDestinationIds = new Set(filteredHotels.map((hotel) => hotel.destinationId).filter(Boolean));
     return destinations
       .filter((destination) =>
         !needle ||
         matchingHotelDestinationIds.has(destination.id) ||
         normalize(`${destination.name} ${destination.state} ${destination.summary}`).includes(needle)
-      )
-      .slice(0, 140);
-  }, [destinations, filteredHotels, query]);
+      );
+  }, [destinations, filteredHotels, query, destinationQuery]);
   const hotelListItems = query && filteredHotels.length ? mergeHotels(activeHotelOptions, filteredHotels) : activeHotelOptions;
 
   useEffect(() => {
@@ -145,13 +145,13 @@ export default function AdminFamilyCurationForm() {
   }, [catalog, selectedDestination?.id, password]);
 
   useEffect(() => {
-    if (!query || !filteredDestinations.length) return;
+    if ((!query && !destinationQuery) || !filteredDestinations.length) return;
     const currentStillVisible = filteredDestinations.some((destination) => destination.id === destinationId);
     if (!currentStillVisible) {
       setDestinationId(filteredDestinations[0].id);
       setHotelId("");
     }
-  }, [query, filteredDestinations, destinationId]);
+  }, [query, destinationQuery, filteredDestinations, destinationId]);
 
   function unlock(event) {
     event.preventDefault();
@@ -165,8 +165,10 @@ export default function AdminFamilyCurationForm() {
         setLoginStatus({ type: "error", message: json.message || "Nao consegui abrir o admin." });
         return;
       }
-      setCatalog(json);
-      setDestinationId(json.destinations?.[0]?.id || "");
+      const orderedDestinations = sortDestinations(json.destinations || []);
+      setCatalog({ ...json, destinations: orderedDestinations, hotels: sortHotels(json.hotels || []) });
+      setDestinationId(orderedDestinations?.[0]?.id || "");
+      setDestinationQuery("");
       setHotelId("");
       setHotelOptions({ status: "idle", items: [], warning: "" });
       setLoginStatus({ type: "success", message: `${json.destinations?.length || 0} destinos e ${json.hotels?.length || 0} hoteis carregados.` });
@@ -231,14 +233,28 @@ export default function AdminFamilyCurationForm() {
           </div>
           <label className="admin-search">
             <Search size={16} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar destino ou hotel" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar hotel, resort ou pousada" />
           </label>
         </div>
 
         <div className="admin-picker-grid">
           <label>
+            Digitar destino
+            <input
+              value={destinationQuery}
+              onChange={(event) => handleDestinationQuery(event.target.value)}
+              list="admin-destination-options"
+              placeholder="Ex.: Japaratinga, Atibaia, Gramado..."
+            />
+            <datalist id="admin-destination-options">
+              {destinations.map((destination) => (
+                <option value={destinationLabel(destination)} key={destination.id} />
+              ))}
+            </datalist>
+          </label>
+          <label>
             Destino
-            <select value={selectedDestination?.id || ""} onChange={(event) => { setDestinationId(event.target.value); setHotelId(""); }}>
+            <select value={selectedDestination?.id || ""} onChange={(event) => selectDestination(event.target.value)}>
               {filteredDestinations.map((destination) => (
                 <option value={destination.id} key={destination.id}>{destination.name}, {destination.state}</option>
               ))}
@@ -352,7 +368,28 @@ export default function AdminFamilyCurationForm() {
   function selectHotel(nextHotelId) {
     setHotelId(nextHotelId);
     const nextHotel = [...hotels, ...activeHotelOptions, ...filteredHotels].find((hotel) => hotel.id === nextHotelId);
-    if (nextHotel?.destinationId) setDestinationId(nextHotel.destinationId);
+    if (nextHotel?.destinationId) selectDestination(nextHotel.destinationId);
+  }
+
+  function selectDestination(nextDestinationId) {
+    const nextDestination = destinations.find((destination) => destination.id === nextDestinationId);
+    setDestinationId(nextDestinationId);
+    setHotelId("");
+    if (nextDestination) setDestinationQuery(destinationLabel(nextDestination));
+  }
+
+  function handleDestinationQuery(value) {
+    setDestinationQuery(value);
+    const needle = normalize(value);
+    const exact = destinations.find((destination) => {
+      return [destinationLabel(destination), destination.name, destination.slug]
+        .map(normalize)
+        .includes(needle);
+    });
+    if (exact) {
+      setDestinationId(exact.id);
+      setHotelId("");
+    }
   }
 }
 
@@ -441,7 +478,32 @@ function StatusMessage({ status }) {
 }
 
 function normalize(value) {
-  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function compactKey(value) {
+  return normalize(value).replace(/[^a-z0-9]+/g, "");
+}
+
+function destinationLabel(destination) {
+  return [destination?.name, destination?.state].filter(Boolean).join(", ");
+}
+
+function sortDestinations(destinations = []) {
+  return [...destinations].sort((a, b) => {
+    const byName = String(a.name || "").localeCompare(String(b.name || ""), "pt-BR", { sensitivity: "base" });
+    if (byName) return byName;
+    return String(a.state || "").localeCompare(String(b.state || ""), "pt-BR", { sensitivity: "base" });
+  });
+}
+
+function sortHotels(hotels = []) {
+  return [...hotels].sort((a, b) => {
+    const byDestination = String(a.city || "").localeCompare(String(b.city || ""), "pt-BR", { sensitivity: "base" });
+    if (byDestination) return byDestination;
+    return hotelQualityScore(b) - hotelQualityScore(a) ||
+      String(a.name || "").localeCompare(String(b.name || ""), "pt-BR", { sensitivity: "base" });
+  });
 }
 
 function mergeHotels(...groups) {
@@ -449,20 +511,52 @@ function mergeHotels(...groups) {
 }
 
 function dedupeHotels(hotels = []) {
-  const seen = new Set();
   const unique = [];
-  for (const hotel of hotels) {
-    const key = normalize(`${hotel.name}|${hotel.city}`);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
+  const sorted = [...hotels].sort((a, b) => hotelQualityScore(b) - hotelQualityScore(a));
+  for (const hotel of sorted) {
+    if (!hotel?.name) continue;
+    if (unique.some((existing) => isProbablySameHotel(existing, hotel))) continue;
     unique.push(hotel);
   }
-  return unique;
+  return unique.sort((a, b) => String(a.name).localeCompare(String(b.name), "pt-BR", { sensitivity: "base" }));
+}
+
+function hotelQualityScore(hotel = {}) {
+  const reviews = Number(hotel.reviewCount || 0);
+  const rating = Number(hotel.rating || 0);
+  const sourceBonus = /google|curation|audit/i.test(hotel.source || "") ? 20 : 0;
+  const specificity = Math.min(20, compactKey(hotel.name).length / 2);
+  return sourceBonus + Math.log10(reviews + 1) * 12 + rating * 8 + specificity;
+}
+
+function isProbablySameHotel(a = {}, b = {}) {
+  const sameDestination = a.destinationId && b.destinationId
+    ? a.destinationId === b.destinationId
+    : normalize(a.city) === normalize(b.city);
+  if (!sameDestination) return false;
+
+  const aName = compactKey(a.name);
+  const bName = compactKey(b.name);
+  if (!aName || !bName) return false;
+  if (aName === bName) return true;
+
+  const aCanonical = canonicalHotelName(a.name);
+  const bCanonical = canonicalHotelName(b.name);
+  if (aCanonical.length < 8 || bCanonical.length < 8) return false;
+  return aCanonical.includes(bCanonical) || bCanonical.includes(aCanonical);
+}
+
+function canonicalHotelName(value) {
+  return normalize(value)
+    .replace(/\b(hotel|resort|pousada|spa|family|all|inclusive|beach|lounge|suites?|apart|flat)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, "");
 }
 
 function sourceLabel(source = "") {
-  if (source === "google_places_live") return "Google";
-  if (source === "supabase_card") return "card";
-  if (source === "supabase") return "banco";
+  const value = String(source || "");
+  if (value.includes("google_places")) return "Google";
+  if (value === "supabase_card") return "card";
+  if (value === "supabase") return "banco";
+  if (value === "liteapi") return "LiteAPI";
   return "";
 }

@@ -32,7 +32,7 @@ export async function GET(request) {
       .limit(500),
     client
       .from("destination_hotels")
-      .select("id,destination_id,name,address,city,country,latitude,longitude,liteapi_id")
+      .select("id,destination_id,name,address,city,country,latitude,longitude,liteapi_id,liteapi_rating,review_count,source,description")
       .limit(1000),
     client
       .from("destination_hotel_cards")
@@ -81,9 +81,10 @@ export async function GET(request) {
       latitude: hotel.latitude || card?.latitude || null,
       longitude: hotel.longitude || card?.longitude || null,
       stars: card?.stars ?? null,
-      rating: card?.liteapi_rating ?? null,
-      reviewCount: card?.review_count ?? null,
-      description: card?.description || "",
+      rating: hotel.liteapi_rating ?? card?.liteapi_rating ?? null,
+      reviewCount: hotel.review_count ?? card?.review_count ?? null,
+      source: hotel.source || "supabase",
+      description: hotel.description || card?.description || "",
       image: card?.thumbnail || card?.main_photo || ""
     };
   });
