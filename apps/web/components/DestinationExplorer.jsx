@@ -481,7 +481,7 @@ function GoogleLivePanel({ destination }) {
       {place.photos?.length ? (
         <div className="google-photo-grid">
           {place.photos.filter((photo) => photo.photoUri).slice(0, 3).map((photo, index) => (
-            <img src={photo.photoUri} alt={`${place.name} no Google ${index + 1}`} key={`${photo.photoUri}-${index}`} loading="lazy" />
+            <img src={photo.photoUri} alt={`${photo.sourceName || place.name} no Google ${index + 1}`} key={`${photo.photoUri}-${index}`} loading="lazy" />
           ))}
         </div>
       ) : null}
@@ -489,7 +489,7 @@ function GoogleLivePanel({ destination }) {
         <div className="google-review-list">
           {place.reviews.slice(0, 3).map((review, index) => (
             <a href={review.googleMapsUri || review.authorUri || place.googleMapsUri} target="_blank" rel="noreferrer" key={`${review.authorName}-${index}`}>
-              <b>{review.rating || "-"}★ {review.authorName || "Avaliação Google"}</b>
+              <b>{review.rating || "-"}★ {review.authorName || "Avaliação Google"}{review.sourceName ? ` · ${review.sourceName}` : ""}</b>
               <span>{review.text}</span>
             </a>
           ))}

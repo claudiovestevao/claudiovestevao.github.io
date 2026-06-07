@@ -58,13 +58,16 @@ export async function GET(request) {
       });
     }
 
-    const [placeWithMedia, route] = await Promise.all([
+    const [placeWithMedia, route, supportingPlaces] = await Promise.all([
       hydrateGooglePlaceMedia(place),
       computeGoogleRouteFromSp({
         latitude: destination.latitude || place.latitude,
         longitude: destination.longitude || place.longitude
-      }).catch((routeError) => ({ status: "UNAVAILABLE", message: routeError.message }))
+      }).catch((routeError) => ({ status: "UNAVAILABLE", message: routeError.message })),
+      getSupportingGooglePlaces(destination, place.placeId)
     ]);
+    const publicPrimaryPlace = publicPlace(placeWithMedia);
+    const publicSupportingPlaces = supportingPlaces.map(publicPlace);
 
     return NextResponse.json({
       ok: true,
@@ -75,7 +78,14 @@ export async function GET(request) {
         state: destination.state,
         country: destination.country
       },
-      place: publicPlace(placeWithMedia),
+      place: mergeDestinationSignals(publicPrimaryPlace, publicSupportingPlaces),
+      supportingPlaces: publicSupportingPlaces.map((supportingPlace) => ({
+        placeId: supportingPlace.placeId,
+        name: supportingPlace.name,
+        rating: supportingPlace.rating,
+        userRatingCount: supportingPlace.userRatingCount,
+        googleMapsUri: supportingPlace.googleMapsUri
+      })),
       route,
       fetchedAt: new Date().toISOString()
     }, {
@@ -88,6 +98,55 @@ export async function GET(request) {
       message: error.message || "Falha ao consultar Google em tempo real."
     }, { status: Number(error.status || 502) });
   }
+}
+
+async function getSupportingGooglePlaces(destination, primaryPlaceId) {
+  const seen = new Set([primaryPlaceId].filter(Boolean));
+  const query = [
+    destination.name,
+    "atrações turismo família",
+    destination.state,
+    destination.country
+  ].filter(Boolean).join(" ");
+
+  const results = await searchGooglePlacesText({ query, pageSize: 3 }).catch(() => []);
+  const places = [];
+  for (const result of results) {
+    if (!result?.placeId || seen.has(result.placeId)) continue;
+    seen.add(result.placeId);
+    try {
+      places.push(await hydrateGooglePlaceMedia(await getGooglePlaceDetails(result.placeId)));
+    } catch {
+      // Supporting places enrich media only; failures should not block the core destination response.
+    }
+  }
+  return places;
+}
+
+function mergeDestinationSignals(primaryPlace, supportingPlaces) {
+  const supportingPhotos = supportingPlaces.flatMap((supportingPlace) =>
+    (supportingPlace.photos || []).map((photo) => ({
+      ...photo,
+      sourceName: supportingPlace.name,
+      sourceUri: supportingPlace.googleMapsUri
+    }))
+  );
+  const supportingReviews = supportingPlaces.flatMap((supportingPlace) =>
+    (supportingPlace.reviews || []).map((review) => ({
+      ...review,
+      sourceName: supportingPlace.name
+    }))
+  );
+
+  return {
+    ...primaryPlace,
+    photos: [...(primaryPlace.photos || []), ...supportingPhotos]
+      .filter((photo) => photo.photoUri)
+      .slice(0, 3),
+    reviews: [...(primaryPlace.reviews || []), ...supportingReviews]
+      .filter((review) => review.text)
+      .slice(0, 5)
+  };
 }
 
 function publicPlace(place) {
