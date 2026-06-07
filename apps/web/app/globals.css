@@ -189,6 +189,8 @@ a {
 }
 
 .score-pill {
+  display: grid;
+  gap: .05rem;
   min-width: 3.2rem;
   border-radius: .75rem;
   padding: .45rem .55rem;
@@ -196,6 +198,57 @@ a {
   background: var(--blue);
   font-weight: 950;
   text-align: center;
+}
+
+.score-pill strong {
+  line-height: 1;
+}
+
+.score-pill span {
+  font-size: .65rem;
+  font-weight: 850;
+  opacity: .86;
+}
+
+.score-label {
+  border: 1px solid rgba(21, 128, 61, .16);
+  border-radius: 999px;
+  padding: .18rem .48rem;
+  color: var(--green);
+  background: #eefaf2;
+  font-size: .72rem;
+  font-weight: 900;
+}
+
+.score-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-top: .55rem;
+}
+
+.score-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .24rem;
+  min-height: 1.65rem;
+  border: 1px solid rgba(20, 33, 61, .1);
+  border-radius: 999px;
+  padding: .22rem .46rem;
+  color: #344054;
+  background: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.score-chip svg {
+  color: var(--blue);
+}
+
+.score-chip b {
+  color: var(--ink);
+  font-weight: 950;
 }
 
 .badge-soft {
@@ -263,5 +316,14 @@ a {
 
   .destination-row .btn {
     grid-column: 1 / -1;
+  }
+
+  .score-breakdown {
+    gap: .28rem;
+  }
+
+  .score-chip {
+    font-size: .68rem;
+    padding-inline: .38rem;
   }
 }

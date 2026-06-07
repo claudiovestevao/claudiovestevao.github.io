@@ -95,8 +95,11 @@ async function searchSupabaseFamilyViewDestinations(params) {
   }
 
   const destinationIds = [...new Set((data || []).map((row) => row.destination_id).filter(Boolean))];
-  const coordinatesById = await fetchDestinationCoordinates(client, destinationIds);
-  const normalized = (data || []).map((destination) => normalizeFamilyViewDestination(destination, coordinatesById));
+  const [coordinatesById, scoresById] = await Promise.all([
+    fetchDestinationCoordinates(client, destinationIds),
+    fetchDestinationScoreSummaries(client, destinationIds)
+  ]);
+  const normalized = (data || []).map((destination) => normalizeFamilyViewDestination(destination, coordinatesById, scoresById));
   const destinations = filterStaticDestinations(normalized, params);
 
   return {
@@ -127,9 +130,101 @@ async function fetchDestinationCoordinates(client, destinationIds) {
   return new Map((data || []).map((destination) => [destination.id, destination]));
 }
 
-function normalizeFamilyViewDestination(destination, coordinatesById) {
+async function fetchDestinationScoreSummaries(client, destinationIds) {
+  if (!destinationIds.length) return new Map();
+  const data = [];
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const { data: page, error } = await client
+      .from("destination_scores")
+      .select(`
+        destination_id,
+        overall_score,
+        logistics_score,
+        baby_structure_potential_score,
+        seasonality_score,
+        rainy_day_score,
+        safety_score,
+        parent_comfort_score,
+        label,
+        confidence_level
+      `)
+      .in("destination_id", destinationIds)
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      console.warn("[family-concierge] Supabase destination score lookup failed", {
+        code: error.code,
+        message: error.message
+      });
+      return new Map();
+    }
+    data.push(...(page || []));
+    if (!page || page.length < pageSize) break;
+  }
+
+  const grouped = new Map();
+  for (const score of data || []) {
+    if (!grouped.has(score.destination_id)) grouped.set(score.destination_id, []);
+    grouped.get(score.destination_id).push(score);
+  }
+  return new Map([...grouped.entries()].map(([destinationId, scores]) => [destinationId, summarizeScores(scores)]));
+}
+
+function summarizeScores(scores) {
+  const recommendedScores = scores.filter((score) => Number(score.overall_score) >= 6.2);
+  const rowsForAverage = recommendedScores.length ? recommendedScores : scores;
+  const averageOverall = average(rowsForAverage, "overall_score");
+  return {
+    familyScore: Math.round(averageOverall * 10),
+    scoreLabel: scoreLabelFor(averageOverall),
+    scoreConfidence: confidenceFor(scores),
+    fitSummary: {
+      recommendedProfiles: recommendedScores.length,
+      blockedProfiles: Math.max(0, scores.length - recommendedScores.length),
+      totalProfiles: scores.length
+    },
+    categoryScores: {
+      logistics: roundOne(average(rowsForAverage, "logistics_score")),
+      structure: roundOne(average(rowsForAverage, "baby_structure_potential_score")),
+      seasonality: roundOne(average(rowsForAverage, "seasonality_score")),
+      rainyDay: roundOne(average(rowsForAverage, "rainy_day_score")),
+      safety: roundOne(average(rowsForAverage, "safety_score")),
+      parentComfort: roundOne(average(rowsForAverage, "parent_comfort_score"))
+    }
+  };
+}
+
+function scoreLabelFor(score) {
+  if (score >= 8.3) return "Ouro - Experiência Família Excelente";
+  if (score >= 7.3) return "Prata - Muito bom para Famílias";
+  if (score >= 6.2) return "Bronze - Viável com planejamento";
+  return "Não recomendado neste perfil";
+}
+
+function confidenceFor(scores) {
+  const counts = scores.reduce((acc, score) => {
+    const level = score.confidence_level || "low";
+    acc[level] = (acc[level] || 0) + 1;
+    return acc;
+  }, {});
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "low";
+}
+
+function average(rows, key) {
+  const values = rows.map((row) => Number(row[key])).filter(Number.isFinite);
+  if (!values.length) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function roundOne(value) {
+  return Math.round(Number(value || 0) * 10) / 10;
+}
+
+function normalizeFamilyViewDestination(destination, coordinatesById, scoresById) {
   const coordinates = coordinatesById.get(destination.destination_id) || {};
-  const score = Number(destination.overall_score || 0);
+  const scoreSummary = scoresById.get(destination.destination_id);
+  const score = Number(scoreSummary?.familyScore || Math.round(Number(destination.overall_score || 0) * 10));
   const tags = [
     ...(destination.top_tags || []),
     ...(destination.destination_types || []),
@@ -149,7 +244,11 @@ function normalizeFamilyViewDestination(destination, coordinatesById) {
     latitude: coordinates.latitude,
     longitude: coordinates.longitude,
     rank: destination.mvp_priority || 999,
-    familyScore: Math.round(score * 10),
+    familyScore: score,
+    scoreLabel: scoreSummary?.scoreLabel || destination.label || "",
+    scoreConfidence: scoreSummary?.scoreConfidence || "",
+    fitSummary: scoreSummary?.fitSummary,
+    categoryScores: scoreSummary?.categoryScores,
     destinationType: destination.destination_types?.[0] || "regional_family_base",
     curationLevel: destination.is_placeholder ? "family_destination_candidate" : "known_family_destination",
     recommendationReadiness: destination.is_placeholder ? "needs_hotel_and_place_validation" : "ready_for_editorial_review",

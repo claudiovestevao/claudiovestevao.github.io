@@ -17,6 +17,10 @@ export function normalizeDestination(destination) {
     curationLevel: destination.curationLevel || destination.curation_level || "family_destination_candidate",
     recommendationReadiness: destination.recommendationReadiness || destination.recommendation_readiness || "needs_hotel_and_place_validation",
     minimumFamilyRequirementsPassed: Boolean(destination.minimumFamilyRequirementsPassed || destination.minimum_family_requirements_passed),
+    scoreLabel: destination.scoreLabel || destination.score_label || "",
+    scoreConfidence: destination.scoreConfidence || destination.score_confidence || "",
+    categoryScores: normalizeCategoryScores(destination.categoryScores || destination.category_scores),
+    fitSummary: normalizeFitSummary(destination.fitSummary || destination.fit_summary),
     tags: destination.tags || [],
     idealAges: destination.idealAges || destination.ideal_ages || [],
     travelModes: destination.travelModes || destination.travel_modes || [],
@@ -90,6 +94,27 @@ function cleanNumber(value) {
   if (value === null || value === undefined || value === "") return null;
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : null;
+}
+
+function normalizeCategoryScores(scores = {}) {
+  if (!scores || typeof scores !== "object") return null;
+  return {
+    logistics: cleanNumber(scores.logistics),
+    structure: cleanNumber(scores.structure),
+    seasonality: cleanNumber(scores.seasonality),
+    rainyDay: cleanNumber(scores.rainyDay || scores.rainy_day),
+    safety: cleanNumber(scores.safety),
+    parentComfort: cleanNumber(scores.parentComfort || scores.parent_comfort)
+  };
+}
+
+function normalizeFitSummary(summary = {}) {
+  if (!summary || typeof summary !== "object") return null;
+  return {
+    recommendedProfiles: Number(summary.recommendedProfiles || summary.recommended_profiles || 0),
+    blockedProfiles: Number(summary.blockedProfiles || summary.blocked_profiles || 0),
+    totalProfiles: Number(summary.totalProfiles || summary.total_profiles || 0)
+  };
 }
 
 function removeAccents(value) {

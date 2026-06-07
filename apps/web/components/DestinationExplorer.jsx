@@ -1,7 +1,17 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Loader2, Search, SlidersHorizontal } from "lucide-react";
+import {
+  Baby,
+  CalendarDays,
+  Car,
+  CloudSun,
+  HeartHandshake,
+  Loader2,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal
+} from "lucide-react";
 
 export default function DestinationExplorer({ initialResult }) {
   const [query, setQuery] = useState("");
@@ -124,14 +134,23 @@ function SelectField({ label, value, onChange, options }) {
 }
 
 function DestinationRow({ destination }) {
+  const fitSummary = destination.fitSummary;
   return (
     <div className="destination-row">
-      <div className="score-pill">{destination.familyScore}</div>
+      <div className="score-pill" title={destination.scoreLabel || "Nota familiar"}>
+        <strong>{destination.familyScore}</strong>
+        <span>/100</span>
+      </div>
       <div className="min-w-0">
-        <div className="fw-bold">{destination.name}, {destination.stateCode}</div>
-        <div className="text-secondary small">
-          {destination.bestFor || "Destino familiar candidato"} · {destination.recommendationReadiness}
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          <div className="fw-bold">{destination.name}, {destination.stateCode}</div>
+          {destination.scoreLabel ? <span className="score-label">{destination.scoreLabel}</span> : null}
         </div>
+        <div className="text-secondary small">
+          {destination.bestFor || "Destino familiar candidato"}
+          {fitSummary?.totalProfiles ? ` · atende ${fitSummary.recommendedProfiles}/${fitSummary.totalProfiles} perfis familiares` : ""}
+        </div>
+        <ScoreBreakdown scores={destination.categoryScores} />
         <div className="d-flex flex-wrap gap-1 mt-2">
           {(destination.tags || []).slice(0, 4).map((tag) => (
             <span className="badge-soft" key={tag}>{tag}</span>
@@ -148,6 +167,36 @@ function DestinationRow({ destination }) {
       </a>
     </div>
   );
+}
+
+function ScoreBreakdown({ scores }) {
+  const items = [
+    { key: "logistics", label: "Logística", icon: Car },
+    { key: "structure", label: "Estrutura", icon: Baby },
+    { key: "seasonality", label: "Época", icon: CalendarDays },
+    { key: "rainyDay", label: "Chuva", icon: CloudSun },
+    { key: "safety", label: "Segurança", icon: ShieldCheck },
+    { key: "parentComfort", label: "Pais", icon: HeartHandshake }
+  ].filter((item) => Number.isFinite(Number(scores?.[item.key])));
+
+  if (!items.length) return null;
+
+  return (
+    <div className="score-breakdown" aria-label="Notas por categoria">
+      {items.map(({ key, label, icon: Icon }) => (
+        <span className="score-chip" key={key} title={`${label}: ${formatScore(scores[key])} de 10`}>
+          <Icon size={13} aria-hidden="true" />
+          {label} <b>{formatScore(scores[key])}</b>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function formatScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "-";
+  return numeric.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 }
 
 function pinStyle(destination, destinations, index) {
@@ -167,8 +216,8 @@ function pinStyle(destination, destinations, index) {
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);
   const maxLng = Math.max(...lngs);
-  const latRange = Math.max(.001, maxLat - minLat);
-  const lngRange = Math.max(.001, maxLng - minLng);
+  const latRange = Math.max(0.001, maxLat - minLat);
+  const lngRange = Math.max(0.001, maxLng - minLng);
   return {
     left: `${10 + ((lng - minLng) / lngRange) * 80}%`,
     top: `${88 - ((lat - minLat) / latRange) * 76}%`
