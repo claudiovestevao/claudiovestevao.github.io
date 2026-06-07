@@ -4,6 +4,7 @@ export const appConfig = {
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
   cronSecret: process.env.CRON_SECRET || "",
+  familyCurationAdminPassword: process.env.FAMILY_CURATION_ADMIN_PASSWORD || "1905",
   enrichBatchSize: Number.parseInt(process.env.ENRICH_BATCH_SIZE || "25", 10),
   useStaticFallback: process.env.USE_STATIC_DESTINATION_FALLBACK !== "0"
 };
