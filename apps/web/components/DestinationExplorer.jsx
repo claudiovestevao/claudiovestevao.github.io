@@ -21,6 +21,7 @@ import {
   Wallet
 } from "lucide-react";
 import { calculateFamilyFitScore } from "../../../agentes/concierge-da-familia/src/data/familyHassleCuration.js";
+import { TRIP_MOMENT_OPTIONS } from "../lib/destinations/moments.js";
 
 const SAO_PAULO_CENTER = [-23.55052, -46.63331];
 
@@ -101,15 +102,11 @@ export default function DestinationExplorer({ initialResult }) {
             <label className="ui-select">
               <span><CalendarDays size={14} /> Momento</span>
               <select value={tripMoment} onChange={(event) => setTripMoment(event.target.value)}>
-                <option value="">Qualquer época</option>
-                <option value="weekend_short">Fim de semana curto</option>
-                <option value="carnival">Carnaval</option>
-                <option value="june_festivals">Junho / festas juninas</option>
-                <option value="winter">Inverno / julho</option>
-                <option value="flowers">Flores / primavera</option>
-                <option value="christmas_lights">Natal / luzes</option>
-                <option value="long_weekend">4 a 6 dias</option>
-                <option value="long_vacation">Férias 15+ dias</option>
+                {TRIP_MOMENT_OPTIONS.map((option) => (
+                  <option key={option.value || "any"} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="ui-select">
