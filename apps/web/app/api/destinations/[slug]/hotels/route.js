@@ -149,9 +149,9 @@ function normalizeLocalHotel(row, destination, cardByLiteApi, tripMoment) {
     directUrl: extractFirstUrl(description, /Site:\s*(https?:\/\/\S+)/i),
     availabilityUrl: bookingSearchUrl(row.name || card?.hotel_name, destination),
     availabilityLabel: "Ver disponibilidade e preço",
-    familyAmenities: familyAmenitiesFromText(description),
-    babyStructure: babyStructureFromText(description),
-    kidsStructure: kidsStructureFromText(description),
+    familyAmenities: familyAmenitiesFromText(description, row.name),
+    babyStructure: babyStructureFromText(description, row.name),
+    kidsStructure: kidsStructureFromText(description, row.name),
     mainStrength: shortHotelStrength(description, row.name),
     attentionPoint: "Estrutura infantil, tarifa e disponibilidade precisam ser confirmadas no momento da reserva.",
     verified: false,
@@ -181,9 +181,9 @@ function normalizeHotelCard(row, destination, tripMoment) {
     directUrl: "",
     availabilityUrl: bookingSearchUrl(row.hotel_name, destination),
     availabilityLabel: "Ver disponibilidade e preço",
-    familyAmenities: familyAmenitiesFromText(row.description || ""),
-    babyStructure: babyStructureFromText(row.description || ""),
-    kidsStructure: kidsStructureFromText(row.description || ""),
+    familyAmenities: familyAmenitiesFromText(row.description || "", row.hotel_name),
+    babyStructure: babyStructureFromText(row.description || "", row.hotel_name),
+    kidsStructure: kidsStructureFromText(row.description || "", row.hotel_name),
     mainStrength: shortHotelStrength(row.description, row.hotel_name),
     attentionPoint: "Hotel elegível para comparação; confirme estrutura infantil diretamente antes de reservar.",
     verified: false,
@@ -233,8 +233,10 @@ function familyAmenitiesFromAccommodation(row) {
   return [...new Set(items)].slice(0, 6);
 }
 
-function familyAmenitiesFromText(text = "") {
-  const normalized = normalizeText(text);
+function familyAmenitiesFromText(text = "", name = "") {
+  const known = knownFamilyProfile(name, text);
+  if (known.amenities?.length) return known.amenities;
+  const normalized = normalizeText(`${name} ${text}`);
   const items = [
     hasAny(normalized, ["berco", "crib"]) ? "berço" : "",
     hasAny(normalized, ["copa baby", "baby copa", "papinha"]) ? "copa baby" : "",
@@ -243,7 +245,9 @@ function familyAmenitiesFromText(text = "") {
     hasAny(normalized, ["piscina infantil", "kids pool", "acqua kids"]) ? "piscina infantil" : "",
     hasAny(normalized, ["all inclusive"]) ? "all inclusive" : ""
   ].filter(Boolean);
-  return items.length ? [...new Set(items)].slice(0, 6) : ["estrutura a confirmar"];
+  if (items.length) return [...new Set(items)].slice(0, 6);
+  if (hasAny(normalized, ["resort", "hotel fazenda"])) return ["lazer no hotel", "piscina/lazer a confirmar", "recreação a confirmar"];
+  return ["estrutura a confirmar"];
 }
 
 function babyStructureLabel(row) {
@@ -266,14 +270,18 @@ function kidsStructureLabel(row) {
   return items.length ? items.join(", ") : "confirmar recreação e piscina infantil";
 }
 
-function babyStructureFromText(text = "") {
-  const amenities = familyAmenitiesFromText(text);
+function babyStructureFromText(text = "", name = "") {
+  const known = knownFamilyProfile(name, text);
+  if (known.baby) return known.baby;
+  const amenities = familyAmenitiesFromText(text, name);
   const baby = amenities.filter((item) => ["berço", "copa baby", "papinha/menu infantil"].includes(item));
   return baby.length ? baby.join(", ") : "confirmar berço/copa baby";
 }
 
-function kidsStructureFromText(text = "") {
-  const amenities = familyAmenitiesFromText(text);
+function kidsStructureFromText(text = "", name = "") {
+  const known = knownFamilyProfile(name, text);
+  if (known.kids) return known.kids;
+  const amenities = familyAmenitiesFromText(text, name);
   const kids = amenities.filter((item) => ["kids club", "recreação", "piscina infantil", "all inclusive"].includes(item));
   return kids.length ? kids.join(", ") : "confirmar recreação infantil";
 }
@@ -327,9 +335,67 @@ function inferPropertyType(name = "", description = "") {
 
 function shortHotelStrength(description = "", name = "") {
   const text = String(description || "").replace(/\s+/g, " ").trim();
-  if (text && text.length > 60) return text.slice(0, 180);
+  const known = knownFamilyProfile(name, description);
+  if (known.strength) return known.strength;
+  if (/curadoria interna|google place_id|fonte operacional/i.test(text)) {
+    return "Hotel no radar de curadoria familiar; bom candidato para comparar avaliação, localização e estrutura antes de reservar.";
+  }
+  if (text && text.length > 60) return text.replace(/https?:\/\/\S+/g, "").slice(0, 180).trim();
   if (/resort/i.test(name)) return "Boa opção para comparar quando a família quer lazer concentrado e estrutura no próprio hotel.";
   return "Boa opção para comparar com base em avaliação pública, localização e aderência familiar.";
+}
+
+function knownFamilyProfile(name = "", text = "") {
+  const normalized = normalizeText(`${name} ${text}`);
+  if (hasAny(normalized, ["taua resort", "taua atibaia"])) {
+    return {
+      amenities: ["recreação", "piscinas", "lazer no hotel", "estrutura indoor"],
+      baby: "confirmar berço, copa baby e alimentação infantil",
+      kids: "recreação, piscinas e lazer no hotel; confirmar programação por idade",
+      strength: "Resort forte para família em Atibaia, bom para lazer concentrado e fim de semana sem voo."
+    };
+  }
+  if (hasAny(normalized, ["bourbon resort atibaia", "bourbon atibaia"])) {
+    return {
+      amenities: ["kids club", "piscina infantil", "recreação", "plano B na chuva"],
+      baby: "confirmar berço e copa baby; estrutura geral é bem familiar",
+      kids: "kids club, recreação e piscinas",
+      strength: "Resort clássico para famílias em Atibaia, com lazer estruturado e boa lógica para viagem curta de carro."
+    };
+  }
+  if (hasAny(normalized, ["atibaia residence"])) {
+    return {
+      amenities: ["piscina/lazer a confirmar", "quartos família", "estrutura a confirmar"],
+      baby: "confirmar berço e apoio para alimentação",
+      kids: "confirmar recreação, piscina infantil e programação",
+      strength: "Opção para comparar em Atibaia quando a família busca hotel/resort com avaliação pública forte."
+    };
+  }
+  if (hasAny(normalized, ["clara ibiuna", "clara resort"])) {
+    return {
+      amenities: ["recreação", "kids club", "piscinas", "lazer no hotel"],
+      baby: "confirmar berço, copa baby e itens de apoio",
+      kids: "recreação, kids club e lazer de resort",
+      strength: "Resort de referência para famílias que querem descanso, lazer concentrado e contato com natureza."
+    };
+  }
+  if (hasAny(normalized, ["iberostar", "praia do forte"])) {
+    return {
+      amenities: ["all inclusive", "kids club", "piscinas", "praia"],
+      baby: "confirmar berço, copa baby e alimentação infantil",
+      kids: "kids club, piscinas e estrutura all inclusive",
+      strength: "Resort de praia forte para famílias que querem alimentação resolvida e estrutura de lazer."
+    };
+  }
+  if (hasAny(normalized, ["japaratinga lounge", "japaratinga resort"])) {
+    return {
+      amenities: ["all inclusive", "piscinas", "praia", "recreação a confirmar"],
+      baby: "confirmar berço, copa baby e sombra/praia para bebê",
+      kids: "piscinas, praia e lazer de resort; confirmar recreação por idade",
+      strength: "Boa opção de praia em Alagoas quando a família quer resort e rotina mais resolvida."
+    };
+  }
+  return {};
 }
 
 function bookingSearchUrl(hotelName, destination) {
