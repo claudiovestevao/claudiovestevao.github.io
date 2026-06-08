@@ -756,6 +756,99 @@ select {
   background: #eff6ff;
 }
 
+.trip-cost-card {
+  display: grid;
+  gap: .35rem;
+  border: 1px solid rgba(161, 92, 7, .18);
+  border-radius: var(--radius);
+  padding: .68rem;
+  background: #fffaf0;
+}
+
+.trip-cost-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+}
+
+.trip-cost-card > div > span {
+  color: var(--foreground);
+  font-size: .82rem;
+  font-weight: 950;
+}
+
+.trip-cost-card p {
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.38;
+}
+
+.trip-cost-card small {
+  color: #8a4b05;
+  font-size: .7rem;
+  font-weight: 850;
+}
+
+.cost-bags {
+  display: inline-flex;
+  align-items: center;
+  gap: .18rem;
+  min-width: 0;
+  border: 1px solid rgba(161, 92, 7, .2);
+  border-radius: 999px;
+  padding: .24rem .5rem;
+  color: #7c2d12;
+  background: #fffbeb;
+  font-size: .74rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cost-bags svg {
+  flex: 0 0 auto;
+  color: #b45309;
+  fill: rgba(244, 183, 64, .22);
+}
+
+.cost-bags b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cost-bags.is-compact {
+  justify-self: start;
+  max-width: 100%;
+  margin-top: .28rem;
+  padding: .18rem .42rem;
+  font-size: .68rem;
+}
+
+.cost-tier-1 .cost-bags,
+.cost-bags.cost-tier-1 {
+  border-color: rgba(19, 131, 75, .2);
+  color: #11643c;
+  background: #ecfdf3;
+}
+
+.cost-tier-1 .cost-bags svg,
+.cost-bags.cost-tier-1 svg {
+  color: #13834b;
+}
+
+.cost-tier-3 .cost-bags,
+.cost-bags.cost-tier-3 {
+  border-color: rgba(185, 28, 28, .2);
+  color: #991b1b;
+  background: #fff7ed;
+}
+
+.cost-tier-3 .cost-bags svg,
+.cost-bags.cost-tier-3 svg {
+  color: #c2410c;
+}
+
 .score-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

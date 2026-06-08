@@ -197,6 +197,7 @@ function MapExperience({ destinations, mapDestinations, selectedDestination, set
             <span>
               <b>{destination.name}</b>
               <small>{destination.stateCode} · {shortScoreLabel(destination.scoreLabel, destination.familyScore)} · {transportSummary(destination)}</small>
+              <CostBags destination={destination} compact />
             </span>
           </button>
         ))}
@@ -452,6 +453,7 @@ function DestinationSummary({ destination }) {
       </div>
 
       <TravelLogisticsSummary destination={destination} />
+      <TripCostSignal destination={destination} />
       <ScoreBreakdown scores={destination.categoryScores} />
       <FamilyHasslePanel destination={destination} />
       <SemPerrengueStrategy destination={destination} />
@@ -515,6 +517,32 @@ function TravelLogisticsSummary({ destination }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function TripCostSignal({ destination }) {
+  const cost = destinationCostSignal(destination);
+  return (
+    <div className={`trip-cost-card cost-tier-${cost.tier}`} aria-label="Sinal de custo estimado da viagem">
+      <div>
+        <span>Custo provável</span>
+        <CostBags destination={destination} />
+      </div>
+      <p>{cost.description}</p>
+      <small>Estimativa relativa para comparar destinos. Não é preço nem disponibilidade.</small>
+    </div>
+  );
+}
+
+function CostBags({ destination, compact = false }) {
+  const cost = destinationCostSignal(destination);
+  return (
+    <span className={`cost-bags cost-tier-${cost.tier} ${compact ? "is-compact" : ""}`} title={cost.description}>
+      {Array.from({ length: cost.tier }).map((_, index) => (
+        <Wallet size={compact ? 12 : 15} aria-hidden="true" key={index} />
+      ))}
+      <b>{compact ? cost.shortLabel : cost.label}</b>
+    </span>
   );
 }
 
@@ -900,6 +928,46 @@ function familyEffortLabel(minutes, hassleLevel) {
   if (minutes <= 90) return "leve";
   if (minutes <= 240) return "moderado";
   return "alto";
+}
+
+function destinationCostSignal(destination) {
+  const mode = transportMode(destination);
+  const text = normalizeAssistantText([
+    destination.name,
+    destination.country,
+    destination.destinationType,
+    destination.bestFor,
+    destination.honestSummary,
+    ...(destination.tags || []),
+    ...(destination.stayOptions || []).map((option) => `${option.key} ${option.label} ${option.reason}`)
+  ].join(" "));
+  const minutes = Number(destination.estimatedTotalMinutesFromSp) || minutesFromTravelText([...(destination.travelModes || []), ...(destination.tags || [])].join(" "));
+  let tier = 1;
+
+  if (mode === "flight" || destination.country !== "Brasil") tier += 1;
+  if (hasAny(text, ["resort", "all inclusive", "premium", "luxury", "spa", "disney", "orlando", "europa", "bariloche"])) tier += 1;
+  if (Number.isFinite(minutes) && minutes > 240 && mode === "car") tier += 1;
+  if (hasAny(text, ["pousada", "chale", "apart", "casa de temporada"]) && mode === "car" && !hasAny(text, ["resort", "all inclusive"])) tier -= 1;
+
+  tier = Math.max(1, Math.min(3, tier));
+  const labels = {
+    1: {
+      label: "1 saquinho · mais econômico",
+      shortLabel: "custo 1",
+      description: "Tende a ser uma opção mais econômica, especialmente se a hospedagem for simples e o deslocamento for de carro."
+    },
+    2: {
+      label: "2 saquinhos · intermediário",
+      shortLabel: "custo 2",
+      description: "Tende a exigir orçamento intermediário: pode envolver hotel com mais estrutura, mais noites ou deslocamento mais relevante."
+    },
+    3: {
+      label: "3 saquinhos · mais alto",
+      shortLabel: "custo 3",
+      description: "Tende a custar mais, normalmente por envolver resort, all inclusive, voo, destino internacional ou logística mais longa."
+    }
+  };
+  return { tier, ...labels[tier] };
 }
 
 function curationDescription(label) {
