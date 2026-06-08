@@ -133,6 +133,7 @@ export default function DestinationExplorer({ initialResult }) {
             mapDestinations={mapDestinations}
             selectedDestination={selectedDestination}
             setSelectedSlug={setSelectedSlug}
+            tripMoment={tripMoment}
           />
         </>
       ) : (
@@ -160,7 +161,7 @@ function ModeButton({ active, description, icon: Icon, label, onClick }) {
   );
 }
 
-function MapExperience({ destinations, mapDestinations, selectedDestination, setSelectedSlug }) {
+function MapExperience({ destinations, mapDestinations, selectedDestination, setSelectedSlug, tripMoment }) {
   return (
     <>
       <div className="explorer-layout">
@@ -181,7 +182,7 @@ function MapExperience({ destinations, mapDestinations, selectedDestination, set
         </div>
 
         <aside className="side-panel" aria-label="Resumo do destino selecionado">
-          {selectedDestination ? <DestinationSummary destination={selectedDestination} /> : <EmptyState />}
+          {selectedDestination ? <DestinationSummary destination={selectedDestination} tripMoment={tripMoment} /> : <EmptyState />}
         </aside>
       </div>
 
@@ -426,8 +427,7 @@ function DestinationMap({ destinations, selectedSlug, onSelect }) {
   return <div className="real-map" ref={elementRef} aria-label="Mapa real com destinos familiares curados" />;
 }
 
-function DestinationSummary({ destination }) {
-  const bookingUrl = `https://www.booking.com/searchresults.pt-br.html?ss=${encodeURIComponent(`${destination.name}, ${destination.stateCode}`)}`;
+function DestinationSummary({ destination, tripMoment }) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${destination.name} ${destination.stateCode}`)}`;
 
   return (
@@ -458,6 +458,7 @@ function DestinationSummary({ destination }) {
       <FamilyHasslePanel destination={destination} />
       <SemPerrengueStrategy destination={destination} />
       <StayOptions options={destination.stayOptions} />
+      <HotelRecommendations destination={destination} tripMoment={tripMoment} />
       <GoogleLivePanel destination={destination} />
 
       <div className="attention-list">
@@ -466,16 +467,128 @@ function DestinationSummary({ destination }) {
         ))}
       </div>
 
-      <div className="summary-actions">
-        <a className="ui-button primary" href={bookingUrl} target="_blank" rel="noreferrer">
-          <Hotel size={16} />
-          Ver hotéis
-        </a>
+      <div className="summary-actions single">
         <a className="ui-button ghost" href={mapsUrl} target="_blank" rel="noreferrer">
           <MapPin size={16} />
           Ver no mapa
         </a>
       </div>
+    </div>
+  );
+}
+
+function HotelRecommendations({ destination, tripMoment }) {
+  const [state, setState] = useState({ status: "loading", hotels: [], warning: "" });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: "loading", hotels: [], warning: "" });
+    const params = new URLSearchParams({
+      limit: "3",
+      moment: tripMoment || ""
+    });
+    fetch(`/api/destinations/${encodeURIComponent(destination.slug)}/hotels?${params.toString()}`, {
+      headers: { accept: "application/json" }
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (cancelled) return;
+        setState(data.ok
+          ? { status: "ready", hotels: data.hotels || [], warning: data.warnings?.[0] || "" }
+          : { status: "error", hotels: [], warning: data.message || "Hotéis indisponíveis agora." });
+      })
+      .catch((error) => {
+        if (!cancelled) setState({ status: "error", hotels: [], warning: error.message || "Hotéis indisponíveis agora." });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [destination.slug, tripMoment]);
+
+  return (
+    <section className="hotel-recommendations" aria-label="Melhores hospedagens familiares">
+      <div className="hotel-recommendations-head">
+        <div>
+          <span className="ui-badge"><Hotel size={14} /> 3 melhores hospedagens</span>
+          <h3>Compare antes de sair do site</h3>
+        </div>
+        <small>Ordenado por aderência familiar, avaliação pública e estrutura para crianças.</small>
+      </div>
+
+      {state.status === "loading" ? (
+        <div className="hotel-recommendations-status">
+          <Loader2 className="spin" size={15} />
+          Carregando opções curadas...
+        </div>
+      ) : null}
+
+      {state.status === "error" ? (
+        <div className="hotel-recommendations-status is-error">
+          <ShieldCheck size={15} />
+          {state.warning}
+        </div>
+      ) : null}
+
+      {state.status === "ready" && !state.hotels.length ? (
+        <div className="hotel-recommendations-status">
+          <ShieldCheck size={15} />
+          Ainda não há 3 hotéis qualificados para este destino.
+        </div>
+      ) : null}
+
+      {state.hotels.length ? (
+        <div className="hotel-option-list">
+          {state.hotels.map((hotel, index) => (
+            <article className="hotel-option-card" key={hotel.id || hotel.name}>
+              <div className="hotel-option-rank">{index + 1}</div>
+              <div className="hotel-option-main">
+                <div className="hotel-option-title">
+                  <div>
+                    <b>{hotel.name}</b>
+                    <span>{hotel.propertyType} · {hotel.priceRange}</span>
+                  </div>
+                  <HotelRating hotel={hotel} />
+                </div>
+                <p>{hotel.mainStrength}</p>
+                <div className="hotel-family-grid">
+                  <HotelFact icon={Baby} label="Bebês" value={hotel.babyStructure} />
+                  <HotelFact icon={Users} label="Crianças" value={hotel.kidsStructure} />
+                  <HotelFact icon={Wallet} label="Preço" value={hotel.priceNote} />
+                </div>
+                <div className="hotel-amenities">
+                  {(hotel.familyAmenities || []).slice(0, 6).map((amenity) => <span key={amenity}>{amenity}</span>)}
+                </div>
+                <small className="hotel-attention">{hotel.attentionPoint}</small>
+                <a className="ui-button primary compact" href={hotel.availabilityUrl || hotel.bookingUrl || hotel.directUrl} target="_blank" rel="noreferrer">
+                  <Hotel size={15} />
+                  {hotel.availabilityLabel || "Ver disponibilidade e preço"}
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function HotelRating({ hotel }) {
+  if (!hotel.rating && !hotel.familyScore) return <span className="hotel-rating is-muted">sem nota pública</span>;
+  return (
+    <span className="hotel-rating">
+      <Star size={13} />
+      {hotel.rating ? Number(hotel.rating).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) : `${hotel.familyScore}/100`}
+      {hotel.reviewCount ? <small>{formatCompact(hotel.reviewCount)} avaliações</small> : null}
+    </span>
+  );
+}
+
+function HotelFact({ icon: Icon, label, value }) {
+  return (
+    <div className="hotel-fact">
+      <Icon size={14} />
+      <span>{label}</span>
+      <b>{value || "confirmar"}</b>
     </div>
   );
 }
