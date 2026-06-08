@@ -26,7 +26,8 @@ import {
 import { calculateFamilyFitScore } from "../../../agentes/concierge-da-familia/src/data/familyHassleCuration.js";
 import { TRIP_MOMENT_OPTIONS } from "../lib/destinations/moments.js";
 
-const SAO_PAULO_CENTER = [-23.55052, -46.63331];
+const SAO_PAULO_STATE_CENTER = [-22.7, -48.6];
+const SAO_PAULO_STATE_ZOOM = 7;
 
 export default function DestinationExplorer({ initialResult }) {
   const [mode, setMode] = useState("explore");
@@ -134,6 +135,7 @@ export default function DestinationExplorer({ initialResult }) {
             selectedDestination={selectedDestination}
             setSelectedSlug={setSelectedSlug}
             tripMoment={tripMoment}
+            preferSaoPauloScope={!query && !tripMoment && !curationLevel}
           />
         </>
       ) : (
@@ -161,7 +163,7 @@ function ModeButton({ active, description, icon: Icon, label, onClick }) {
   );
 }
 
-function MapExperience({ destinations, mapDestinations, selectedDestination, setSelectedSlug, tripMoment }) {
+function MapExperience({ destinations, mapDestinations, selectedDestination, setSelectedSlug, tripMoment, preferSaoPauloScope }) {
   return (
     <>
       <div className="explorer-layout">
@@ -170,10 +172,15 @@ function MapExperience({ destinations, mapDestinations, selectedDestination, set
             destinations={mapDestinations}
             selectedSlug={selectedDestination?.slug}
             onSelect={setSelectedSlug}
+            preferSaoPauloScope={preferSaoPauloScope}
           />
           <div className="map-origin-badge">
             <MapPin size={15} />
             Saindo de São Paulo-SP
+          </div>
+          <div className="map-scope-badge">
+            <strong>MVP São Paulo</strong>
+            <span>Sudeste em breve. Afaste o zoom para ver outros estados e países.</span>
           </div>
           <div className="map-status">
             <strong>{destinations.length}</strong>
@@ -339,7 +346,7 @@ function QuickChoice({ icon: Icon, label, value, onChange, options }) {
   );
 }
 
-function DestinationMap({ destinations, selectedSlug, onSelect }) {
+function DestinationMap({ destinations, selectedSlug, onSelect, preferSaoPauloScope }) {
   const mapRef = useRef(null);
   const layerRef = useRef(null);
   const elementRef = useRef(null);
@@ -355,7 +362,7 @@ function DestinationMap({ destinations, selectedSlug, onSelect }) {
       const map = L.map(elementRef.current, {
         zoomControl: false,
         scrollWheelZoom: true
-      }).setView(SAO_PAULO_CENTER, 7);
+      }).setView(SAO_PAULO_STATE_CENTER, SAO_PAULO_STATE_ZOOM);
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -409,12 +416,15 @@ function DestinationMap({ destinations, selectedSlug, onSelect }) {
         marker.addTo(layer);
       }
 
-      if (points.length > 1) {
-        map.fitBounds(points.map((point) => [point.lat, point.lng]), { padding: [34, 34], maxZoom: 9 });
-      } else if (points.length === 1) {
-        map.setView([points[0].lat, points[0].lng], 10);
+      const saoPauloPoints = points.filter((point) => point.destination.stateCode === "SP");
+      const scopedPoints = preferSaoPauloScope && saoPauloPoints.length ? saoPauloPoints : points;
+
+      if (scopedPoints.length > 1) {
+        map.fitBounds(scopedPoints.map((point) => [point.lat, point.lng]), { padding: [34, 34], maxZoom: 8 });
+      } else if (scopedPoints.length === 1) {
+        map.setView([scopedPoints[0].lat, scopedPoints[0].lng], 10);
       } else {
-        map.setView(SAO_PAULO_CENTER, 7);
+        map.setView(SAO_PAULO_STATE_CENTER, SAO_PAULO_STATE_ZOOM);
       }
     }
 
@@ -422,7 +432,7 @@ function DestinationMap({ destinations, selectedSlug, onSelect }) {
     return () => {
       cancelled = true;
     };
-  }, [destinations, selectedSlug, onSelect, isMapReady]);
+  }, [destinations, selectedSlug, onSelect, isMapReady, preferSaoPauloScope]);
 
   return <div className="real-map" ref={elementRef} aria-label="Mapa real com destinos familiares curados" />;
 }

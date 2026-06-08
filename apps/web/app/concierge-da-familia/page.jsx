@@ -28,10 +28,10 @@ export default async function ConciergeFamilyPage() {
               <ArrowLeft size={15} /> agentes
             </Link>
             <div className="d-flex flex-column gap-3">
-              <span className="ui-badge align-self-start"><MapPinned size={14} /> Mapa familiar a partir de SP</span>
+              <span className="ui-badge align-self-start"><MapPinned size={14} /> MVP São Paulo · Sudeste em breve</span>
               <h1 className="hero-title">Descubra no mapa onde vale viajar com sua família.</h1>
               <p className="hero-copy">
-                Compare destinos por esforço, estrutura, idade das crianças e opções reais de estadia.
+                Neste MVP, a origem padrão é São Paulo-SP e o mapa começa pelo estado. Afaste o zoom para explorar outros estados e países já mapeados.
               </p>
             </div>
           </div>
@@ -39,7 +39,7 @@ export default async function ConciergeFamilyPage() {
             <div className="trust-bar">
               <TrustItem icon={CheckCircle2} text={`${initialResult.totalKnown?.toLocaleString("pt-BR") || "170"} destinos ativos`} />
               <TrustItem icon={ShieldCheck} text="score familiar transparente" />
-              <TrustItem icon={MapPinned} text="mapa real e filtros rápidos" />
+              <TrustItem icon={MapPinned} text="origem padrão: São Paulo-SP" />
             </div>
           </div>
         </div>
