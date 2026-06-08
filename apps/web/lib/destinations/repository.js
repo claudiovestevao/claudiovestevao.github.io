@@ -323,6 +323,9 @@ function normalizeFamilyViewDestination(destination, coordinatesById, scoresById
     minimumFamilyRequirementsPassed: false,
     tags,
     idealAges: destination.ideal_age_ranges || [],
+    bestTransportModeFromSp: destination.best_transport_mode_from_sp || "",
+    estimatedTotalMinutesFromSp: destination.estimated_total_minutes_from_sp,
+    estimatedDistanceKmFromSp: destination.estimated_distance_km_from_sp,
     travelModes: [
       destination.best_transport_mode_from_sp,
       destination.estimated_total_minutes_from_sp

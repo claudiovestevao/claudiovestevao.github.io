@@ -172,7 +172,7 @@ function publicPlace(place) {
       .filter((review) => review.text)
       .slice(0, 5)
       .map((review) => ({
-        authorName: review.authorName,
+        authorName: firstNameOnly(review.authorName) || "Família",
         authorUri: review.authorUri,
         rating: review.rating,
         relativeTime: review.relativeTime,
@@ -184,5 +184,11 @@ function publicPlace(place) {
 
 function trimReview(text) {
   const clean = String(text || "").replace(/\s+/g, " ").trim();
-  return clean.length > 280 ? `${clean.slice(0, 277)}...` : clean;
+  return clean.length > 900 ? `${clean.slice(0, 897)}...` : clean;
+}
+
+function firstNameOnly(value) {
+  const clean = String(value || "").trim();
+  if (!clean) return "";
+  return clean.split(/\s+/)[0].replace(/[^\p{L}.'-]/gu, "");
 }

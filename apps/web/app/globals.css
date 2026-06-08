@@ -604,6 +604,51 @@ select {
   border-color: rgba(19, 131, 75, .18);
 }
 
+.curation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .36rem;
+  min-height: 1.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .3rem .68rem;
+  font-size: .78rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.curation-badge.curation-ouro,
+.score-dot.curation-ouro {
+  border-color: rgba(180, 124, 10, .34);
+  color: #6f4300;
+  background: linear-gradient(135deg, #fff7d6, #f6c453);
+}
+
+.curation-badge.curation-prata,
+.score-dot.curation-prata {
+  border-color: rgba(100, 116, 139, .28);
+  color: #334155;
+  background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+}
+
+.curation-badge.curation-bronze,
+.score-dot.curation-bronze {
+  border-color: rgba(154, 83, 28, .3);
+  color: #7c2d12;
+  background: linear-gradient(135deg, #ffedd5, #d98b48);
+}
+
+.curation-badge.curation-candidate,
+.score-dot.curation-candidate {
+  border-color: rgba(15, 91, 215, .18);
+  color: var(--primary);
+  background: #eff6ff;
+}
+
+.curation-badge svg {
+  flex: 0 0 auto;
+}
+
 .hassle-badge {
   display: inline-flex;
   align-items: center;
@@ -645,6 +690,70 @@ select {
   border-color: rgba(88, 28, 135, .2);
   color: #581c87;
   background: #faf5ff;
+}
+
+.travel-logistics-card {
+  display: grid;
+  gap: .6rem;
+  border: 1px solid rgba(15, 91, 215, .16);
+  border-radius: var(--radius);
+  padding: .72rem;
+  background: #f8fbff;
+}
+
+.travel-logistics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 850;
+}
+
+.travel-logistics-head b {
+  color: var(--foreground);
+  font-size: .85rem;
+}
+
+.travel-logistics-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: .46rem;
+}
+
+.travel-logistics-metric {
+  display: grid;
+  gap: .16rem;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .55rem;
+  background: #fff;
+}
+
+.travel-logistics-metric svg {
+  color: var(--primary);
+}
+
+.travel-logistics-metric span {
+  color: var(--foreground);
+  font-size: .98rem;
+  font-weight: 950;
+}
+
+.travel-logistics-metric small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.travel-logistics-metric.is-primary {
+  border-color: rgba(15, 91, 215, .2);
+  background: #eff6ff;
 }
 
 .score-grid {
@@ -808,6 +917,18 @@ select {
   background: #eff6ff;
 }
 
+.destination-card.curation-ouro {
+  border-color: rgba(180, 124, 10, .22);
+}
+
+.destination-card.curation-prata {
+  border-color: rgba(100, 116, 139, .22);
+}
+
+.destination-card.curation-bronze {
+  border-color: rgba(154, 83, 28, .22);
+}
+
 .score-dot {
   display: grid;
   place-items: center;
@@ -873,6 +994,38 @@ select {
   white-space: nowrap;
 }
 
+.route-highlight-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.route-highlight-card > div {
+  display: grid;
+  gap: .16rem;
+  border: 1px solid rgba(15, 91, 215, .16);
+  border-radius: var(--radius);
+  padding: .58rem;
+  background: #eff6ff;
+}
+
+.route-highlight-card svg {
+  color: var(--primary);
+}
+
+.route-highlight-card span {
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.route-highlight-card b {
+  color: var(--foreground);
+  font-size: .98rem;
+  font-weight: 950;
+}
+
 .google-live-facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -923,10 +1076,10 @@ select {
 
 .google-review-list a {
   display: grid;
-  gap: .16rem;
+  gap: .28rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: .5rem;
+  padding: .62rem;
   color: var(--foreground);
   background: #fff;
   text-decoration: none;
@@ -937,14 +1090,11 @@ select {
 }
 
 .google-review-list span {
-  display: -webkit-box;
-  overflow: hidden;
+  display: block;
   color: var(--muted);
   font-size: .78rem;
   font-weight: 750;
-  line-height: 1.35;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  line-height: 1.42;
 }
 
 .assistant-layout {
@@ -1694,6 +1844,11 @@ select {
   .admin-score-grid {
     grid-template-columns: 1fr;
   }
+
+  .travel-logistics-grid,
+  .route-highlight-card {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 575px) {
@@ -1711,6 +1866,8 @@ select {
   .mode-header,
   .results-strip,
   .google-live-facts,
+  .travel-logistics-grid,
+  .route-highlight-card,
   .score-grid,
   .hassle-panel,
   .summary-actions {
@@ -1736,6 +1893,11 @@ select {
 
   .assistant-recommendation svg {
     display: none;
+  }
+
+  .curation-badge,
+  .hassle-badge {
+    white-space: normal;
   }
 
   .assistant-recommendation .hassle-badge {

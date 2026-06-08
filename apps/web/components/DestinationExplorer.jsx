@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   Baby,
+  Bus,
   CalendarDays,
   Car,
   ChevronRight,
+  Clock,
   CloudSun,
   Compass,
   HeartHandshake,
@@ -13,6 +15,7 @@ import {
   Loader2,
   MapPin,
   MessageCircle,
+  Plane,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -185,15 +188,15 @@ function MapExperience({ destinations, mapDestinations, selectedDestination, set
       <div className="results-strip" aria-label="Destinos em destaque">
         {destinations.slice(0, 8).map((destination) => (
           <button
-            className={`destination-card ${destination.slug === selectedDestination?.slug ? "is-active" : ""}`}
+            className={`destination-card ${curationClass(destination.scoreLabel, destination.familyScore)} ${destination.slug === selectedDestination?.slug ? "is-active" : ""}`}
             key={destination.slug}
             type="button"
             onClick={() => setSelectedSlug(destination.slug)}
           >
-            <span className="score-dot">{destination.familyScore}</span>
+            <span className={`score-dot ${curationClass(destination.scoreLabel, destination.familyScore)}`}>{destination.familyScore}</span>
             <span>
               <b>{destination.name}</b>
-              <small>{destination.stateCode} · {shortScoreLabel(destination.scoreLabel)} · {hassleLabel(destination.familyHassleLevel)}</small>
+              <small>{destination.stateCode} · {shortScoreLabel(destination.scoreLabel, destination.familyScore)} · {transportSummary(destination)}</small>
             </span>
           </button>
         ))}
@@ -442,12 +445,13 @@ function DestinationSummary({ destination }) {
 
       <div className="summary-section">
         <div className="summary-badges">
-          <BadgeLine icon={Star} label={destination.scoreLabel || "Curadoria familiar"} />
+          <CurationBadge label={destination.scoreLabel} score={destination.familyScore} />
           <FamilyHassleBadge destination={destination} />
         </div>
         <p className="summary-copy">{destination.honestSummary || destination.bestFor || "Boa opção para famílias quando a hospedagem e o deslocamento combinam com a idade das crianças."}</p>
       </div>
 
+      <TravelLogisticsSummary destination={destination} />
       <ScoreBreakdown scores={destination.categoryScores} />
       <FamilyHasslePanel destination={destination} />
       <SemPerrengueStrategy destination={destination} />
@@ -469,6 +473,46 @@ function DestinationSummary({ destination }) {
           <MapPin size={16} />
           Ver no mapa
         </a>
+      </div>
+    </div>
+  );
+}
+
+function CurationBadge({ label = "", score = null }) {
+  const shortLabel = shortScoreLabel(label, score);
+  return (
+    <span className={`curation-badge ${curationClass(label, score)}`}>
+      <Star size={15} />
+      {shortLabel === "Em curadoria" ? "Candidato em curadoria" : `${shortLabel} · ${curationDescription(shortLabel)}`}
+    </span>
+  );
+}
+
+function TravelLogisticsSummary({ destination }) {
+  const logistics = destinationLogistics(destination);
+  const ModeIcon = logistics.icon;
+  return (
+    <div className="travel-logistics-card" aria-label="Resumo de deslocamento desde São Paulo">
+      <div className="travel-logistics-head">
+        <span>Saindo de São Paulo-SP</span>
+        <b>{logistics.modeLabel}</b>
+      </div>
+      <div className="travel-logistics-grid">
+        <div className="travel-logistics-metric is-primary">
+          <ModeIcon size={18} />
+          <span>{logistics.duration || "tempo a validar"}</span>
+          <small>{logistics.durationSource}</small>
+        </div>
+        <div className="travel-logistics-metric">
+          <MapPin size={18} />
+          <span>{logistics.distance || "distância a validar"}</span>
+          <small>{logistics.distanceSource}</small>
+        </div>
+        <div className="travel-logistics-metric">
+          <Clock size={18} />
+          <span>{logistics.familyEffort}</span>
+          <small>esforço para família</small>
+        </div>
       </div>
     </div>
   );
@@ -569,9 +613,12 @@ function GoogleLivePanel({ destination }) {
         <span className="ui-badge">Google ao vivo</span>
         <small>{place.name}</small>
       </div>
+      {route?.status === "OK" ? (
+        <GoogleRouteHighlights route={route} />
+      ) : null}
       <div className="google-live-facts">
         <span><Star size={13} /> {place.rating || "-"} · {formatCompact(place.userRatingCount)} avaliações</span>
-        <span><Car size={13} /> {route?.status === "OK" ? `${route.distanceKm} km · ${route.driveText}` : "rota em validação"}</span>
+        <span><Car size={13} /> {route?.status === "OK" ? "rota de carro validada" : "rota em validação"}</span>
       </div>
       {place.photos?.length ? (
         <div className="google-photo-grid">
@@ -584,12 +631,34 @@ function GoogleLivePanel({ destination }) {
         <div className="google-review-list">
           {place.reviews.slice(0, 3).map((review, index) => (
             <a href={review.googleMapsUri || review.authorUri || place.googleMapsUri} target="_blank" rel="noreferrer" key={`${review.authorName}-${index}`}>
-              <b>{review.rating || "-"}★ {review.authorName || "Avaliação Google"}{review.sourceName ? ` · ${review.sourceName}` : ""}</b>
+              <b>{review.rating || "-"}★ {firstNameOnly(review.authorName) || "Família"}{review.sourceName ? ` · ${review.sourceName}` : ""}</b>
               <span>{review.text}</span>
             </a>
           ))}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function GoogleRouteHighlights({ route }) {
+  return (
+    <div className="route-highlight-card" aria-label="Rota de carro validada pelo Google">
+      <div>
+        <Car size={18} />
+        <span>Carro</span>
+        <b>{route.driveText}</b>
+      </div>
+      <div>
+        <MapPin size={18} />
+        <span>Distância</span>
+        <b>{route.distanceKm} km</b>
+      </div>
+      <div>
+        <Clock size={18} />
+        <span>Referência</span>
+        <b>Google Routes</b>
+      </div>
     </div>
   );
 }
@@ -644,15 +713,6 @@ function ScoreBreakdown({ scores }) {
           <b>{formatScore(scores[key])}</b>
         </div>
       ))}
-    </div>
-  );
-}
-
-function BadgeLine({ icon: Icon, label }) {
-  return (
-    <div className="badge-line">
-      <Icon size={15} />
-      <span>{label}</span>
     </div>
   );
 }
@@ -768,10 +828,102 @@ function hasAny(text, terms) {
   return terms.some((term) => text.includes(term));
 }
 
-function shortScoreLabel(label = "") {
-  if (label.includes("Ouro")) return "Ouro";
-  if (label.includes("Prata")) return "Prata";
-  if (label.includes("Bronze")) return "Bronze";
+function destinationLogistics(destination) {
+  const mode = transportMode(destination);
+  const minutes = Number(destination.estimatedTotalMinutesFromSp) || minutesFromTravelText([...(destination.travelModes || []), ...(destination.tags || [])].join(" "));
+  const distanceKm = Number(destination.estimatedDistanceKmFromSp);
+  return {
+    icon: transportIcon(mode),
+    modeLabel: transportModeLabel(mode),
+    duration: minutes ? formatDuration(minutes) : "",
+    durationSource: minutes ? `tempo de ${transportModeLabel(mode).toLowerCase()}` : "estimativa pendente",
+    distance: Number.isFinite(distanceKm) && distanceKm > 0 ? `${Math.round(distanceKm)} km` : "",
+    distanceSource: Number.isFinite(distanceKm) && distanceKm > 0 ? "distância estimada" : "Google Routes atualiza abaixo",
+    familyEffort: familyEffortLabel(minutes, destination.familyHassleLevel)
+  };
+}
+
+function transportSummary(destination) {
+  const logistics = destinationLogistics(destination);
+  return [logistics.modeLabel, logistics.duration].filter(Boolean).join(" · ") || logistics.modeLabel;
+}
+
+function transportMode(destination) {
+  const primary = normalizeAssistantText(destination.bestTransportModeFromSp || destination.travelModes?.[0] || "");
+  if (hasAny(primary, ["flight", "voo", "aviao", "air"])) return "flight";
+  if (hasAny(primary, ["car", "carro", "drive"])) return "car";
+  if (hasAny(primary, ["bus", "onibus"])) return "bus";
+
+  const raw = normalizeAssistantText([...(destination.travelModes || []), ...(destination.tags || [])].join(" "));
+  if (hasAny(raw, ["flight", "voo", "aviao", "air"])) return "flight";
+  if (hasAny(raw, ["car", "carro", "drive", "viagem de carro"])) return "car";
+  if (hasAny(raw, ["bus", "onibus"])) return "bus";
+  return destination.stateCode === "SP" || destination.country === "Brasil" ? "car" : "flight";
+}
+
+function transportIcon(mode) {
+  if (mode === "flight") return Plane;
+  if (mode === "bus") return Bus;
+  return Car;
+}
+
+function transportModeLabel(mode) {
+  const labels = {
+    car: "Carro",
+    flight: "Avião",
+    bus: "Ônibus"
+  };
+  return labels[mode] || "Deslocamento";
+}
+
+function minutesFromTravelText(text = "") {
+  const minutesMatch = text.match(/(\d+)\s*min/i);
+  if (minutesMatch) return Number(minutesMatch[1]);
+  const hoursMatch = text.match(/(\d+(?:[,.]\d+)?)\s*h/i);
+  if (hoursMatch) return Math.round(Number(hoursMatch[1].replace(",", ".")) * 60);
+  return null;
+}
+
+function formatDuration(minutes) {
+  const numeric = Number(minutes);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "";
+  const hours = Math.floor(numeric / 60);
+  const rest = Math.round(numeric % 60);
+  if (!hours) return `${rest} min`;
+  if (!rest) return `${hours}h`;
+  return `${hours}h${String(rest).padStart(2, "0")}`;
+}
+
+function familyEffortLabel(minutes, hassleLevel) {
+  if (["alto", "muito_alto"].includes(hassleLevel)) return "planejar pausas";
+  if (!minutes) return "a validar";
+  if (minutes <= 90) return "leve";
+  if (minutes <= 240) return "moderado";
+  return "alto";
+}
+
+function curationDescription(label) {
+  if (label === "Ouro") return "experiência família excelente";
+  if (label === "Prata") return "muito bom para famílias";
+  if (label === "Bronze") return "viável com planejamento";
+  return "em validação";
+}
+
+function curationClass(label = "", score = null) {
+  const normalized = normalizeAssistantText(label);
+  const numericScore = Number(score);
+  if (normalized.includes("ouro") || numericScore >= 85) return "curation-ouro";
+  if (normalized.includes("prata") || numericScore >= 73) return "curation-prata";
+  if (normalized.includes("bronze") || numericScore >= 62) return "curation-bronze";
+  return "curation-candidate";
+}
+
+function shortScoreLabel(label = "", score = null) {
+  const normalized = normalizeAssistantText(label);
+  const numericScore = Number(score);
+  if (normalized.includes("ouro") || numericScore >= 85) return "Ouro";
+  if (normalized.includes("prata") || numericScore >= 73) return "Prata";
+  if (normalized.includes("bronze") || numericScore >= 62) return "Bronze";
   return "Em curadoria";
 }
 
@@ -795,6 +947,12 @@ function formatCompact(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return "-";
   return numeric >= 1000 ? `${(numeric / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}k` : numeric.toLocaleString("pt-BR");
+}
+
+function firstNameOnly(value) {
+  const clean = String(value || "").trim();
+  if (!clean) return "";
+  return clean.split(/\s+/)[0].replace(/[^\p{L}.'-]/gu, "");
 }
 
 function escapeHtml(value) {
