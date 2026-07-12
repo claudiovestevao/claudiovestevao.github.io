@@ -1,0 +1,19 @@
+{
+  "name": "Minha Viagem Orlando",
+  "short_name": "Orlando",
+  "description": "Roteiro privado de Orlando com cofre, emergência, compras, parques e utilidades offline.",
+  "start_url": "/minha-viagem",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/orlando-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

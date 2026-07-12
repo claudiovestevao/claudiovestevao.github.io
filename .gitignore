@@ -2,6 +2,16 @@ agentes/concierge-da-familia/.cache/
 node_modules/
 .next/
 apps/web/.next/
+.env
+.env.*
+!.env.example
+.cron-secret.tmp
 .vercel/
 
 .vercel
+
+.env*
+.next/
+node_modules/
+.env*
+apps/web/app/minha-viagem/_private/*.pdf

@@ -7,7 +7,7 @@
   "scripts": {
     "test": "npm run test:agent && npm run test:web",
     "test:agent": "node --test agentes/concierge-da-familia/tests/*.test.mjs",
-    "test:web": "node --test apps/web/lib/destinations/*.test.mjs",
+    "test:web": "node --test apps/web/lib/*.test.mjs apps/web/lib/destinations/*.test.mjs apps/web/app/minha-viagem/api/_lib/*.test.mjs",
     "web:dev": "npm --workspace apps/web run dev",
     "web:build": "npm --workspace apps/web run build",
     "web:start": "npm --workspace apps/web run start"

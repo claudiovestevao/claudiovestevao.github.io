@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/enrich-destinations",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/minha-viagem/api/cron/orlando-daily",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/minha-viagem/api/cron/price-watch",
+      "schedule": "0 12 * * *"
     }
   ]
 }

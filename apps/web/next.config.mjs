@@ -2,6 +2,13 @@
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  outputFileTracingIncludes: {
+    "/minha-viagem/api/vouchers": ["./app/minha-viagem/_private/orlando-vouchers.pdf"],
+    "/minha-viagem/api/tickets": [
+      "./app/minha-viagem/_private/orlando-disney-2-day-base-ticket.pdf",
+      "./app/minha-viagem/_private/orlando-epic-universe-2026-08-17.pdf"
+    ]
+  },
   async headers() {
     return [
       {
