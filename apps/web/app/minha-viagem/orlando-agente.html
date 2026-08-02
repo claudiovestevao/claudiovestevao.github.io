@@ -2481,6 +2481,7 @@ Phone: +1 407-993-3999</code>
         <button class="action-card" type="button" data-open-tab="interativo"><strong>Modo interativo</strong><span>Escolher dia, energia e plano de jantar.</span></button>
         <button class="action-card" type="button" data-open-tab="decisoes"><strong>Decisões abertas</strong><span>Próximos cliques e pendências.</span></button>
         <button class="action-card" type="button" data-open-tab="mapa"><strong>Mapa do dia</strong><span>Endereços e rotas rápidas.</span></button>
+        <button class="action-card" type="button" data-open-tab="shows"><strong>Shows e horários</strong><span>Desfiles, fogos e shows ao vivo.</span></button>
       </div>
     </div>
     <div class="card">
@@ -3503,6 +3504,62 @@ Phone: +1 407-993-3999</code>
     </div>
   </section>
 
+  <!-- ============ SHOWS E HORÁRIOS ============ -->
+  <section class="panel" id="shows">
+    <div class="card">
+      <h2>🎭 Shows, desfiles e fogos</h2>
+      <p class="sub">Horários de referência tirados do app oficial (My Disney Experience). Shows e desfiles costumam mudar de horário quase todo dia — confirme no app na manhã do dia do parque.</p>
+
+      <h3 style="margin-top:14px">🏰 Magic Kingdom · 12/8</h3>
+      <div class="attraction-grid">
+        <div class="attraction-panel">
+          <div class="attraction-head"><div><h3>Disney Festival of Fantasy Parade</h3><p>Magic Kingdom Park</p></div><span class="attraction-type type-show">Desfile</span></div>
+          <div class="attraction-meta"><span>15:00</span><span>Todas as idades</span></div>
+        </div>
+        <div class="attraction-panel">
+          <div class="attraction-head"><div><h3>Disney Adventure Friends Cavalcade</h3><p>Main Street, U.S.A.</p></div><span class="attraction-type type-show">Cavalgada</span></div>
+          <div class="attraction-meta"><span>10:30 · 11:45</span><span>Todas as idades</span></div>
+        </div>
+        <div class="attraction-panel">
+          <div class="attraction-head"><div><h3>Mickey's Magical Friendship Faire</h3><p>Main Street, U.S.A.</p></div><span class="attraction-type type-show">Show ao vivo</span></div>
+          <div class="attraction-meta"><span>10:00 · 11:10 · 12:25 · 13:40 · 16:00</span><span>Todas as idades</span></div>
+        </div>
+        <div class="attraction-panel featured">
+          <div class="attraction-head"><div><h3>Happily Ever After</h3><p>Fogos · presented by Pandora Jewelry</p></div><span class="attraction-type type-show">Fogos</span></div>
+          <div class="attraction-meta"><span>22:00</span><span>Todas as idades</span></div>
+        </div>
+        <div class="attraction-panel">
+          <div class="attraction-head"><div><h3>Disney Starlight: Dream the Night Away</h3><p>Magic Kingdom Park</p></div><span class="attraction-type type-show">Fogos / show noturno</span></div>
+          <div class="attraction-meta"><span>21:00 · 23:00</span><span>Todas as idades</span></div>
+          <p class="why">Costuma alternar com Happily Ever After conforme o calendário sazonal — confirmar no app perto do dia 12/8.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top:18px">🎬 Hollywood Studios · 14/8</h3>
+      <div class="attraction-grid">
+        <div class="attraction-panel">
+          <div class="attraction-head"><div><h3>Beauty and the Beast – Live on Stage</h3><p>Sunset Boulevard</p></div><span class="attraction-type type-show">Show ao vivo</span></div>
+          <div class="attraction-meta"><span>11:00 · 13:00 · 14:00 · 16:00 · 17:00</span><span>Lightning Lane</span></div>
+        </div>
+        <div class="attraction-panel">
+          <div class="attraction-head"><div><h3>Disney Jr. Mickey Mouse Clubhouse Live! — New!</h3><p>Animation Courtyard</p></div><span class="attraction-type type-show">Show ao vivo</span></div>
+          <div class="attraction-meta"><span>10:15 · 11:15 · 12:15 · 13:15 · 15:05 · 15:55 · 16:45 · 17:35</span><span>Lightning Lane</span></div>
+        </div>
+        <div class="attraction-panel">
+          <div class="attraction-head"><div><h3>The Little Mermaid – A Musical Adventure</h3><p>Animation Courtyard</p></div><span class="attraction-type type-show">Show ao vivo</span></div>
+          <div class="attraction-meta"><span>A cada ~35 min, 10:00–19:55</span><span>Lightning Lane</span></div>
+        </div>
+        <div class="attraction-panel featured">
+          <div class="attraction-head"><div><h3>Fantasmic!</h3><p>Sunset Boulevard</p></div><span class="attraction-type type-show">Fogos / show noturno</span></div>
+          <div class="attraction-meta"><span>21:00 · 22:30</span><span>Todas as idades</span></div>
+          <p class="why">Bonito, mas tarde e com saída cheia. Só encaixar se a família ainda estiver bem depois das 16h.</p>
+        </div>
+      </div>
+
+      <div class="note ok">📱 <b>Dica:</b> os horários mudam quase todo dia. Confirme no app My Disney Experience/Universal na manhã do dia do parque e use "Add to My Plans" pra ficar com lembrete.</div>
+    </div>
+  </section>
+
   <!-- ============ VOOS ============ -->
   <section class="panel" id="voos">
     <div class="card">
@@ -3725,7 +3782,7 @@ function celebrateSuccess(message){
 /* ---------- Tabs ---------- */
 var sectionPrimaryTab={
   hoje:"hoje",visao:"hoje",decisoes:"hoje",antes:"hoje",
-  roteiro:"roteiro",interativo:"roteiro",disney:"roteiro",aovivo:"roteiro",
+  roteiro:"roteiro",interativo:"roteiro",disney:"roteiro",aovivo:"roteiro",shows:"roteiro",
   lojas:"lojas",enxoval:"lojas","compras-arthur":"lojas","compras-nathalie":"lojas","compras-luiza":"lojas","compras-vitor":"lojas","price-watch-card":"lojas",conversor:"lojas",shopCalcCard:"lojas",
   reservas:"reservas",cofre:"reservas",adrList:"reservas",comer:"reservas",voos:"reservas",hospedagem:"reservas",
   mais:"mais",orcamento:"mais",mapa:"mais",mustdo:"mais",missoes:"mais",emergencia:"mais",frases:"mais",taticas:"mais",utilidades:"mais",mala:"mais",diario:"mais"
@@ -3856,6 +3913,7 @@ var searchItems=[
   {label:"Agora ao vivo",tab:"aovivo",group:"Durante",terms:"clima filas parques horario ao vivo"},
   {label:"Mapa",tab:"mapa",group:"Durante",terms:"mapa endereco pins hotel parques lojas hospital hertz"},
   {label:"Parques",tab:"disney",group:"Parques",terms:"magic kingdom hollywood studios epic gestante atracoes"},
+  {label:"Shows, desfiles e fogos",tab:"shows",group:"Parques",terms:"show shows desfile desfiles fogos fireworks parade fantasmic happily ever after festival of fantasy cavalcade friendship faire beauty and the beast little mermaid disney jr starlight horario horarios"},
   {label:"Onde comer",tab:"comer",group:"Parques",terms:"restaurante comida jantar almoço saudável arroz feijão gravida criança pio pio sofrito pollo tropical columbia harbour house sixty vines turci pasta adriatico mrs potato yellow dog texas roadhouse trex t-rex disney springs"},
   {label:"Lojas e cupons",tab:"lojas",group:"Compras",terms:"loja lojas cupom cupons desconto outlet endereco online presencial app revista simular comprar burlington tj maxx bath body levis american eagle amazon macys macy cvs walgreens entrega hotel pacotes"},
   {label:"Conversor",tab:"conversor",group:"Compras",terms:"dolar cambio moeda conversor simulador desconto cupom gorjeta tamanho br us iof roupa tamanho br us"},
