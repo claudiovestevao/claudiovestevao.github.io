@@ -30,11 +30,15 @@ export default function EconomicsDashboard({ csrfToken }) {
         options: responses[3].ok ? payloads[3] : data.options,
         transactions: responses[4].ok ? payloads[4].transactions || [] : []
       });
+      const cfoWarning = (payloads[0].warnings || []).find((message) => !message.startsWith("Despesa essencial estimada"));
+      const infoWarning = (payloads[0].warnings || []).find((message) => message.startsWith("Despesa essencial estimada"));
       setStatus(!responses[0].ok
         ? { type: "error", message: payloads[0].message || "Falha ao carregar o painel CFO." }
-        : payloads[0].warnings?.length
-          ? { type: "error", message: payloads[0].warnings[0] }
-          : null);
+        : cfoWarning
+          ? { type: "error", message: cfoWarning }
+          : infoWarning
+            ? { type: "success", message: infoWarning }
+            : null);
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -139,7 +143,7 @@ export default function EconomicsDashboard({ csrfToken }) {
             <PanelTitle icon={Target} title="R$ 1 milhão aos 40" subtitle={`Aportes a partir de janeiro de 2027 · retorno real de ${formatPercent(cfo.millionGoal.annualRealReturnRate)} ao ano`} />
             <div className="economics-million-grid">
               <div><span>Patrimônio investível atual</span><b>{money(cfo.millionGoal.currentValue)}</b><small>{formatPercent(cfo.millionGoal.progress)} da meta</small></div>
-              <div className="is-emphasis"><span>Aporte mensal total</span><b>{money(cfo.millionGoal.requiredMonthlyContribution)}</b><small>55 aportes planejados</small></div>
+              <div className="is-emphasis"><span>Aporte mensal total</span><b>{money(cfo.millionGoal.requiredMonthlyContribution)}</b><small>{cfo.millionGoal.contributionMonths} aportes planejados</small></div>
               <div><span>PortoPrev automática</span><b>{money(cfo.millionGoal.automaticMonthlyContribution)}</b><small>8% do salário bruto</small></div>
               <div className="is-action"><span>Aporte adicional</span><b>{money(cfo.millionGoal.additionalMonthlyContribution)}</b><small>além da PortoPrev</small></div>
             </div>
@@ -157,8 +161,8 @@ export default function EconomicsDashboard({ csrfToken }) {
               <Sparkles size={20} aria-hidden="true" />
               <div><strong>Em busca do primeiro milhão aos 40.</strong><span>Cada aporte é um passo de liberdade. Constância faz o plano acontecer.</span></div>
             </div>
-            <div className="economics-target-line"><span>Faixa em valores reais · prazo assumido até agosto de 2031</span><b>{money(cfo.millionGoal.minimumValue)} a {money(cfo.millionGoal.upperValue)}</b></div>
-            <p className="economics-footnote"><AlertCircle size={14} /> A PortoPrev reduz o salário disponível, mas conta integralmente como aporte patrimonial. A data de nascimento ajustará o mês final da projeção.</p>
+            <div className="economics-target-line"><span>Faixa em valores reais · prazo até {monthYearBr(cfo.millionGoal.targetDate)}</span><b>{money(cfo.millionGoal.minimumValue)} a {money(cfo.millionGoal.upperValue)}</b></div>
+            <p className="economics-footnote"><AlertCircle size={14} /> A PortoPrev reduz o salário disponível, mas conta integralmente como aporte patrimonial. {cfo.millionGoal.assumption}</p>
           </section>
 
           <section className="economics-panel">
@@ -211,6 +215,7 @@ function money(value) { return new Intl.NumberFormat("pt-BR", { style: "currency
 function formatNumber(value, digits = 0) { return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: digits }).format(Number(value || 0)); }
 function formatPercent(value) { return new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 }).format(Number(value || 0)); }
 function dateBr(value) { if (!value) return ""; return new Intl.DateTimeFormat("pt-BR").format(new Date(`${String(value).slice(0, 10)}T12:00:00`)); }
+function monthYearBr(value) { if (!value) return ""; return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date(`${String(value).slice(0, 10)}T12:00:00`)); }
 function bytes(value) { const n = Number(value || 0); return n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`; }
 function liquidityLabel(value) { return ({ d0_d1: "liquidez imediata", up_to_30_days: "até 30 dias", "31_to_365_days": "31 a 365 dias", over_1_year: "mais de 1 ano", illiquid: "sem liquidez", unknown: "liquidez pendente" })[value] || "liquidez pendente"; }
 function ownerLabel(value) { return value === "Familia" ? "Família" : value; }
