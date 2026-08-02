@@ -647,6 +647,17 @@ a{color:var(--brand)}
 .checkin-event{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:8px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:9px}
 .checkin-event time{color:var(--brand);font-size:12px;font-weight:950}
 .checkin-event-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.proactive-checkin{border:1px solid #ffdca8;border-radius:16px;background:linear-gradient(135deg,#fff8e8 0%,#fff 100%);padding:14px;margin-bottom:14px;box-shadow:var(--shadow)}
+.proactive-checkin-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.proactive-checkin-head b{font-size:15px}
+.proactive-checkin-close{border:0;background:transparent;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;padding:2px 8px}
+.proactive-checkin p{margin:6px 0 10px;color:var(--muted);font-size:13.5px;font-weight:750}
+.proactive-checkin-actions{display:flex;flex-wrap:wrap;gap:8px}
+.proactive-checkin-actions button{min-height:var(--tap);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:900;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.proactive-checkin-actions button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.proactive-checkin-manual{display:flex;gap:8px;margin-top:10px}
+.proactive-checkin-manual input{flex:1;min-height:var(--tap);border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit}
+.proactive-checkin-manual button{min-height:var(--tap);border-radius:10px;padding:0 14px;font-size:13px;font-weight:900;border:1px solid var(--brand);background:var(--brand);color:#fff;cursor:pointer}
 .checkin-event .checkin-confirm,.checkin-event .checkin-correct,.checkin-event .checkin-ignore{align-self:center;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:900;cursor:pointer}
 .checkin-event .checkin-confirm{border:1px solid #86efac;background:#f0fdf4;color:#166534}
 .checkin-event .checkin-confirm:hover{background:#dcfce7}
@@ -974,6 +985,25 @@ section.panel .secondary-primary{border-color:var(--line)!important;background:#
 </head>
 <body>
 <div class="wrap">
+
+  <div class="proactive-checkin" id="proactiveCheckin" hidden>
+    <div class="proactive-checkin-head">
+      <b>📍 Check-in rápido</b>
+      <button class="proactive-checkin-close" type="button" id="proactiveCheckinClose" aria-label="Fechar">×</button>
+    </div>
+    <p id="proactiveCheckinMsg">Faz um tempo que não registramos onde vocês estão. Confirmar local agora?</p>
+    <div class="proactive-checkin-actions" id="proactiveCheckinActions">
+      <button class="primary" type="button" id="proactiveCheckinGps">📍 Usar minha localização</button>
+      <button type="button" id="proactiveCheckinManualToggle">Digitar local</button>
+      <button type="button" id="proactiveCheckinSnooze">Agora não</button>
+    </div>
+    <div class="proactive-checkin-manual" id="proactiveCheckinManualBox" hidden>
+      <input id="proactiveCheckinManualInput" placeholder="Ex.: Magic Kingdom, Home2, Disney Springs">
+      <button type="button" id="proactiveCheckinManualSave">Salvar</button>
+    </div>
+    <div class="proactive-checkin-candidates" id="proactiveCheckinCandidates"></div>
+    <div class="checkin-status" id="proactiveCheckinStatus"></div>
+  </div>
 
   <header class="hero app-hero">
     <div class="mobile-topbar">
@@ -6029,6 +6059,131 @@ function getBrowserLocation(){
     navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
   });
 }
+/* ---------- Check-in proativo (ao abrir o app, se fizer +1h sem check-in) ---------- */
+var PROACTIVE_CHECKIN_SNOOZE_KEY='proactive_checkin_snoozed_until';
+var PROACTIVE_CHECKIN_GAP_MS=60*60*1000;
+function proactiveCheckinLastAt(){
+  var rows=(checkinMemory.checkins||[]).filter(function(row){return row.confidence!=='divergent';});
+  var latest=0;
+  rows.forEach(function(row){
+    var t=Date.parse(row.observedAt||row.createdAt||'');
+    if(t&&t>latest)latest=t;
+  });
+  return latest||null;
+}
+function localTimeFromMs(ms){
+  try{return new Date(ms).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}
+}
+function maybeProactiveCheckinPrompt(){
+  try{
+    var panel=document.getElementById('proactiveCheckin'); if(!panel)return;
+    var snoozedUntil=Number(localStorage.getItem(PROACTIVE_CHECKIN_SNOOZE_KEY)||0);
+    if(snoozedUntil&&Date.now()<snoozedUntil)return;
+    var lastAt=proactiveCheckinLastAt();
+    if(lastAt&&(Date.now()-lastAt)<PROACTIVE_CHECKIN_GAP_MS)return;
+    var msg=document.getElementById('proactiveCheckinMsg');
+    if(msg)msg.textContent=lastAt
+      ? 'Já faz mais de 1h desde o último check-in (' + localTimeFromMs(lastAt) + '). Confirmar onde vocês estão agora?'
+      : 'Ainda não tem check-in hoje. Confirmar onde vocês estão agora?';
+    panel.hidden=false;
+  }catch(e){}
+}
+function hideProactiveCheckin(){
+  var panel=document.getElementById('proactiveCheckin'); if(panel)panel.hidden=true;
+  var manualBox=document.getElementById('proactiveCheckinManualBox'); if(manualBox)manualBox.hidden=true;
+  var candidates=document.getElementById('proactiveCheckinCandidates'); if(candidates)candidates.innerHTML='';
+  setProactiveCheckinStatus('');
+}
+function snoozeProactiveCheckin(){
+  try{localStorage.setItem(PROACTIVE_CHECKIN_SNOOZE_KEY,String(Date.now()+20*60*1000));}catch(e){}
+  hideProactiveCheckin();
+}
+function setProactiveCheckinStatus(message,tone){
+  var el=document.getElementById('proactiveCheckinStatus'); if(!el)return;
+  el.textContent=message||'';
+  el.style.color=tone==='error'?'var(--red)':(tone==='ok'?'var(--green)':'');
+}
+async function proactiveCheckinUseGps(){
+  try{
+    setProactiveCheckinStatus('Pedindo localização do celular...');
+    var pos=await getBrowserLocation();
+    setProactiveCheckinStatus('Buscando lugares próximos...');
+    var data=await fetchCheckinJson('/minha-viagem/api/checkins/places',{
+      method:'POST',
+      headers:checkinApiHeaders(),
+      body:JSON.stringify({
+        latitude:pos.coords.latitude,
+        longitude:pos.coords.longitude,
+        radiusMeters:Math.max(120,Math.min(900,Math.round(pos.coords.accuracy||320))),
+        maxResultCount:5
+      })
+    });
+    renderProactiveCheckinCandidates(data.places||[]);
+    setProactiveCheckinStatus((data.places||[]).length?'Escolha o lugar certo abaixo, ou digite manualmente.':'Não encontrei lugares próximos. Digite o local.','ok');
+  }catch(err){
+    setProactiveCheckinStatus('Não consegui pegar sua localização: '+err.message+'. Digite o local manualmente.','error');
+  }
+}
+function renderProactiveCheckinCandidates(places){
+  var mount=document.getElementById('proactiveCheckinCandidates'); if(!mount)return;
+  if(!places.length){mount.innerHTML='';return;}
+  mount.innerHTML=places.map(function(place,i){
+    return '<div class="checkin-place"><div><b>'+esc(place.name||"Lugar")+'</b><small>'+esc(place.formattedAddress||"")+'</small></div><button type="button" data-proactive-place="'+i+'">Confirmar</button></div>';
+  }).join('');
+  mount.querySelectorAll('[data-proactive-place]').forEach(function(btn){
+    btn.onclick=function(){
+      var place=places[Number(btn.getAttribute('data-proactive-place'))];
+      if(place)saveProactiveCheckin({place:place,manualPlace:place.name||'',source:'google_places',confidence:'confirmed'});
+    };
+  });
+}
+async function saveProactiveCheckin(payload){
+  try{
+    setProactiveCheckinStatus('Salvando check-in...');
+    var today=isoToday();
+    var data=await fetchCheckinJson('/minha-viagem/api/checkins',{
+      method:'POST',
+      headers:checkinApiHeaders(),
+      body:JSON.stringify(Object.assign({},payload,{
+        date:today,
+        observedAt:new Date().toISOString(),
+        participants:selectedCheckinParticipants(),
+        author:tripActor(),
+        note:''
+      }))
+    });
+    checkinMemory.checkins=[data.checkin].concat((checkinMemory.checkins||[]).filter(function(item){return item.id!==data.checkin.id;}));
+    if(diaryActiveDate===today){
+      saveCheckinCache(today,{checkins:checkinMemory.checkins,draft:checkinMemory.draft});
+      renderCheckins();
+    }
+    setProactiveCheckinStatus('Check-in salvo: '+((data.checkin.place&&data.checkin.place.name)||data.checkin.manualPlace||'local')+'.','ok');
+    celebrateSuccess('Check-in registrado.');
+    setTimeout(hideProactiveCheckin,1800);
+  }catch(err){
+    setProactiveCheckinStatus('Não consegui salvar: '+err.message,'error');
+  }
+}
+function saveProactiveCheckinManual(){
+  var input=document.getElementById('proactiveCheckinManualInput');
+  var value=(input&&input.value||'').trim();
+  if(!value){setProactiveCheckinStatus('Digite um lugar antes de salvar.','error');return;}
+  saveProactiveCheckin({place:{name:value},manualPlace:value,source:'manual',confidence:'confirmed'});
+  if(input)input.value='';
+}
+function initProactiveCheckin(){
+  var close=document.getElementById('proactiveCheckinClose'); if(close)close.onclick=snoozeProactiveCheckin;
+  var snooze=document.getElementById('proactiveCheckinSnooze'); if(snooze)snooze.onclick=snoozeProactiveCheckin;
+  var gps=document.getElementById('proactiveCheckinGps'); if(gps)gps.onclick=proactiveCheckinUseGps;
+  var manualToggle=document.getElementById('proactiveCheckinManualToggle');
+  if(manualToggle)manualToggle.onclick=function(){
+    var box=document.getElementById('proactiveCheckinManualBox');
+    if(!box)return;
+    box.hidden=!box.hidden;
+    if(!box.hidden){var input=document.getElementById('proactiveCheckinManualInput'); if(input)input.focus();}
+  };
+  var manualSave=document.getElementById('proactiveCheckinManualSave'); if(manualSave)manualSave.onclick=saveProactiveCheckinManual;
+}
 function renderCheckinCandidates(){
   var mount=document.getElementById('checkinCandidates'); if(!mount)return;
   var places=checkinMemory.places||[];
@@ -6280,7 +6435,8 @@ function initCheckins(){
   var generate=document.getElementById('nightlyGenerate'); if(generate)generate.onclick=function(){generateNightlyDraft('generate');};
   var complement=document.getElementById('nightlyComplementBtn'); if(complement)complement.onclick=function(){generateNightlyDraft('complement');};
   var approve=document.getElementById('nightlyApprove'); if(approve)approve.onclick=approveNightlyDraft;
-  loadCheckinDay(diaryActiveDate);
+  initProactiveCheckin();
+  loadCheckinDay(diaryActiveDate).then(maybeProactiveCheckinPrompt);
 }
 function diaryIsIsoDate(date){
   return /^\d{4}-\d{2}-\d{2}$/.test(String(date||""));
