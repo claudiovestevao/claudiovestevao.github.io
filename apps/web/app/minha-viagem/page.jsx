@@ -4,8 +4,10 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { ArrowLeft, LockKeyhole, PlaneTakeoff } from "lucide-react";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
 import TravelPasswordAuth from "./TravelPasswordAuth";
+import TravelBackButton from "./TravelBackButton";
+import TravelFrameShell from "./TravelFrameShell";
 import {
   TRAVEL_ACCESS_COOKIE,
   TRAVEL_CSRF_COOKIE,
@@ -16,6 +18,7 @@ import {
   travelCookieOptions,
   verifyTravelAccessToken
 } from "@/lib/travel-session";
+import { secretMatches } from "@/lib/server-security";
 
 const PASSWORD = process.env.TRAVEL_PASSWORD;
 
@@ -47,10 +50,7 @@ export default async function MinhaViagemPage({ searchParams }) {
   return (
     <main className="travel-frame-page">
       <div className="travel-frame-bar">
-        <Link className="travel-back-link" href="/">
-          <ArrowLeft size={17} />
-          Claudio Code
-        </Link>
+        <TravelBackButton fallback="/minha-viagem" />
         <div>
           <b>Minha Viagem</b>
           <span>Orlando 2026</span>
@@ -63,12 +63,7 @@ export default async function MinhaViagemPage({ searchParams }) {
           <button type="submit">Bloquear</button>
         </form>
       </div>
-      <iframe
-        allow="microphone; camera"
-        className="travel-frame"
-        srcDoc={documentHtml}
-        title="Agente da viagem Orlando 2026"
-      />
+      <TravelFrameShell documentHtml={documentHtml} />
     </main>
   );
 }
@@ -87,7 +82,7 @@ function TravelLogin({ error }) {
           Voltar
         </Link>
         <div className="travel-gate-icon" aria-hidden="true">
-          <PlaneTakeoff size={28} />
+          <span className="travel-magic-ears"><span /></span>
         </div>
         <span className="ui-badge travel-gate-badge">
           <LockKeyhole size={14} />
@@ -148,7 +143,7 @@ async function unlockTravel(formData) {
 
   const password = String(formData.get("password") ?? "").trim();
 
-  if (!PASSWORD || password !== PASSWORD) {
+  if (!PASSWORD || !secretMatches(password, PASSWORD)) {
     redirect("/minha-viagem?erro=1");
   }
 

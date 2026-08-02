@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
+import { appConfig } from "@/lib/config";
+import { rateLimitRequest, rejectCrossOrigin, rejectLargeBody } from "@/lib/server-security";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  const originGuard = rejectCrossOrigin(request);
+  if (originGuard) return originGuard;
+
+  const sizeGuard = rejectLargeBody(request, 64 * 1024);
+  if (sizeGuard) return sizeGuard;
+
   const payload = await request.json().catch(() => ({}));
   const email = String(payload.email || payload.to || "").trim();
   const consentContact = Boolean(payload.consentContact);
@@ -18,6 +26,14 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, message: "RESEND_API_KEY não configurada no servidor." }, { status: 503 });
   }
 
+  const limited = rateLimitRequest(request, {
+    bucket: "email-recommendation",
+    key: email.toLowerCase(),
+    limit: 3,
+    windowMs: 10 * 60 * 1000
+  });
+  if (limited) return limited;
+
   const html = buildRecommendationEmail(payload);
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -28,7 +44,7 @@ export async function POST(request) {
     body: JSON.stringify({
       from: process.env.TRANSACTIONAL_EMAIL_FROM || "Concierge da Família <noreply@claudiocode.dev>",
       to: email,
-      subject: payload.subject || "Seu resumo do Concierge da Família",
+      subject: cleanSubject(payload.subject) || "Seu resumo do Concierge da Família",
       html
     })
   });
@@ -51,8 +67,8 @@ export async function POST(request) {
 
 function buildRecommendationEmail(payload) {
   const destination = escapeHtml(payload.destination || payload.destinationName || "destino recomendado");
-  const summary = escapeHtml(payload.summary || "Resumo preparado pelo Concierge da Família.");
-  const link = escapeHtml(payload.link || "https://claudiocode.dev/concierge-da-familia");
+  const summary = escapeHtml(String(payload.summary || "Resumo preparado pelo Concierge da Família.").slice(0, 4000));
+  const link = escapeHtml(safeRecommendationLink(payload.link));
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a">
       <h1 style="margin:0 0 12px">Concierge da Família</h1>
@@ -66,6 +82,24 @@ function buildRecommendationEmail(payload) {
       <p style="font-size:12px;color:#64748b">Você recebeu este e-mail porque autorizou contato no Concierge da Família.</p>
     </div>
   `;
+}
+
+function safeRecommendationLink(value) {
+  const fallback = `${appConfig.siteUrl}/concierge-da-familia`;
+  const raw = String(value || "").trim();
+  if (!raw) return fallback;
+
+  try {
+    const url = new URL(raw, appConfig.siteUrl);
+    if (url.origin !== new URL(appConfig.siteUrl).origin) return fallback;
+    return url.toString();
+  } catch {
+    return fallback;
+  }
+}
+
+function cleanSubject(value) {
+  return String(value || "").replace(/[\r\n]+/g, " ").trim().slice(0, 120);
 }
 
 function escapeHtml(value) {

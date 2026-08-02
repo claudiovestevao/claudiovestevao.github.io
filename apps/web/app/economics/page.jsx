@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Economics | Claudio Code",
-  description: "Area privada de financas familiares."
+  description: "Área privada de finanças familiares."
 };
 
 export default async function EconomicsPage({ searchParams }) {
@@ -73,7 +73,7 @@ function EconomicsLogin({ error }) {
         </span>
         <h1 id="economics-gate-title">Economics</h1>
         <p>
-          Central privada para documentos, e-mails importantes e proximas camadas de orcamento familiar.
+          Central privada para documentos, e-mails importantes e próximas camadas de orçamento familiar.
         </p>
         <div className="travel-family-row" aria-label="Administradores do Economics">
           <span><b>V</b> Vitor</span>
@@ -94,10 +94,10 @@ function EconomicsLogin({ error }) {
 }
 
 function authMessage(error, googleReady) {
-  if (error === "unauthorized") return "Este e-mail nao esta liberado no Economics.";
-  if (error === "google") return "Nao consegui concluir o login com Google. Tente de novo.";
-  if (error === "session") return "Sessao do Google nao validada. Tente entrar novamente.";
-  if (error === "google_config" || !googleReady) return "Login precisa das variaveis Supabase configuradas.";
+  if (error === "unauthorized") return "Este e-mail não está liberado no Economics.";
+  if (error === "google") return "Não consegui concluir o login com Google. Tente de novo.";
+  if (error === "session") return "Sessão do Google não validada. Tente entrar novamente.";
+  if (error === "google_config" || !googleReady) return "O login precisa das variáveis do Supabase configuradas.";
   return "";
 }
 

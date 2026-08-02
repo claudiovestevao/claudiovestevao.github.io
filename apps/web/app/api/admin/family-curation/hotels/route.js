@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { appConfig } from "@/lib/config";
+import { authorizeBearerSecret, rateLimitRequest } from "@/lib/server-security";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { hasGoogleMaps, searchGooglePlacesText } from "@/lib/integrations/google";
 
@@ -8,10 +9,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const password = String(request.headers.get("x-admin-password") || searchParams.get("password") || "").trim();
-  if (!password || password !== appConfig.familyCurationAdminPassword) {
-    return NextResponse.json({ ok: false, message: "Senha de admin invalida." }, { status: 401 });
-  }
+  const limited = rateLimitRequest(request, { bucket: "family-curation-hotels", limit: 60, windowMs: 60 * 1000 });
+  if (limited) return limited;
+
+  const auth = authorizeBearerSecret(request, appConfig.familyCurationAdminPassword, {
+    headerName: "x-admin-password",
+    serviceName: "Admin"
+  });
+  if (!auth.ok) return auth.response;
 
   const destinationId = String(searchParams.get("destinationId") || "").trim();
   if (!destinationId) {

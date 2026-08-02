@@ -14,8 +14,15 @@ export default function EconomicsAuthCallback() {
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const query = new URLSearchParams(window.location.search);
       const nextPath = safeNextPath(query.get("next"));
+      const calendarConnect = query.get("calendar") === "1";
       const error = hash.get("error_description") || query.get("error_description") || query.get("error");
       const accessToken = hash.get("access_token");
+      const providerToken = hash.get("provider_token");
+      const providerRefreshToken = hash.get("provider_refresh_token");
+      const refreshToken = hash.get("refresh_token");
+      const expiresIn = Number(hash.get("expires_in") || 0);
+
+      if (calendarConnect) setMessage("Conectando Google Calendar ao Kanban...");
 
       if (error) {
         window.location.replace("/economics?erro=google");
@@ -23,7 +30,7 @@ export default function EconomicsAuthCallback() {
       }
 
       if (!accessToken) {
-        setMessage("Nao recebi a sessao do Google. Tente entrar novamente.");
+        setMessage("Não recebi a sessão do Google. Tente entrar novamente.");
         return;
       }
 
@@ -32,14 +39,21 @@ export default function EconomicsAuthCallback() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ access_token: accessToken })
+        body: JSON.stringify({
+          access_token: accessToken,
+          calendar_connect: calendarConnect,
+          provider_token: providerToken,
+          provider_refresh_token: providerRefreshToken,
+          refresh_token: refreshToken,
+          provider_expires_at: expiresIn > 0 ? new Date(Date.now() + expiresIn * 1000).toISOString() : ""
+        })
       });
 
       if (cancelled) return;
 
       if (response.ok) {
         window.history.replaceState(null, "", "/economics/auth/callback");
-        window.location.replace(nextPath);
+        window.location.replace(calendarConnect && nextPath.startsWith("/kanban") ? "/kanban?calendar=connected" : nextPath);
         return;
       }
 
@@ -52,7 +66,7 @@ export default function EconomicsAuthCallback() {
     }
 
     finishLogin().catch(() => {
-      if (!cancelled) setMessage("Nao consegui validar agora. Tente entrar novamente.");
+      if (!cancelled) setMessage("Não consegui validar agora. Tente entrar novamente.");
     });
 
     return () => {
@@ -66,7 +80,7 @@ export default function EconomicsAuthCallback() {
         <div className="economics-gate-icon" aria-hidden="true">
           <PiggyBank size={28} />
         </div>
-        <h1 id="economics-callback-title">Entrando no Economics</h1>
+        <h1 id="economics-callback-title">Entrando</h1>
         <p>{message}</p>
         <Link className="economics-google-button" href="/economics">
           Voltar para o login

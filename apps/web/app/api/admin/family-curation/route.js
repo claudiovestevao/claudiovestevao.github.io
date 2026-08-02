@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { appConfig } from "@/lib/config";
+import {
+  authorizeBearerSecret,
+  rateLimitRequest,
+  rejectCrossOrigin,
+  secretMatches
+} from "@/lib/server-security";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -10,11 +16,14 @@ const MAX_PHOTOS = 12;
 const MAX_PHOTO_BYTES = 12 * 1024 * 1024;
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const password = clean(request.headers.get("x-admin-password") || searchParams.get("password"));
-  if (!password || password !== appConfig.familyCurationAdminPassword) {
-    return NextResponse.json({ ok: false, message: "Senha de admin invalida." }, { status: 401 });
-  }
+  const limited = rateLimitRequest(request, { bucket: "family-curation-admin", limit: 30, windowMs: 60 * 1000 });
+  if (limited) return limited;
+
+  const auth = authorizeBearerSecret(request, appConfig.familyCurationAdminPassword, {
+    headerName: "x-admin-password",
+    serviceName: "Admin"
+  });
+  if (!auth.ok) return auth.response;
 
   const client = getSupabaseServerClient();
   if (!client || !appConfig.supabaseServiceRoleKey) {
@@ -102,13 +111,19 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const originGuard = rejectCrossOrigin(request);
+  if (originGuard) return originGuard;
+
+  const limited = rateLimitRequest(request, { bucket: "family-curation-submit", limit: 20, windowMs: 60 * 1000 });
+  if (limited) return limited;
+
   const formData = await request.formData().catch(() => null);
   if (!formData) {
     return NextResponse.json({ ok: false, message: "Formulario invalido." }, { status: 400 });
   }
 
-  const password = clean(formData.get("password"));
-  if (!password || password !== appConfig.familyCurationAdminPassword) {
+  const password = clean(request.headers.get("x-admin-password") || formData.get("password"));
+  if (!appConfig.familyCurationAdminPassword || !secretMatches(password, appConfig.familyCurationAdminPassword)) {
     return NextResponse.json({ ok: false, message: "Senha de admin invalida." }, { status: 401 });
   }
 

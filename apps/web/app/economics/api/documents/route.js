@@ -29,7 +29,7 @@ export async function GET() {
 export async function POST(request) {
   const context = await requireEconomicsContext();
   if (!context.ok) return economicsJson({ ok: false, message: context.message }, context.status);
-  if (!(await hasValidCsrf(request))) return economicsJson({ ok: false, message: "CSRF invalido." }, 403);
+  if (!(await hasValidCsrf(request))) return economicsJson({ ok: false, message: "CSRF inválido." }, 403);
 
   const formData = await request.formData().catch(() => null);
   const file = formData?.get("file");
@@ -46,7 +46,7 @@ export async function POST(request) {
 
   const mimeType = String(file.type || "application/octet-stream");
   if (!ALLOWED_TYPES.has(mimeType)) {
-    return economicsJson({ ok: false, message: "Tipo de arquivo nao permitido." }, 415);
+    return economicsJson({ ok: false, message: "Tipo de arquivo não permitido." }, 415);
   }
 
   const safeName = sanitizeFileName(file.name);

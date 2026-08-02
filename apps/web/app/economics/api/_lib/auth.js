@@ -6,7 +6,7 @@ export async function requireEconomicsContext() {
   const cookieStore = await cookies();
   const session = verifyEconomicsAccessToken(cookieStore.get(ECONOMICS_ACCESS_COOKIE)?.value || "");
   if (!session.ok || !session.user) {
-    return { ok: false, status: 401, message: "Sessao Economics ausente ou expirada." };
+    return { ok: false, status: 401, message: "Sessão do Economics ausente ou expirada." };
   }
 
   return getEconomicsContext(session.user);

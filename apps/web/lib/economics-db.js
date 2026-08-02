@@ -10,10 +10,10 @@ export function getEconomicsClient() {
 
 export async function getEconomicsContext(user) {
   const profile = economicsProfileForEmail(user?.email);
-  if (!profile) return { ok: false, status: 403, message: "E-mail nao liberado no Economics." };
+  if (!profile) return { ok: false, status: 403, message: "E-mail não liberado no Economics." };
 
   const supabase = getEconomicsClient();
-  if (!supabase) return { ok: false, status: 503, message: "Supabase nao configurado no servidor." };
+  if (!supabase) return { ok: false, status: 503, message: "Supabase não configurado no servidor." };
 
   const { data: member, error } = await supabase
     .from("economics_household_members")
@@ -23,7 +23,7 @@ export async function getEconomicsContext(user) {
     .maybeSingle();
 
   if (error) return { ok: false, status: 500, message: "Falha ao validar acesso ao household." };
-  if (!member?.household_id) return { ok: false, status: 403, message: "Household Economics ainda nao liberado para este e-mail." };
+  if (!member?.household_id) return { ok: false, status: 403, message: "Household Economics ainda não liberado para este e-mail." };
 
   return {
     ok: true,

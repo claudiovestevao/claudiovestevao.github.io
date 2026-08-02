@@ -35,23 +35,23 @@ export async function GET(request) {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (error) return economicsJson({ ok: false, message: "Falha ao listar lancamentos." }, 500);
+  if (error) return economicsJson({ ok: false, message: "Falha ao listar lançamentos." }, 500);
   return economicsJson({ ok: true, transactions: data || [] });
 }
 
 export async function POST(request) {
   const context = await requireEconomicsContext();
   if (!context.ok) return economicsJson({ ok: false, message: context.message }, context.status);
-  if (!(await hasValidCsrf(request))) return economicsJson({ ok: false, message: "CSRF invalido." }, 403);
+  if (!(await hasValidCsrf(request))) return economicsJson({ ok: false, message: "CSRF inválido." }, 403);
 
   const body = await request.json().catch(() => ({}));
   const description = String(body.description || "").trim().slice(0, 180);
   const amount = toMoneyNumber(body.amount);
   const occurredOn = normalizeDate(body.occurred_on);
 
-  if (!description) return economicsJson({ ok: false, message: "Descreva o lancamento." }, 400);
+  if (!description) return economicsJson({ ok: false, message: "Descreva o lançamento." }, 400);
   if (!amount) return economicsJson({ ok: false, message: "Informe um valor maior que zero." }, 400);
-  if (!occurredOn) return economicsJson({ ok: false, message: "Data invalida." }, 400);
+  if (!occurredOn) return economicsJson({ ok: false, message: "Data inválida." }, 400);
 
   const payload = {
     household_id: context.householdId,
@@ -76,7 +76,7 @@ export async function POST(request) {
     .select("id, description, amount, occurred_on, type, payment_method, owner")
     .single();
 
-  if (error) return economicsJson({ ok: false, message: "Falha ao salvar lancamento." }, 500);
+  if (error) return economicsJson({ ok: false, message: "Falha ao salvar lançamento." }, 500);
 
   await writeEconomicsAudit(context.supabase, {
     householdId: context.householdId,

@@ -3,119 +3,207 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Claudio Code | Hub de Agentes</title>
-  <meta name="description" content="Agentes digitais da Claudio Code, com destaque para o Concierge da Família.">
+  <title>Claudio Code | Painel</title>
+  <meta name="description" content="Painel de acesso para viagem, destinos, finan&ccedil;as, tarefas e rotina familiar.">
   <style>
     :root{
-      --background:#f8fafc;
-      --foreground:#0f172a;
+      --background:#f9fbff;
+      --foreground:#07111f;
       --card:#fff;
       --muted:#64748b;
-      --border:#e2e8f0;
-      --primary:#0f5bd7;
-      --accent:#f4b740;
+      --line:rgba(98,116,142,.22);
+      --blue:#165dff;
+      --teal:#0f766e;
+      --coral:#ef6a4d;
+      --gold:#f2b84b;
+      --violet:#6d5dfc;
+      --sky:#eaf3ff;
       --radius:8px;
+      --shadow:0 18px 54px rgba(7,17,31,.1);
     }
     *{box-sizing:border-box}
+    html{min-width:320px;scroll-behavior:smooth}
     body{
       margin:0;
       min-height:100vh;
       color:var(--foreground);
-      background:var(--background);
+      background:
+        linear-gradient(180deg,#f8fafc 0%,#fff 44%,#f6f8fb 100%);
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
     a{color:inherit}
+    .wrap{width:min(1120px,calc(100% - 2rem));margin:0 auto}
     header{
       position:sticky;
       top:0;
       z-index:10;
-      border-bottom:1px solid var(--border);
+      border-bottom:1px solid var(--line);
       background:rgba(255,255,255,.94);
       backdrop-filter:blur(14px);
     }
-    .wrap{width:min(1120px,100%);margin:0 auto;padding:0 1rem}
-    .topbar{height:56px;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-    .brand{display:inline-flex;align-items:center;gap:.55rem;font-weight:900;text-decoration:none}
-    .brand span{display:grid;place-items:center;width:2rem;height:2rem;border-radius:var(--radius);color:#fff;background:var(--primary)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:56px}
+    .brand{display:inline-flex;align-items:center;gap:.55rem;color:var(--foreground);font-weight:950;text-decoration:none}
+    .brand span{display:grid;place-items:center;width:2rem;height:2rem;border-radius:var(--radius);color:#fff;background:var(--blue)}
+    .nav{display:flex;align-items:center;gap:.5rem}
     .button{
       display:inline-flex;
       align-items:center;
       justify-content:center;
       min-height:2.35rem;
+      border:1px solid var(--line);
       border-radius:var(--radius);
-      padding:.55rem .85rem;
-      color:#fff;
-      background:var(--primary);
-      text-decoration:none;
-      font-weight:850;
-      line-height:1;
-    }
-    main{padding:2.8rem 0 3rem}
-    .hero{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) minmax(280px,380px);
-      gap:1rem;
-      align-items:end;
-      margin-bottom:1.25rem;
-    }
-    .badge{
-      display:inline-flex;
-      width:max-content;
-      max-width:100%;
-      border:1px solid rgba(15,91,215,.15);
-      border-radius:999px;
-      padding:.28rem .62rem;
-      color:var(--primary);
-      background:#eff6ff;
-      font-size:.78rem;
-      font-weight:850;
-    }
-    h1{max-width:780px;margin:.9rem 0 0;font-size:clamp(2.15rem,5vw,4.6rem);line-height:.98;letter-spacing:0}
-    .hero p{max-width:620px;margin:.9rem 0 0;color:var(--muted);font-size:1.04rem;line-height:1.5}
-    .hero-action{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:.75rem;
-      align-items:center;
-      border:1px solid rgba(15,91,215,.28);
-      border-radius:var(--radius);
-      padding:1rem;
-      background:var(--card);
-      box-shadow:0 12px 34px rgba(15,91,215,.08);
-      text-decoration:none;
-    }
-    .hero-action b{display:block}
-    .hero-action small{display:block;margin-top:.18rem;color:var(--muted);font-weight:750}
-    .hero-action span:last-child{color:var(--primary);font-size:1.3rem;font-weight:950}
-    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8rem}
-    .card{
-      display:grid;
-      gap:1rem;
-      min-height:210px;
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:1rem;
-      background:var(--card);
+      padding:.52rem .82rem;
+      background:#fff;
       color:var(--foreground);
       text-decoration:none;
+      font-size:.9rem;
+      font-weight:900;
+      line-height:1;
     }
-    .card.primary{border-color:rgba(15,91,215,.42);box-shadow:0 12px 34px rgba(15,91,215,.1)}
-    .card.muted{pointer-events:none;opacity:.68}
-    .card-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-    .icon{font-size:1.45rem}
-    .status{border:1px solid rgba(15,91,215,.15);border-radius:999px;padding:.24rem .54rem;color:var(--primary);background:#eff6ff;font-size:.74rem;font-weight:850}
-    h2{margin:0 0 .35rem;font-size:1.08rem;font-weight:900}
-    .card p{margin:0;color:var(--muted);font-size:.94rem;line-height:1.45}
-    .link{margin-top:auto;color:var(--primary);font-weight:900}
-    footer{padding:1.3rem 0;color:var(--muted);font-size:.88rem}
-    @media (max-width:980px){
+    .button.primary{border-color:transparent;color:#fff;background:var(--blue)}
+    main{padding-bottom:3rem}
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(320px,.72fr);
+      gap:1rem;
+      align-items:stretch;
+      padding:2rem 0 1.1rem;
+    }
+    .copy{display:grid;align-content:center;gap:.78rem;min-height:300px}
+    .eyebrow{
+      display:inline-flex;
+      justify-self:start;
+      border:1px solid rgba(22,93,255,.18);
+      border-radius:999px;
+      padding:.42rem .72rem;
+      color:#0b4ac7;
+      background:var(--sky);
+      font-size:.82rem;
+      font-weight:950;
+    }
+    h1{
+      max-width:860px;
+      margin:0;
+      color:var(--foreground);
+      font-size:clamp(2.2rem,5vw,4.15rem);
+      line-height:1;
+      letter-spacing:0;
+      font-weight:950;
+    }
+    .hero p{max-width:650px;margin:0;color:#4b5f78;font-size:1.03rem;line-height:1.55;font-weight:730}
+    .actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.38rem}
+    .console{
+      display:grid;
+      align-content:space-between;
+      gap:1rem;
+      min-height:300px;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:1rem;
+      background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(246,248,251,.92)),#fff;
+      box-shadow:var(--shadow);
+    }
+    .console-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      min-height:2rem;
+      border-radius:999px;
+      padding:.34rem .62rem;
+      font-size:.78rem;
+      font-weight:950;
+    }
+    .pill.blue{color:#0b4ac7;background:var(--sky)}
+    .pill.green{color:#106240;background:#e8f8ef}
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+    .metric{display:grid;gap:.1rem;border:1px solid var(--line);border-radius:var(--radius);padding:.8rem;background:#fff}
+    .metric strong{font-size:2rem;line-height:1;font-weight:950}
+    .metric span{color:var(--muted);font-size:.78rem;font-weight:900}
+    .feed{display:grid;gap:.55rem}
+    .feed div{display:grid;gap:.08rem;border:1px solid var(--line);border-radius:var(--radius);padding:.72rem;background:#fff}
+    .feed b{font-size:.88rem;font-weight:950}
+    .feed small{color:var(--muted);font-size:.78rem;font-weight:820}
+    .section{display:grid;gap:1rem;padding:1.35rem 0 1.6rem}
+    .section-head span{display:inline-flex;margin-bottom:.25rem;color:var(--blue);font-size:.74rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+    .section-head h2{margin:0 0 .15rem;font-size:1.42rem;font-weight:950}
+    .section-head p{max-width:620px;margin:0;color:var(--muted);font-weight:760}
+    .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.85rem}
+    .card{
+      --tone:var(--blue);
+      --tint:var(--sky);
+      display:grid;
+      grid-column:span 2;
+      gap:.78rem;
+      position:relative;
+      overflow:hidden;
+      min-height:198px;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:1rem;
+      color:var(--foreground);
+      background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(246,248,251,.9)),#fff;
+      text-decoration:none;
+      box-shadow:0 12px 34px rgba(7,17,31,.06);
+    }
+    .card:after{content:"";position:absolute;inset:auto 0 0;height:3px;background:linear-gradient(90deg,var(--tone),rgba(98,116,142,.12))}
+    .card.featured{
+      --tone:var(--teal);
+      --tint:#e7f7f4;
+      grid-column:span 3;
+      min-height:224px;
+      color:#fff;
+      background:linear-gradient(135deg,rgba(7,17,31,.98),rgba(15,118,110,.88)),var(--foreground);
+      box-shadow:0 24px 70px rgba(7,17,31,.16);
+    }
+    .card.money{--tone:#148a52;--tint:#e8f8ef}
+    .card.work{--tone:var(--violet);--tint:#efedff}
+    .card.party,.card.event{--tone:var(--coral);--tint:#fff0ec}
+    .card.kids{--tone:var(--gold);--tint:#fff7df}
+    .card.disabled{pointer-events:none;color:var(--muted);background:#f1f5f9;box-shadow:none}
+    .card-top,.card-footer{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+    .icon{display:grid;place-items:center;width:2.65rem;height:2.65rem;border-radius:var(--radius);color:var(--tone);background:var(--tint);font-weight:950}
+    .tag,.meta{
+      display:inline-flex;
+      align-items:center;
+      min-height:1.72rem;
+      border:1px solid color-mix(in srgb,var(--tone) 20%,transparent);
+      border-radius:999px;
+      padding:.22rem .52rem;
+      color:var(--tone);
+      background:var(--tint);
+      font-size:.7rem;
+      font-weight:950;
+      white-space:nowrap;
+    }
+    .card h3{margin:0;font-size:1.16rem;font-weight:950}
+    .card p{max-width:430px;margin:0;color:#4b5f78;line-height:1.45;font-weight:720}
+    .card-footer{align-self:end;margin-top:.25rem}
+    .card-footer b{color:var(--tone);font-size:.9rem;font-weight:950}
+    .featured .icon{color:var(--foreground);background:#fff}
+    .featured .tag,.featured .meta{border-color:rgba(255,255,255,.22);color:#fff;background:rgba(255,255,255,.12)}
+    .featured p,.featured .card-footer b{color:#fff}
+    .system-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.85rem}
+    .tile{display:grid;gap:.45rem;min-height:112px;border:1px solid var(--line);border-radius:var(--radius);padding:1rem;background:#fff;box-shadow:0 12px 34px rgba(7,17,31,.05)}
+    .tile b{font-weight:950}
+    .tile p{margin:0;color:var(--muted);line-height:1.45;font-weight:730}
+    footer{padding:0 0 2rem;color:var(--muted);font-size:.88rem;font-weight:780}
+    @media (max-width:1199px){
+      .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+      .card{grid-column:span 2}
+      .card.featured{grid-column:span 4}
+    }
+    @media (max-width:900px){
       .hero{grid-template-columns:1fr}
-      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .copy,.console{min-height:0}
+      .system-grid{grid-template-columns:1fr}
     }
-    @media (max-width:620px){
-      main{padding-top:1.2rem}
-      .grid{grid-template-columns:1fr}
-      .card{min-height:auto}
+    @media (max-width:575px){
+      .wrap{width:min(100% - 1rem,1120px)}
+      .nav .button:not(.primary){display:none}
+      .hero{gap:.85rem;padding-top:1.45rem}
+      h1{font-size:clamp(2.35rem,14vw,3.6rem)}
+      .grid,.metrics{grid-template-columns:1fr}
+      .card,.card.featured{grid-column:auto;min-height:0}
     }
   </style>
 </head>
@@ -123,48 +211,115 @@
   <header>
     <div class="wrap topbar">
       <a class="brand" href="/"><span>C</span>Claudio Code</a>
-      <a class="button" href="/concierge-da-familia/">Concierge da Família</a>
+      <nav class="nav" aria-label="Principal">
+        <a class="button" href="#agentes">Acessos</a>
+        <a class="button" href="#fila">Fila</a>
+        <a class="button primary" href="/concierge-da-familia/">Concierge</a>
+      </nav>
     </div>
   </header>
+
   <main class="wrap">
     <section class="hero">
-      <div>
-        <span class="badge">Claudio Code · agentes</span>
-        <h1>Produtos digitais prontos para operar.</h1>
-        <p>Comece pelo Concierge da Família: destinos, mapa, score e dados reais em uma experiência simples.</p>
+      <div class="copy">
+        <span class="eyebrow">Painel Claudio Code</span>
+        <h1>Abrir uma &aacute;rea, resolver uma coisa, seguir o dia.</h1>
+        <p>Entrada &uacute;nica para viagem, finan&ccedil;as, tarefas e produtos p&uacute;blicos. O que est&aacute; ativo abre direto; o que ainda n&atilde;o est&aacute; pronto fica marcado como fila.</p>
+        <div class="actions">
+          <a class="button primary" href="/minha-viagem">Minha Viagem</a>
+          <a class="button" href="/concierge-da-familia/">Concierge</a>
+        </div>
       </div>
-      <a class="hero-action" href="/concierge-da-familia/">
-        <span>
-          <b>Abrir Concierge da Família</b>
-          <small>Explorar destinos no mapa</small>
-        </span>
-        <span>→</span>
-      </a>
+      <aside class="console" aria-label="Resumo operacional Claudio Code">
+        <div class="console-head">
+          <span class="pill blue">Resumo</span>
+          <span class="pill green">Online</span>
+        </div>
+        <div class="metrics">
+          <div class="metric"><strong>5</strong><span>agentes ativos</span></div>
+          <div class="metric"><strong>2</strong><span>em desenho</span></div>
+        </div>
+        <div class="feed">
+          <div><b>5 atalhos funcionando</b><small>Viagem, Concierge, Economics, Kanban e Luiza</small></div>
+          <div><b>Privado separado</b><small>Documentos e finan&ccedil;as ficam atr&aacute;s de login</small></div>
+          <div><b>2 itens na fila</b><small>Festeiro e KidSquare ainda sem bot&atilde;o ativo</small></div>
+        </div>
+      </aside>
     </section>
 
-    <section class="grid" aria-label="Agentes disponíveis">
-      <a class="card primary" href="/concierge-da-familia/">
-        <div class="card-top"><span class="icon">⌖</span><span class="status">No ar</span></div>
-        <div><h2>Concierge da Família</h2><p>Mapa inteligente para escolher destinos familiares com menos perrengue.</p></div>
-        <span class="link">Abrir →</span>
-      </a>
-      <a class="card muted" href="#">
-        <div class="card-top"><span class="icon">◷</span><span class="status">Em breve</span></div>
-        <div><h2>Agente Festeiro</h2><p>Festas, convites e RSVP com operação mais simples.</p></div>
-        <span class="link">Em breve →</span>
-      </a>
-      <a class="card muted" href="#">
-        <div class="card-top"><span class="icon">◇</span><span class="status">Em breve</span></div>
-        <div><h2>Agente Economics</h2><p>Decisões de orçamento familiar com clareza.</p></div>
-        <span class="link">Em breve →</span>
-      </a>
-      <a class="card muted" href="#">
-        <div class="card-top"><span class="icon">✦</span><span class="status">Em breve</span></div>
-        <div><h2>KidSquare</h2><p>Lugares kids-friendly para a rotina da família.</p></div>
-        <span class="link">Em breve →</span>
-      </a>
+    <section class="section" id="agentes">
+      <div class="section-head">
+        <span>Acessos</span>
+        <h2>&Aacute;reas em uso</h2>
+        <p>Atalhos diretos, com estado e tipo de acesso antes do clique.</p>
+      </div>
+      <div class="grid">
+        <a class="card featured" href="/concierge-da-familia/">
+          <div class="card-top"><span class="icon">CC</span><span class="tag">Ativo</span></div>
+          <span class="tag">P&uacute;blico</span>
+          <h3>Concierge da Fam&iacute;lia</h3>
+          <p>Destinos familiares com mapa, filtros, hot&eacute;is e score para decidir com menos atrito.</p>
+          <div class="card-footer"><span class="meta">Mapa + score</span><b>Abrir &rarr;</b></div>
+        </a>
+        <a class="card" href="/minha-viagem">
+          <div class="card-top"><span class="icon">MV</span><span class="tag">Ativo</span></div>
+          <span class="tag">Privado</span>
+          <h3>Minha Viagem</h3>
+          <p>Roteiro, check-ins, di&aacute;rio, vouchers, ingressos, seguros e compras de Orlando.</p>
+          <div class="card-footer"><span class="meta">Di&aacute;rio + PDFs</span><b>Abrir &rarr;</b></div>
+        </a>
+        <a class="card money" href="/economics">
+          <div class="card-top"><span class="icon">EC</span><span class="tag">Ativo</span></div>
+          <span class="tag">Privado</span>
+          <h3>Economics</h3>
+          <p>Documentos, decis&otilde;es e controles financeiros da fam&iacute;lia em uma &aacute;rea separada.</p>
+          <div class="card-footer"><span class="meta">Finan&ccedil;as</span><b>Abrir &rarr;</b></div>
+        </a>
+        <a class="card work" href="/kanban">
+          <div class="card-top"><span class="icon">KB</span><span class="tag">Ativo</span></div>
+          <span class="tag">Privado</span>
+          <h3>Kanban</h3>
+          <p>Tarefas de Vitor e Nathalie com prioridade, respons&aacute;veis e calend&aacute;rio.</p>
+          <div class="card-footer"><span class="meta">Opera&ccedil;&atilde;o</span><b>Abrir &rarr;</b></div>
+        </a>
+        <a class="card party" href="/festa-luiza/">
+          <div class="card-top"><span class="icon">LZ</span><span class="tag">Ativo</span></div>
+          <span class="tag">Privado</span>
+          <h3>Site Luiza</h3>
+          <p>Atalho preservado para a p&aacute;gina da festa da Luiza.</p>
+          <div class="card-footer"><span class="meta">Mem&oacute;ria</span><b>Abrir &rarr;</b></div>
+        </a>
+        <a class="card event disabled" href="#">
+          <div class="card-top"><span class="icon">AF</span><span class="tag">Fila</span></div>
+          <span class="tag">Planejado</span>
+          <h3>Agente Festeiro</h3>
+          <p>Convites, RSVP e p&aacute;gina de evento entram aqui quando houver uma tela &uacute;til.</p>
+          <div class="card-footer"><span class="meta">Eventos</span><b>Em breve &rarr;</b></div>
+        </a>
+        <a class="card kids disabled" href="#">
+          <div class="card-top"><span class="icon">KS</span><span class="tag">Fila</span></div>
+          <span class="tag">Planejado</span>
+          <h3>KidSquare</h3>
+          <p>Lugares kids-friendly para a rotina da fam&iacute;lia, com favoritos e sinais pr&aacute;ticos.</p>
+          <div class="card-footer"><span class="meta">Rotina</span><b>Em breve &rarr;</b></div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="fila">
+      <div class="section-head">
+        <span>Fila</span>
+        <h2>Pr&oacute;ximas a&ccedil;&otilde;es</h2>
+        <p>Itens que ajudam a decidir o que merece virar produto de verdade.</p>
+      </div>
+      <div class="system-grid">
+        <article class="tile"><b>Di&aacute;rio da viagem</b><p>No fim do dia, abrir a viagem e validar o rascunho da IA com texto ou &aacute;udio.</p></article>
+        <article class="tile"><b>Agente Festeiro</b><p>S&oacute; vira &aacute;rea ativa quando tiver convite, RSVP e p&aacute;gina de evento operando.</p></article>
+        <article class="tile"><b>KidSquare</b><p>Entra depois que houver uma lista real de lugares, favoritos e crit&eacute;rios da fam&iacute;lia.</p></article>
+      </div>
     </section>
   </main>
-  <footer class="wrap">claudiocode.dev · produtos digitais com dados reais</footer>
+
+  <footer class="wrap">claudiocode.dev &middot; produtos digitais com dados reais</footer>
 </body>
 </html>

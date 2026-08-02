@@ -61,7 +61,7 @@ export async function POST(request) {
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   }
   if (body.action === "check_prices") {
-    const result = await runPriceWatch({ digest: Boolean(body.digest) });
+    const result = await runPriceWatch({ digest: Boolean(body.digest), notify: false });
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   }
 

@@ -27,6 +27,7 @@ export default async function KanbanPage({ searchParams }) {
   }
 
   const csrfToken = cookieStore.get(ECONOMICS_CSRF_COOKIE)?.value || createEconomicsCsrfToken();
+  const kanbanAgentId = process.env.NEXT_PUBLIC_ELEVENLABS_KANBAN_AGENT_ID || "";
 
   return (
     <main className="kanban-page">
@@ -43,11 +44,8 @@ export default async function KanbanPage({ searchParams }) {
           <span>{session.user.avatar}</span>
           {session.user.name}
         </span>
-        <Link className="ui-button ghost compact" href="/economics">
-          Economics
-        </Link>
       </header>
-      <KanbanBoard csrfToken={csrfToken} user={session.user} />
+      <KanbanBoard csrfToken={csrfToken} calendarNotice={params?.calendar || ""} kanbanAgentId={kanbanAgentId} user={session.user} />
     </main>
   );
 }
@@ -83,7 +81,7 @@ function KanbanLogin({ error }) {
         >
           Entrar com Google
         </Link>
-        {error ? <small className="travel-auth-message" role="alert">Nao consegui abrir o Kanban. Entre novamente.</small> : null}
+        {error ? <small className="travel-auth-message" role="alert">Não consegui abrir o Kanban. Entre novamente.</small> : null}
       </section>
     </main>
   );

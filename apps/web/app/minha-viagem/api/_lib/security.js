@@ -11,6 +11,9 @@ const DEFAULT_LIMIT = 120;
 const LIMITS = {
   "state:write": 90,
   "challenge:write": 90,
+  "checkins:write": 90,
+  "checkins:places": 40,
+  "checkins:draft": 25,
   "media:write": 45,
   transcribe: 12
 };

@@ -4,19 +4,19 @@ import "./globals.css";
 import GlobalBackButton from "@/components/GlobalBackButton";
 
 export const metadata = {
-  title: "Claudio Code | Hub de Agentes",
-  description: "Agentes digitais da Claudio Code, com Concierge da Família e área privada de viagem.",
+  title: "Claudio Code | Painel",
+  description: "Painel de acesso para viagem, destinos, finanças, tarefas e rotina familiar.",
   metadataBase: new URL("https://claudiocode.dev"),
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Minha Viagem",
+    title: "Claudio Code",
     statusBarStyle: "default"
   }
 };
 
 export const viewport = {
-  themeColor: "#2563eb"
+  themeColor: "#165dff"
 };
 
 export default function RootLayout({ children }) {
@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
     <html lang="pt-BR">
       <head>
         <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="theme-color" content="#2563eb" />
+        <meta name="theme-color" content="#165dff" />
       </head>
       <body>
         <GlobalBackButton />

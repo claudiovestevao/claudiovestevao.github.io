@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { appConfig } from "@/lib/config";
+import { rateLimitRequest, rejectCrossOrigin, rejectLargeBody } from "@/lib/server-security";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { resolveTravelMemberForAuthUser } from "@/lib/travel-members";
 import {
@@ -15,6 +16,19 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  const originGuard = rejectCrossOrigin(request);
+  if (originGuard) return originGuard;
+
+  const sizeGuard = rejectLargeBody(request, 16 * 1024);
+  if (sizeGuard) return sizeGuard;
+
+  const limited = rateLimitRequest(request, {
+    bucket: "travel-password-reset",
+    limit: 8,
+    windowMs: 10 * 60 * 1000
+  });
+  if (limited) return limited;
+
   if (!appConfig.supabaseUrl || !appConfig.supabaseAnonKey || !appConfig.supabaseServiceRoleKey) {
     return json({ ok: false, message: "Troca de senha ainda nao configurada." }, 503);
   }

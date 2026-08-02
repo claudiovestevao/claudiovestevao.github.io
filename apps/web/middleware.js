@@ -135,21 +135,25 @@ function constantTimeEqual(a, b) {
 }
 
 function applySecurityHeaders(response) {
+  response.headers.set("Cache-Control", "private, no-store");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("X-Frame-Options", "SAMEORIGIN");
   response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
-  response.headers.set("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(), payment=()");
+  response.headers.set("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(self), payment=()");
   response.headers.set(
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' blob: https://unpkg.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://api.openai.com https://*.supabase.co https://api.themeparks.wiki https://queue-times.com https://api.open-meteo.com https://economia.awesomeapi.com.br https://open.er-api.com",
-      "frame-src 'self'",
+      "connect-src 'self' https://api.openai.com https://*.supabase.co https://api.themeparks.wiki https://queue-times.com https://api.open-meteo.com https://economia.awesomeapi.com.br https://open.er-api.com https://api.elevenlabs.io https://elevenlabs.io https://*.elevenlabs.io wss://api.elevenlabs.io wss://*.elevenlabs.io",
+      "media-src 'self' data: blob: https://api.elevenlabs.io https://*.elevenlabs.io",
+      "worker-src 'self' blob: https://unpkg.com https://elevenlabs.io https://*.elevenlabs.io",
+      "worklet-src 'self' blob: https://unpkg.com https://elevenlabs.io https://*.elevenlabs.io",
+      "frame-src 'self' https://elevenlabs.io https://*.elevenlabs.io",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

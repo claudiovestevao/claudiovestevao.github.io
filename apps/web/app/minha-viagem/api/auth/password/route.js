@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { appConfig } from "@/lib/config";
+import { rateLimitRequest, rejectCrossOrigin, rejectLargeBody } from "@/lib/server-security";
 import { isTravelEmailInvited, resolveTravelMemberForAuthUser } from "@/lib/travel-members";
 import {
   TRAVEL_ACCESS_COOKIE,
@@ -14,6 +15,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  const originGuard = rejectCrossOrigin(request);
+  if (originGuard) return originGuard;
+
+  const sizeGuard = rejectLargeBody(request, 8 * 1024);
+  if (sizeGuard) return sizeGuard;
+
   if (!appConfig.supabaseUrl || !appConfig.supabaseAnonKey) {
     return json({ ok: false, message: "Login por e-mail ainda nao configurado." }, 503);
   }
@@ -26,6 +33,14 @@ export async function POST(request) {
   if (!["login", "register"].includes(mode)) {
     return json({ ok: false, message: "Acao invalida." }, 400);
   }
+
+  const limited = rateLimitRequest(request, {
+    bucket: `travel-password-${mode}`,
+    key: email,
+    limit: mode === "register" ? 5 : 8,
+    windowMs: 10 * 60 * 1000
+  });
+  if (limited) return limited;
 
   const invalid = validateCredentials(email, password);
   if (invalid) return json({ ok: false, message: invalid }, 400);

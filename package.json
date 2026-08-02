@@ -4,6 +4,9 @@
   "workspaces": [
     "apps/web"
   ],
+  "overrides": {
+    "postcss": "8.5.19"
+  },
   "scripts": {
     "test": "npm run test:agent && npm run test:web",
     "test:agent": "node --test agentes/concierge-da-familia/tests/*.test.mjs",

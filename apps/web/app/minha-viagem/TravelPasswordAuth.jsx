@@ -10,6 +10,8 @@ export default function TravelPasswordAuth({ googleReady, adminsReady }) {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [loading, setLoading] = useState(false);
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const formValid = emailValid && password.length >= 8;
 
   async function submit(event) {
     event.preventDefault();
@@ -83,24 +85,32 @@ export default function TravelPasswordAuth({ googleReady, adminsReady }) {
     <div className="travel-auth-box">
       <div className="travel-auth-tabs" role="tablist" aria-label="Acesso da viagem">
         <button
+          aria-controls="travel-auth-panel"
           aria-selected={mode === "login"}
           className={mode === "login" ? "is-active" : ""}
+          id="travel-auth-login-tab"
           onClick={() => {
             setMode("login");
             setStatus({ type: "", message: "" });
           }}
+          role="tab"
+          tabIndex={mode === "login" ? 0 : -1}
           type="button"
         >
           <KeyRound size={16} />
           Entrar
         </button>
         <button
+          aria-controls="travel-auth-panel"
           aria-selected={mode === "register"}
           className={mode === "register" ? "is-active" : ""}
+          id="travel-auth-register-tab"
           onClick={() => {
             setMode("register");
             setStatus({ type: "", message: "" });
           }}
+          role="tab"
+          tabIndex={mode === "register" ? 0 : -1}
           type="button"
         >
           <UserPlus size={16} />
@@ -108,7 +118,14 @@ export default function TravelPasswordAuth({ googleReady, adminsReady }) {
         </button>
       </div>
 
-      <form className="travel-auth-panel is-active" onSubmit={submit}>
+      <form
+        aria-busy={loading}
+        aria-labelledby={mode === "login" ? "travel-auth-login-tab" : "travel-auth-register-tab"}
+        className="travel-auth-panel is-active"
+        id="travel-auth-panel"
+        onSubmit={submit}
+        role="tabpanel"
+      >
         <label htmlFor="travel-auth-email">E-mail</label>
         <input
           autoComplete="email"
@@ -133,17 +150,17 @@ export default function TravelPasswordAuth({ googleReady, adminsReady }) {
           value={password}
         />
 
-        <button disabled={loading} type="submit">
+        <button disabled={loading || !formValid} type="submit">
           {loading ? "Um instante..." : submitLabel}
         </button>
 
-        <button className="travel-auth-link-button" disabled={loading} onClick={sendPasswordLink} type="button">
+        <button className="travel-auth-link-button" disabled={loading || !emailValid} onClick={sendPasswordLink} type="button">
           Criar/trocar senha por e-mail
         </button>
       </form>
 
       {status.message ? (
-        <small className={`travel-auth-message ${status.type === "error" ? "is-error" : "is-success"}`} role="alert">
+        <small className={`travel-auth-message ${status.type === "error" ? "is-error" : "is-success"}`} id="travel-auth-status" role="alert">
           {status.message}
         </small>
       ) : null}

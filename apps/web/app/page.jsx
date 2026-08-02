@@ -1,62 +1,58 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Columns3, Gift, Map, PiggyBank, PlaneTakeoff, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Columns3,
+  Gift,
+  LockKeyhole,
+  Map,
+  PiggyBank,
+  PlaneTakeoff
+} from "lucide-react";
 
 const privateAreas = [
   {
     href: "/minha-viagem",
     title: "Minha Viagem",
-    status: "Privado",
-    text: "Roteiro de Orlando, reservas, compras, orçamento e documentos da viagem.",
+    text: "Roteiro, check-ins, diário, vouchers, ingressos, seguros e compras de Orlando.",
+    metric: "Diário + PDFs",
     icon: PlaneTakeoff,
+    tone: "travel",
     featured: true
   },
   {
     href: "/economics",
     title: "Economics",
-    status: "Privado",
-    text: "Cofre financeiro da família, documentos e controles importantes.",
-    icon: PiggyBank
+    text: "Documentos, decisões e controles financeiros da família.",
+    metric: "Finanças",
+    icon: PiggyBank,
+    tone: "money"
   },
   {
     href: "/kanban",
     title: "Kanban",
-    status: "Privado",
-    text: "Tarefas compartilhadas entre Vitor e Nathalie, estilo Trello.",
-    icon: Columns3
+    text: "Tarefas de Vitor e Nathalie, com prioridades, responsáveis e calendário.",
+    metric: "Operação",
+    icon: Columns3,
+    tone: "work"
   },
   {
     href: "/festa-luiza/",
     title: "Site Luiza",
-    status: "Privado",
-    text: "Página da festa da Luiza preservada em um atalho direto.",
-    icon: Gift
+    text: "Espaço reservado para os momentos e materiais da Luiza.",
+    metric: "Memória",
+    icon: Gift,
+    tone: "party"
   }
 ];
 
-const publicProjects = [
+const guestAreas = [
   {
     href: "/concierge-da-familia",
     title: "Concierge da Família",
-    status: "Público",
-    text: "Mapa inteligente para escolher destinos familiares com menos perrengue.",
+    text: "Destinos familiares com mapa, filtros, hotéis e score para decidir.",
+    metric: "Mapa + score",
     icon: Map,
-    enabled: true
-  },
-  {
-    href: "#",
-    title: "Agente Festeiro",
-    status: "Depois",
-    text: "Convites, RSVP e páginas de festa já ficam separados para a próxima rodada.",
-    icon: CalendarDays,
-    enabled: false
-  },
-  {
-    href: "#",
-    title: "KidSquare",
-    status: "Em breve",
-    text: "Ainda sem conteúdo publicado.",
-    icon: Sparkles,
-    enabled: false
+    tone: "atlas"
   }
 ];
 
@@ -64,78 +60,65 @@ export default function HomePage() {
   return (
     <main className="app-shell home-hub-page">
       <Topbar />
-      <section className="container home-hub-hero">
-        <span className="home-eyebrow">
-          <Sparkles size={15} />
-          Hub da família
-        </span>
-        <h1>Claudio Code</h1>
-        <p>Um painel simples para abrir o que importa: viagem, finanças, tarefas e projetos públicos.</p>
-        <div className="home-hub-actions">
-          <Link className="ui-button primary" href="/minha-viagem">
-            Abrir Viagem
-          </Link>
-          <Link className="ui-button ghost" href="#privado">
-            Ver área privada
-          </Link>
-        </div>
-      </section>
 
-      <section className="container home-hub-section" id="privado">
-        <SectionHeader eyebrow="Protegido" title="Área Privada" text="Atalhos para o que é da família." />
-        <div className="home-hub-grid">
-          {privateAreas.map((area) => (
-            <HubCard item={area} key={area.title} />
-          ))}
-        </div>
-      </section>
+      <section className="container home-access-page" aria-labelledby="home-title">
+        <header className="home-access-header">
+          <span>Claudio Code</span>
+          <h1 id="home-title">Agentes para produtividade e bem estar</h1>
+        </header>
 
-      <section className="container home-hub-section" id="publico">
-        <SectionHeader eyebrow="Aberto" title="Projetos Públicos" text="Produtos e experimentos que podem ficar visíveis." />
-        <div className="home-hub-grid is-public">
-          {publicProjects.map((project) => (
-            <HubCard item={project} key={project.title} />
-          ))}
-        </div>
+        <AccessSection icon={LockKeyhole} title="Áreas pessoais" items={privateAreas} privateArea />
+        <AccessSection icon={Map} title="Área do convidado" items={guestAreas} />
       </section>
     </main>
   );
 }
 
-function SectionHeader({ eyebrow, title, text }) {
+function AccessSection({ icon: Icon, items, privateArea, title }) {
   return (
-    <div className="home-section-head">
-      <div>
-        <span>{eyebrow}</span>
-        <h2>{title}</h2>
-        <p>{text}</p>
+    <section className="home-access-section" aria-label={title}>
+      <div className="home-access-section-head">
+        <span className={privateArea ? "is-private" : "is-guest"}>
+          <Icon size={16} />
+          {title}
+        </span>
       </div>
-    </div>
+      <div className="home-hub-grid">
+        {items.map((item) => (
+          <HubCard item={item} key={item.title} privateArea={privateArea} />
+        ))}
+      </div>
+    </section>
   );
 }
 
-function HubCard({ item }) {
+function HubCard({ item, privateArea }) {
   const Icon = item.icon;
-  const enabled = item.enabled !== false && item.href !== "#";
 
   return (
     <Link
-      aria-disabled={enabled ? undefined : true}
-      className={`hub-card ${item.featured ? "is-featured" : ""} ${enabled ? "" : "is-disabled"}`}
-      href={enabled ? item.href : "#"}
-      tabIndex={enabled ? undefined : -1}
+      className={`hub-card ${item.featured ? "is-featured" : ""}`}
+      data-tone={item.tone}
+      href={item.href}
     >
-      <div className="hub-card-icon">
-        <Icon size={22} />
+      <div className="hub-card-topline">
+        <div className={`hub-card-icon ${item.tone === "travel" ? "is-magic" : ""}`}>
+          {item.tone === "travel" ? <span className="hub-magic-ears"><span /></span> : <Icon size={22} />}
+        </div>
+        {privateArea ? (
+          <span className="hub-card-status is-private"><LockKeyhole size={13} /> Protegido</span>
+        ) : (
+          <span className="hub-card-status">Convidado</span>
+        )}
       </div>
       <div className="hub-card-title">
         <h3>{item.title}</h3>
-        <span>{item.status}</span>
       </div>
       <p>{item.text}</p>
-      <span className="hub-card-action">
-        {enabled ? "Abrir" : "Em breve"} <ArrowRight size={16} />
-      </span>
+      <div className="hub-card-footer">
+        <span>{item.metric}</span>
+        <b>Abrir <ArrowRight size={16} /></b>
+      </div>
     </Link>
   );
 }
@@ -148,17 +131,9 @@ function Topbar() {
           <span aria-hidden="true">C</span>
           Claudio Code
         </Link>
-        <div className="topbar-actions">
-          <Link className="ui-button ghost compact" href="#privado">
-            Privado
-          </Link>
-          <Link className="ui-button ghost compact" href="#publico">
-            Público
-          </Link>
-          <Link className="ui-button primary compact" href="/minha-viagem">
-            Viagem
-          </Link>
-        </div>
+        <Link className="ui-button ghost compact" href="/concierge-da-familia">
+          Área do convidado
+        </Link>
       </div>
     </header>
   );

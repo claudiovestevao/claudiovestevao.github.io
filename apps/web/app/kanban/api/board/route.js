@@ -9,8 +9,12 @@ export const dynamic = "force-dynamic";
 
 const BOARD_FILE = "kanban/board.json";
 const COLUMNS = new Set(["todo", "doing", "done"]);
-const OWNERS = new Set(["Vitor", "Nathalie", "Ambos"]);
+const OWNERS = new Set(["Sem dono", "Vitor", "Nathalie", "Ambos"]);
+const PRIORITIES = new Set(["low", "medium", "high", "urgent"]);
+const REMINDERS = new Set(["none", "same_day", "one_day", "three_days", "one_week"]);
 const SHEET_IMPORT_KEY = "home_tasks_google_sheet_2026_07_12";
+const TRAVEL_GROUP_MIGRATION_KEY = "travel_group_2026_08_01";
+const TRAVEL_GROUP = "Viagem";
 const OLD_SEED_IDS = new Set(["seed-prioridades", "seed-pendencias", "seed-economics"]);
 const SHEET_CARDS = [
   { id: "sheet-01-papel-de-parede", title: "Papel de parede", group: "🖥️ Escritório" },
@@ -52,7 +56,10 @@ const SHEET_CARDS = [
   { id: "sheet-37-instalar-pratos-decorativos", title: "Instalar pratos decorativos", group: "🛋️ Sala" }
 ].map((card) => ({
   ...card,
-  owner: "Ambos",
+  owner: "Sem dono",
+  priority: "medium",
+  dueDate: "",
+  reminder: "none",
   column: "todo",
   createdBy: "Google Sheets",
   createdAt: "2026-07-12T00:00:00.000Z"
@@ -60,7 +67,7 @@ const SHEET_CARDS = [
 
 export async function GET() {
   const context = await requireEconomicsContext();
-  if (!context.ok) return economicsJson({ ok: false, message: context.message }, context.status);
+  if (!context.ok) return economicsJson({ ok: false, message: "Sessao Kanban ausente ou expirada." }, context.status);
 
   const board = await readBoard(context);
   return economicsJson({ ok: true, board });
@@ -68,19 +75,13 @@ export async function GET() {
 
 export async function POST(request) {
   const context = await requireEconomicsContext();
-  if (!context.ok) return economicsJson({ ok: false, message: context.message }, context.status);
-  if (!(await hasValidCsrf(request))) return economicsJson({ ok: false, message: "CSRF invalido. Entre novamente no Economics." }, 403);
+  if (!context.ok) return economicsJson({ ok: false, message: "Sessao Kanban ausente ou expirada." }, context.status);
+  if (!(await hasValidCsrf(request))) return economicsJson({ ok: false, message: "Sessao expirada. Entre novamente no Kanban." }, 403);
 
   const body = await request.json().catch(() => ({}));
   const board = normalizeBoard(body?.board);
-  const storagePath = boardPath(context.householdId);
-
-  const upload = await context.supabase.storage.from(ECONOMICS_STORAGE_BUCKET).upload(storagePath, JSON.stringify(board, null, 2), {
-    contentType: "application/json",
-    upsert: true
-  });
-
-  if (upload.error) return economicsJson({ ok: false, message: "Falha ao salvar o Kanban." }, 500);
+  const saved = await persistBoard(context, board);
+  if (!saved) return economicsJson({ ok: false, message: "Falha ao salvar o Kanban." }, 500);
 
   await writeEconomicsAudit(context.supabase, {
     householdId: context.householdId,
@@ -102,7 +103,27 @@ async function readBoard(context) {
 
   const text = await data.text().catch(() => "");
   const parsed = parseJson(text);
-  return migrateBoard(normalizeBoard(parsed));
+  const board = normalizeBoard(parsed);
+  const migratedBoard = migrateBoard(board);
+
+  if (JSON.stringify(board) !== JSON.stringify(migratedBoard)) {
+    await persistBoard(context, migratedBoard);
+  }
+
+  return migratedBoard;
+}
+
+async function persistBoard(context, board) {
+  const storagePath = boardPath(context.householdId);
+  await context.supabase.storage.from(ECONOMICS_STORAGE_BUCKET).remove([storagePath]);
+
+  const upload = await context.supabase.storage.from(ECONOMICS_STORAGE_BUCKET).upload(storagePath, JSON.stringify(board, null, 2), {
+    cacheControl: "0",
+    contentType: "application/json",
+    upsert: true
+  });
+
+  return !upload.error;
 }
 
 function normalizeBoard(value) {
@@ -114,8 +135,13 @@ function normalizeBoard(value) {
         id: String(card?.id || randomUUID()),
         title: String(card?.title || "").trim().slice(0, 160),
         group: String(card?.group || "Geral").trim().slice(0, 80),
-        owner: OWNERS.has(card?.owner) ? card.owner : "Ambos",
+        owner: normalizeOwner(card),
+        priority: PRIORITIES.has(card?.priority) ? card.priority : "medium",
+        dueDate: normalizeDate(card?.dueDate),
+        dueTime: normalizeTime(card?.dueTime),
+        reminder: REMINDERS.has(card?.reminder) ? card.reminder : "none",
         column: COLUMNS.has(card?.column) ? card.column : "todo",
+        googleCalendar: normalizeGoogleCalendar(card?.googleCalendar),
         createdBy: String(card?.createdBy || "Familia").slice(0, 80),
         createdAt: String(card?.createdAt || new Date().toISOString())
       }))
@@ -124,21 +150,76 @@ function normalizeBoard(value) {
   };
 }
 
-function migrateBoard(board) {
-  if (board.imports?.[SHEET_IMPORT_KEY]) return board;
+function normalizeOwner(card) {
+  if (OWNERS.has(card?.owner)) {
+    if (card.owner === "Ambos" && card.createdBy === "Google Sheets") return "Sem dono";
+    return card.owner;
+  }
+  return "Sem dono";
+}
 
-  const existingIds = new Set(board.cards.map((card) => card.id));
-  const importedCards = SHEET_CARDS.filter((card) => !existingIds.has(card.id));
-  const currentCards = board.cards.filter((card) => !OLD_SEED_IDS.has(card.id));
+function normalizeDate(value) {
+  const text = String(value || "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : "";
+}
+
+function normalizeTime(value) {
+  const text = String(value || "").trim();
+  return /^\d{2}:\d{2}$/.test(text) ? text : "";
+}
+
+function normalizeGoogleCalendar(value) {
+  if (!value || typeof value !== "object") return null;
+  const eventId = String(value.eventId || "").trim();
+  if (!eventId) return null;
+  return {
+    eventId,
+    calendarId: String(value.calendarId || "primary").trim() || "primary",
+    htmlLink: String(value.htmlLink || "").trim(),
+    syncedAt: String(value.syncedAt || "").trim(),
+    sourceHash: String(value.sourceHash || "").trim()
+  };
+}
+
+function migrateBoard(board) {
+  let migratedBoard = board;
+
+  if (!migratedBoard.imports?.[SHEET_IMPORT_KEY]) {
+    const existingIds = new Set(migratedBoard.cards.map((card) => card.id));
+    const importedCards = SHEET_CARDS.filter((card) => !existingIds.has(card.id));
+    const currentCards = migratedBoard.cards.filter((card) => !OLD_SEED_IDS.has(card.id));
+
+    migratedBoard = normalizeBoard({
+      ...migratedBoard,
+      imports: {
+        ...migratedBoard.imports,
+        [SHEET_IMPORT_KEY]: true
+      },
+      cards: [...currentCards, ...importedCards]
+    });
+  }
+
+  if (migratedBoard.imports?.[TRAVEL_GROUP_MIGRATION_KEY]) return migratedBoard;
 
   return normalizeBoard({
-    ...board,
+    ...migratedBoard,
     imports: {
-      ...board.imports,
-      [SHEET_IMPORT_KEY]: true
+      ...migratedBoard.imports,
+      [TRAVEL_GROUP_MIGRATION_KEY]: true
     },
-    cards: [...currentCards, ...importedCards]
+    cards: migratedBoard.cards.map((card) => (
+      isTravelCard(card) ? { ...card, group: TRAVEL_GROUP } : card
+    ))
   });
+}
+
+function isTravelCard(card) {
+  const text = `${card?.title || ""} ${card?.group || ""}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  return /\b(viagem|orlando|disney|universal|epic universe|magic kingdom|hollywood studios|animal kingdom|epcot|sea world|seaworld|florida|miami|mco|gru|voo|passagem|embarque|aeroporto|hotel|hospedagem|check-?in|check-?out|voucher|ingresso|parque|passaporte|visto|seguro viagem|mala|bagagem|aluguel de carro|carro alugado|hertz|dolar|cambio|arc)\b/.test(text);
 }
 
 function parseJson(value) {

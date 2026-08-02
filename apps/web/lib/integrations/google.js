@@ -72,6 +72,52 @@ export async function getGooglePlaceDetails(placeId) {
   return normalizeGooglePlace(json);
 }
 
+export async function searchGooglePlacesNearby({ latitude, longitude, radiusMeters = 250, maxResultCount = 8 }) {
+  assertGoogleMaps();
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    throw Object.assign(new Error("Coordenadas invalidas para buscar lugares proximos."), { status: 400 });
+  }
+
+  const fieldMask = [
+    "places.id",
+    "places.name",
+    "places.displayName",
+    "places.formattedAddress",
+    "places.types",
+    "places.location",
+    "places.googleMapsUri"
+  ].join(",");
+
+  const response = await fetch("https://places.googleapis.com/v1/places:searchNearby", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": getGoogleMapsKey(),
+      "X-Goog-FieldMask": fieldMask
+    },
+    body: JSON.stringify({
+      maxResultCount: Math.max(1, Math.min(12, Number(maxResultCount) || 8)),
+      rankPreference: "DISTANCE",
+      languageCode: "pt-BR",
+      regionCode: "US",
+      locationRestriction: {
+        circle: {
+          center: {
+            latitude: lat,
+            longitude: lng
+          },
+          radius: Math.max(50, Math.min(1200, Number(radiusMeters) || 250))
+        }
+      }
+    })
+  });
+
+  const json = await checkedJson(response, "google_places_nearby");
+  return (json.places || []).map(normalizeGooglePlace);
+}
+
 export async function getGooglePlacePhotoUri(googlePhotoName, { maxWidthPx = 1200, maxHeightPx = 900 } = {}) {
   assertGoogleMaps();
   const params = new URLSearchParams({

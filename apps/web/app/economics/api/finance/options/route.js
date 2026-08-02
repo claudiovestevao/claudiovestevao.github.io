@@ -32,7 +32,7 @@ export async function GET() {
   if (categoriesResult.error) {
     return economicsJson({
       ok: false,
-      message: `Nucleo financeiro pendente: economics_categories indisponivel (${categoriesResult.error.message}).`
+      message: `Núcleo financeiro pendente: economics_categories indisponível (${categoriesResult.error.message}).`
     }, 503);
   }
 

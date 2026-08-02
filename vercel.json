@@ -9,11 +9,27 @@
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/minha-viagem/api/cron/orlando-daily",
+      "path": "/minha-viagem/api/cron/orlando-daily?slot=08",
       "schedule": "0 11 * * *"
     },
     {
+      "path": "/minha-viagem/api/cron/orlando-daily?slot=13",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/minha-viagem/api/cron/orlando-daily?slot=19",
+      "schedule": "0 22 * * *"
+    },
+    {
       "path": "/minha-viagem/api/cron/price-watch",
+      "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/minha-viagem/api/cron/diary-nightly",
+      "schedule": "30 23 * * *"
+    },
+    {
+      "path": "/economics/api/cron/payment-reminders",
       "schedule": "0 12 * * *"
     }
   ]

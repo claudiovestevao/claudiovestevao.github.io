@@ -143,16 +143,49 @@ export function projectFreedom({ currentValue = 0, monthlyContribution = 0, curr
   });
 }
 
+export function calculateMillionGoal({
+  currentValue = 0,
+  targetValue = 1000000,
+  monthsToTarget = 60,
+  contributionMonths = 55,
+  annualRealReturnRate = 0.04,
+  automaticMonthlyContribution = 0
+} = {}) {
+  const monthlyRate = Math.pow(1 + Number(annualRealReturnRate || 0), 1 / 12) - 1;
+  const targetMonths = Math.max(1, Number(monthsToTarget || 0));
+  const paymentMonths = Math.max(1, Math.min(targetMonths, Number(contributionMonths || 0)));
+  const currentValueAtTarget = Number(currentValue || 0) * Math.pow(1 + monthlyRate, targetMonths);
+  const contributionFactor = monthlyRate > 0
+    ? (Math.pow(1 + monthlyRate, paymentMonths) - 1) / monthlyRate
+    : paymentMonths;
+  const requiredMonthlyContribution = Math.max(0, (Number(targetValue || 0) - currentValueAtTarget) / contributionFactor);
+  const automatic = Math.max(0, Number(automaticMonthlyContribution || 0));
+  const additional = Math.max(0, requiredMonthlyContribution - automatic);
+
+  return {
+    targetValue: round(targetValue),
+    currentValue: round(currentValue),
+    monthsToTarget: targetMonths,
+    contributionMonths: paymentMonths,
+    annualRealReturnRate: Number(annualRealReturnRate || 0),
+    currentValueAtTarget: round(currentValueAtTarget),
+    requiredMonthlyContribution: round(requiredMonthlyContribution),
+    automaticMonthlyContribution: round(automatic),
+    additionalMonthlyContribution: round(additional),
+    progress: Number(targetValue || 0) > 0 ? Math.min(1, Number(currentValue || 0) / Number(targetValue)) : 0
+  };
+}
+
 export function chooseNextBestAction({ snapshot, upcomingBills = [], assets = [], goals = [] } = {}) {
   const overdue = upcomingBills.find((bill) => new Date(`${bill.due_on}T12:00:00`) < new Date() && bill.status !== "paid");
   if (overdue) return { kind: "bill", title: `Confirmar pagamento de ${overdue.title}`, detail: `${formatMoney(overdue.amount)} com vencimento em ${formatShortDate(overdue.due_on)}.` };
-  if (!snapshot?.liquidityKnown) return { kind: "protection", title: "Classificar a liquidez da carteira EQI", detail: "Sem isso, o Economics nao consegue medir a reserva de emergencia com seguranca." };
-  if (!snapshot?.essentialExpense) return { kind: "protection", title: "Informar a despesa essencial mensal", detail: "Esse numero destrava a cobertura da reserva em meses." };
+  if (!snapshot?.liquidityKnown) return { kind: "protection", title: "Classificar a liquidez da carteira EQI", detail: "Sem isso, o Economics não consegue medir a reserva de emergência com segurança." };
+  if (!snapshot?.essentialExpense) return { kind: "protection", title: "Informar a despesa essencial mensal", detail: "Esse número destrava a cobertura da reserva em meses." };
   const unknownAsset = assets.find((asset) => Number(asset.current_value || 0) === 0 && /PortoPrev/i.test(asset.name));
-  if (unknownAsset) return { kind: "freedom", title: "Enviar o extrato atual da PortoPrev", detail: "O saldo muda a leitura do patrimonio e da liberdade aos 55." };
+  if (unknownAsset) return { kind: "freedom", title: "Enviar o extrato atual da PortoPrev", detail: "O saldo reduz o aporte adicional necessário para chegar a R$ 1 milhão aos 40." };
   const incompleteGoal = goals.find((goal) => Number(goal.target_value_today || 0) === 0 && goal.status === "active");
-  if (incompleteGoal) return { kind: "goal", title: `Definir a meta: ${incompleteGoal.name}`, detail: "Uma estimativa inicial ja permite acompanhar o progresso." };
-  return { kind: "review", title: "Revisar os proximos vencimentos", detail: "Leva menos de cinco minutos e mantem o mes previsivel." };
+  if (incompleteGoal) return { kind: "goal", title: `Definir a meta: ${incompleteGoal.name}`, detail: "Uma estimativa inicial já permite acompanhar o progresso." };
+  return { kind: "review", title: "Revisar os próximos vencimentos", detail: "Leva menos de cinco minutos e mantém o mês previsível." };
 }
 
 function sum(items, field) {

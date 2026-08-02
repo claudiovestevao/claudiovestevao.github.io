@@ -15,3 +15,5 @@ apps/web/.next/
 node_modules/
 .env*
 apps/web/app/minha-viagem/_private/*.pdf
+apps/web/tmp/
+tmp/
