@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { appConfig } from "@/lib/config";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { saveDiaryEntry, uploadDiaryImage, uploadDiaryVideo } from "../../_lib/diary";
+import { saveCheckin } from "../../_lib/checkins";
+import { searchGooglePlacesNearby, hasGoogleMaps } from "@/lib/integrations/google";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -96,11 +98,15 @@ async function processWhatsAppMessage(client, item) {
     return { ok: true, ignored: true, id: message.id, reason: "remetente fora da lista permitida" };
   }
 
+  if (type === "location") {
+    return handleLocationCheckin({ message, from, item });
+  }
+
   if (!["text", "audio", "image", "video"].includes(type)) {
     console.info("whatsapp_message_ignored", { id: message.id, type, reason: "unsupported_type" });
     await sendWhatsAppReply(
       from,
-      "Recebi sua mensagem, mas por enquanto o diario aceita texto, audio, foto e video MP4/WebM.",
+      "Recebi sua mensagem, mas por enquanto o diario aceita texto, audio, foto, video MP4/WebM e localizacao (clipe > Localizacao).",
       item.phoneNumberId
     );
     return { ok: true, ignored: true, id: message.id, reason: `tipo nao suportado: ${type}` };
@@ -187,6 +193,76 @@ async function processWhatsAppMessage(client, item) {
   }
 
   return { ok: true, id: message.id, type, duplicate: Boolean(saved.duplicate), source: saved.source || "" };
+}
+
+async function handleLocationCheckin({ message, from, item }) {
+  const location = message.location || {};
+  const latitude = Number(location.latitude);
+  const longitude = Number(location.longitude);
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    console.info("whatsapp_location_ignored", { id: message.id, reason: "coordenadas_invalidas" });
+    return { ok: true, ignored: true, id: message.id, reason: "localizacao sem coordenadas validas" };
+  }
+
+  const author = whatsappAuthor(from);
+  const manualName = clean(location.name);
+  const address = clean(location.address);
+  const place = await resolvePlaceFromCoordinates({ latitude, longitude, manualName, address });
+  const observedAt = message.timestamp ? new Date(Number(message.timestamp) * 1000).toISOString() : new Date().toISOString();
+
+  const saved = await saveCheckin({
+    observedAt,
+    place,
+    manualPlace: place.name || manualName || address,
+    author: { name: author.name, role: author.key },
+    note: "",
+    source: "whatsapp",
+    confidence: "confirmed",
+    evidence: [{ type: "whatsapp_location", messageId: message.id }]
+  });
+
+  const placeLabel = saved.checkin?.place?.name || saved.checkin?.manualPlace || "local sem nome";
+  const timeLabel = saved.checkin?.localTime || "";
+  console.info("whatsapp_checkin_saved", { id: message.id, place: placeLabel, source: saved.source });
+  await sendWhatsAppReply(
+    from,
+    `📍 Check-in registrado: ${placeLabel}${timeLabel ? ` as ${timeLabel}` : ""}. Vou usar isso no diario de hoje!`,
+    item.phoneNumberId
+  );
+
+  return { ok: true, id: message.id, type: "location", checkin: true, place: placeLabel };
+}
+
+async function resolvePlaceFromCoordinates({ latitude, longitude, manualName, address }) {
+  const base = {
+    placeId: "",
+    name: manualName || "",
+    formattedAddress: address || "",
+    latitude,
+    longitude,
+    googleMapsUri: `https://maps.google.com/?q=${latitude},${longitude}`,
+    categories: []
+  };
+
+  if (manualName || !hasGoogleMaps()) return base;
+
+  try {
+    const [nearest] = await searchGooglePlacesNearby({ latitude, longitude, radiusMeters: 120, maxResultCount: 1 });
+    if (!nearest) return base;
+    return {
+      placeId: nearest.placeId || "",
+      name: nearest.name || base.name,
+      formattedAddress: nearest.formattedAddress || base.formattedAddress,
+      latitude,
+      longitude,
+      googleMapsUri: nearest.googleMapsUri || base.googleMapsUri,
+      categories: nearest.categories || []
+    };
+  } catch (error) {
+    console.warn("whatsapp_location_reverse_geocode_failed", error?.message || String(error));
+    return base;
+  }
 }
 
 function extractMessages(payload) {
