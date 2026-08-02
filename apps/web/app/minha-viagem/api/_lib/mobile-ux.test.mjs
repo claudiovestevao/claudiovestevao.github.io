@@ -150,11 +150,11 @@ test("trip calendar joins itinerary, meals, bookings and store details", () => {
   assert.ok(tripHtml.includes('id="tripCalendar"'));
   assert.ok(tripHtml.includes('id="calendarDetailDialog"'));
   assert.ok(tripHtml.includes("calendarStoresHtml(detail)"));
-  assert.ok(calendarBlock.includes('stores:["international","columbia","northface"]'));
+  assert.ok(calendarBlock.includes('stores:["international","gap","carters2","victoriassecret","calvinklein2","columbia","northface","bath"]'));
   assert.ok(calendarBlock.includes('label:"Confirmada"'));
   assert.ok(calendarBlock.includes('label:"Requer reserva"'));
   assert.ok(calendarBlock.includes('label:"Não aplicável (dispensada)"'));
-  assert.ok(tripDaysBlock.includes('{date:"Sex 14/8",title:"Hollywood Studios"'));
+  assert.ok(tripDaysBlock.includes('{date:"Sex 14/8",title:"Hollywood Studios + Fantasmic!"'));
   assert.ok(tripDaysBlock.includes('{date:"Sáb 15/8",title:"Florida Mall + eixo Millenia"'));
   assert.ok(maxBudgets.length > 0 && maxBudgets.every((value) => value <= 80));
   assert.ok(numericRatings.length > 0 && numericRatings.every((value) => value >= 4.5));
