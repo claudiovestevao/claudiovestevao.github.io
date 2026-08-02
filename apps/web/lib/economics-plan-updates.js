@@ -1,14 +1,38 @@
-export const ECONOMICS_PLAN_VERSION = 5;
+export const ECONOMICS_PLAN_VERSION = 6;
 
-// Alguns títulos foram salvos em algum momento com os acentos virando "?"
+// Alguns campos foram salvos em algum momento com os acentos virando "?"
 // (perda de encoding fora do app — não é bug do código de leitura/gravação,
-// que sempre trata UTF-8). Corrige pelo texto exato conhecido; se aparecer
-// mais algum título quebrado, adicionar aqui.
+// que sempre trata UTF-8). Corrige pelo texto exato conhecido em title,
+// category, source e notes. Se aparecer mais mojibake, adicionar aqui.
 const MOJIBAKE_TITLE_FIXES = {
+  // Títulos de renda
+  "Sal?rio": "Salário",
+  // Títulos de pagamentos
   "Bab?": "Babá",
   "Condom?nio, ?gua e g?s": "Condomínio, água e gás",
+  "Energia el?trica": "Energia elétrica",
+  "Cons?rcio PortoBank": "Consórcio PortoBank",
   "Fatura Ita? Personnalit?": "Fatura Itaú Personnalité",
-  "Financiamento imobili?rio Bradesco": "Financiamento imobiliário Bradesco"
+  "Financiamento imobili?rio Bradesco": "Financiamento imobiliário Bradesco",
+  // Categorias de pagamentos/receitas
+  "Educa??o": "Educação",
+  "Comunica??o": "Comunicação",
+  "Fam?lia": "Família",
+  "Patrim?nio": "Patrimônio",
+  "Cart?es": "Cartões",
+  // Fontes de pagamento (contas/cartões)
+  "Ita?": "Itaú",
+  "Ita? Personnalit?": "Itaú Personnalité",
+  "Cart?o Ita? Personnalit?": "Cartão Itaú Personnalité",
+  "Cart?o PortoBank": "Cartão PortoBank",
+  "Cart?o a confirmar": "Cartão a confirmar",
+  // Notas gerais
+  "Estimativa antes de benef?cios e descontos adicionais de folha": "Estimativa antes de benefícios e descontos adicionais de folha",
+  "Pago; cart?o em processo de encerramento": "Pago; cartão em processo de encerramento",
+  "Estimativa de 4 a 5 sal?rios brutos": "Estimativa de 4 a 5 salários brutos",
+  "Um sal?rio bruto, previsto para o fim de setembro": "Um salário bruto, previsto para o fim de setembro",
+  // Bônus 13º
+  "13? sal?rio": "13º salário"
 };
 
 function fixMojibakeText(value) {
@@ -67,10 +91,11 @@ export function applyKnownPlanUpdates(plan) {
 function fixMojibakeFields(item) {
   if (!item || typeof item !== "object") return item;
   const title = fixMojibakeText(item.title);
+  const category = fixMojibakeText(item.category);
   const notes = fixMojibakeText(item.notes);
   const source = fixMojibakeText(item.source);
-  if (title === item.title && notes === item.notes && source === item.source) return item;
-  return { ...item, title, notes, source };
+  if (title === item.title && category === item.category && notes === item.notes && source === item.source) return item;
+  return { ...item, title, category, notes, source };
 }
 
 function updateKnownIncome(income) {
@@ -139,6 +164,7 @@ function updateThirteenthSalary(bonus, incomes) {
   const net = Number(income?.netBeforePension || income?.netEstimate || bonus.netEstimate || 0);
   return {
     ...bonus,
+    title: "13º salário",
     grossAmount: gross,
     netEstimate: net,
     minAmount: net,

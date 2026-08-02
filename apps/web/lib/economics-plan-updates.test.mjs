@@ -21,7 +21,7 @@ const basePlan = {
 
 test("updates subscription values and annual renewal without duplicates", () => {
   const plan = applyKnownPlanUpdates(basePlan);
-  assert.equal(plan.version, ECONOMICS_PLAN_VERSION);
+  assert.equal(plan.version, 6);
   assert.equal(plan.payments.length, 3);
   assert.equal(plan.payments.find((item) => item.id === "chatgpt").foreignAmount, 20);
   assert.equal(plan.payments.find((item) => item.id === "prime").amount, 166.8);
@@ -47,17 +47,31 @@ test("discounts eight percent for PortoPrev from Vitor available salary", () => 
   assert.equal(vitor.netEstimate, 24241.91);
 });
 
-test("repairs known mojibake payment titles ('?' in place of accents)", () => {
+test("repairs known mojibake in title, category, source, and notes fields", () => {
   const plan = applyKnownPlanUpdates({
     ...basePlan,
     payments: [
       ...basePlan.payments,
-      { id: "baba", title: "Bab?", amount: 4000 },
-      { id: "condo", title: "Condom?nio, ?gua e g?s", amount: 2300 },
-      { id: "financ", title: "Financiamento imobili?rio Bradesco", amount: 7980 }
+      { id: "baba", title: "Bab?", category: "Fam?lia", amount: 4000 },
+      { id: "condo", title: "Condom?nio, ?gua e g?s", source: "Ita?", amount: 2300 },
+      { id: "financ", title: "Financiamento imobili?rio Bradesco", category: "Patrim?nio", amount: 7980 }
     ]
   });
   assert.equal(plan.payments.find((item) => item.id === "baba").title, "Babá");
+  assert.equal(plan.payments.find((item) => item.id === "baba").category, "Família");
   assert.equal(plan.payments.find((item) => item.id === "condo").title, "Condomínio, água e gás");
+  assert.equal(plan.payments.find((item) => item.id === "condo").source, "Itaú");
   assert.equal(plan.payments.find((item) => item.id === "financ").title, "Financiamento imobiliário Bradesco");
+  assert.equal(plan.payments.find((item) => item.id === "financ").category, "Patrimônio");
+});
+
+test("repairs mojibake in bonus 13º salário title", () => {
+  const plan = applyKnownPlanUpdates({
+    ...basePlan,
+    bonuses: [
+      { id: "13-vitor", owner: "Vitor", title: "13? sal?rio", month: 12, minAmount: 38000, maxAmount: 38000 }
+    ]
+  });
+  const bonus = plan.bonuses.find((item) => item.owner === "Vitor" && item.taxed);
+  assert.equal(bonus.title, "13º salário");
 });
