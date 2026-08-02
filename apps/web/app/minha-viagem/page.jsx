@@ -4,7 +4,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ListChecks, LockKeyhole } from "lucide-react";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
 import TravelPasswordAuth from "./TravelPasswordAuth";
 import TravelBackButton from "./TravelBackButton";
 import TravelFrameShell from "./TravelFrameShell";
@@ -59,9 +59,6 @@ export default async function MinhaViagemPage({ searchParams }) {
           <span>{travelUser.avatar}</span>
           {travelUser.name}
         </span>
-        <Link className="travel-checklist-link" href="/minha-viagem/checklist-mala" title="Checklist de mala">
-          <ListChecks size={17} />
-        </Link>
         <form action={lockTravel}>
           <button type="submit">Bloquear</button>
         </form>

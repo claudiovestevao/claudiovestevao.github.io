@@ -3590,10 +3590,11 @@ Phone: +1 407-993-3999</code>
     <div class="card">
       <button class="reset" onclick="resetGeneric('mala_v2','malalist',malaItens,'bar2','pc2')">↺ Limpar</button>
       <h2>Mala, documentos e alfândega</h2>
-      <p class="sub">O essencial. Marca também salva sozinho.</p>
+      <p class="sub">Checklist completo por pessoa (Claudio, Nathalie, Luiza, Vitor), bagagem de mão e logística. Marca também salva sozinho.</p>
       <div class="progress"><i id="bar2"></i></div>
       <div class="pcount" id="pc2">0 de 0 itens</div>
       <div id="malalist"></div>
+      <div class="note ok">🛒 <b>Não levar (comprar no Walmart dia 10/8):</b> protetor solar de corpo, ventilador portátil, eletrólitos, snacks de parque. Fica mais barato e mais leve comprar por lá.</div>
       <div class="note warn">🛃 <b>Alfândega (volta ao Brasil):</b> isenção de <b>US$ 1.000</b> por pessoa (via aérea) — a Luiza e o "Arthur a caminho" não contam como cota extra, mas você e a Nathalie somam US$ 2.000. Acima disso, 50% de imposto sobre o excedente. <b>Guarde todas as notas</b> e evite muitas peças iguais (parece revenda). Com R$ 15 mil em compras, fiquem de olho nesse limite.</div>
     </div>
   </section>
@@ -4397,20 +4398,48 @@ var malaItens={
    ["Carteira de vacinação da Luiza",""],
    ["Cartões habilitados p/ exterior",""],
    ["Voucher Hertz + comprovantes LDW/LIS","para recusar upsell de seguro no balcão"],
-   ["Reservas (hotel, carro) e ingressos no app",""]
+   ["Reservas (hotel, carro) e ingressos no app",""],
+   ["Cartão pré-natal da Nathalie",""],
+   ["Certidão de nascimento da Luiza (cópia)",""],
+   ["Cartão Wise da Nathalie",""],
+   ["Impressão física das reservas de hotel e do itinerário de voo","backup sem internet/bateria"],
+   ["Confirmar com a companhia aérea o limite de semanas gestacionais para embarque (ida e volta)",""]
  ],
  "Saúde & conforto":[
    ["Remédios de uso contínuo + receitas",""],
    ["Kit 1º socorros (febre, antialérgico infantil)",""],
    ["Meias de compressão p/ a Nathalie (voos)",""],
    ["Protetor solar (adulto e infantil)",""],
-   ["Repelente",""]
+   ["Repelente",""],
+   ["Termômetro digital",""],
+   ["Remédio de enjoo infantil","viagem de carro/avião"],
+   ["Band-aid de bolha (Compeed)","pés de parque"],
+   ["Pomada pra assadura/atrito",""],
+   ["Analgésico liberado pelo obstetra p/ a Nathalie","só o que o obstetra liberou"],
+   ["Remédio de azia liberado pelo obstetra",""],
+   ["Vitaminas do pré-natal","quantidade pra 11 dias + folga"],
+   ["Protetor solar rosto","o de corpo compra no Walmart lá"],
+   ["Creme de mão + protetor labial","ar do avião e dos parques resseca muito"]
  ],
  "Criança (Luiza)":[
    ["Carrinho leve dobrável",""],
    ["Snacks e itens de conforto p/ o voo",""],
    ["Muda de roupa extra na bagagem de mão",""],
-   ["Tablet/fones com desenhos baixados",""]
+   ["Tablet/fones com desenhos baixados",""],
+   ["7 conjuntos completos","1/dia + folga; criança suja roupa"],
+   ["2 trocas completas extras SEMPRE na mochila do parque",""],
+   ["8 calcinhas + 8 pares de meias",""],
+   ["2 pijamas",""],
+   ["2 maiôs/biquínis",""],
+   ["Fraldas noturnas","quantidade pra 10 noites + folga"],
+   ["1 lata de leite em pó LACRADA","alfândega dos EUA só aceita alimento industrializado e lacrado; se acabar, o Ninho lá se chama \"Nido\" e tem no Walmart"],
+   ["Fantasia da Moana","dia do Magic Kingdom — as de lá custam $$$"],
+   ["Pulseira de segurança com telefone dos pais",""],
+   ["Óculos de sol infantil",""],
+   ["Almofada de pescoço pro voo",""],
+   ["Boneca Luna",""],
+   ["Boneca Barbie sereia",""],
+   ["Mochilinha dela","dá senso de responsabilidade e leva os brinquedos"]
  ],
  "Logística":[
    ["Adaptador de tomada (EUA)",""],
@@ -4419,7 +4448,78 @@ var malaItens={
    ["Potes de marmita","para snacks, fruta, comida pronta e sobras do hotel"],
    ["Mala vazia/extra p/ as compras",""],
    ["Balança de mala portátil",""],
-   ["Pasta p/ guardar TODAS as notas fiscais",""]
+   ["Pasta p/ guardar TODAS as notas fiscais",""],
+   ["Packing cubes vazios pro enxoval",""],
+   ["Cadeado TSA nas malas despachadas",""],
+   ["Etiqueta de identificação (nome, telefone, endereço) em cada mala e mochila",""],
+   ["Chip internacional/eSIM ativado antes de embarcar",""],
+   ["Carregadores e cabos extras",""],
+   ["Guarda-chuva","já comprado no BR"]
+ ],
+ "Claudio":[
+   ["4 camisetas dry-fit",""],
+   ["1 camisa/polo","jantares"],
+   ["2 bermudas",""],
+   ["1 calça leve",""],
+   ["6 cuecas",""],
+   ["6 pares de meias",""],
+   ["1 sunga",""],
+   ["Tênis confortável (amaciado) + chinelo",""],
+   ["Boné",""],
+   ["Óculos de sol",""],
+   ["Capa de chuva/poncho","já comprado no BR"],
+   ["1 blusa leve de frio","ar-condicionado/avião"],
+   ["Pijama",""]
+ ],
+ "Nathalie (gestante)":[
+   ["4 vestidos/looks leves e confortáveis",""],
+   ["2 shorts/leggings de gestante",""],
+   ["4 blusas",""],
+   ["Roupas íntimas p/ 6 dias",""],
+   ["Biquíni",""],
+   ["Tênis MUITO confortável + sandália",""],
+   ["Chapéu/boné",""],
+   ["Óculos de sol",""],
+   ["Capa de chuva/poncho","já comprado no BR"],
+   ["1 casaquinho","ar-condicionado"],
+   ["Pijama",""],
+   ["Almofada de pescoço pro voo",""]
+ ],
+ "Vitor":[
+   ["5 camisetas",""],
+   ["2 bermudas",""],
+   ["Roupas íntimas + meias p/ 6 dias",""],
+   ["Sunga",""],
+   ["Tênis confortável + chinelo",""],
+   ["Boné + óculos de sol",""],
+   ["Capa de chuva/poncho","já comprado no BR"],
+   ["Casaquinho",""],
+   ["Pijama",""],
+   ["Almofada de pescoço pro voo",""]
+ ],
+ "Bagagem de mão (voo ~9h)":[
+   ["Documentos + carta do obstetra + remédios essenciais","NUNCA despachar"],
+   ["Troca de roupa completa pra cada um","extravio/acidentes"],
+   ["Fralda extra da Luiza + lenços umedecidos",""],
+   ["1 mamadeira + leite em pó já dosado em potinho","voo de 9h; peça água morna à tripulação"],
+   ["Ziploc transparente pros líquidos","máx. 100 ml cada na cabine"],
+   ["Itens de valor (eletrônicos, joias, dinheiro, cartões) SEMPRE na mão","nunca despachar"],
+   ["Almofadas de pescoço: Nathalie, Luiza e Vitor",""],
+   ["Casaquinhos","avião gelado"],
+   ["Snacks: Luiza e Vitor","voo + primeiros dias"],
+   ["Garrafinhas vazias","encher após a segurança"],
+   ["Escova/pasta de dente + higiene mini + álcool gel",""],
+   ["Meias de compressão da Nathalie","vestir antes do embarque"],
+   ["Brinquedos/entretenimento do avião",""],
+   ["Tablet da Luiza carregado + fone infantil",""],
+   ["Tablet/jogos do Vitor + fone",""],
+   ["Boneca Luna","a Barbie sereia vai na mala — 1 boneca por voo basta"],
+   ["1 brinquedo pequeno NOVO pra Luiza","surpresa na decolagem — rende horas"],
+   ["Kit desenho: lápis de cor, caderninho, adesivos",""],
+   ["Cartas UNO ou similar","Vitor + família"],
+   ["Livrinho de atividades da Luiza",""],
+   ["Power bank","recarregar tablets no voo"],
+   ["Máscara de dormir + protetor auricular (adultos)","voo de 9h"]
  ]
 };
 
