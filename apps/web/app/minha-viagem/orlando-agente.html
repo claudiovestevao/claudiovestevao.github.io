@@ -529,7 +529,7 @@ a{color:var(--brand)}
 .park-deep-card,.show-agenda-card,.park-source-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px;box-shadow:0 8px 22px rgba(15,23,42,.045)}
 .park-deep-card h3,.show-agenda-card h3,.park-source-card h3{margin:0 0 7px;font-size:18px;line-height:1.18}
 .park-deep-card p,.show-agenda-card p,.park-source-card p{margin:0 0 8px;color:var(--muted);font-size:12.8px;font-weight:720;line-height:1.42}
-.park-deep-card ol,.show-agenda-card ul,.park-source-card ul{margin:0;padding-left:18px;color:var(--ink);font-size:13px;font-weight:720;line-height:1.45}
+.park-deep-card ol,.park-deep-card ul,.show-agenda-card ul,.park-source-card ul{margin:0;padding-left:18px;color:var(--ink);font-size:13px;font-weight:720;line-height:1.45}
 .park-deep-card li,.show-agenda-card li,.park-source-card li{margin:4px 0}
 .park-deep-meta{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
 .park-deep-meta span{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:#f8fafc;color:var(--muted);padding:4px 8px;font-size:11.5px;font-weight:900}
@@ -3063,18 +3063,6 @@ Phone: +1 407-993-3999</code>
     </div>
 
     <div class="card">
-      <h2>🎟️ Ingressos — comprados</h2>
-      <p class="sub">PDFs anexados no Cofre. Ingressos já vinculados no My Disney Experience e no app da Universal.</p>
-      <table class="cmp">
-        <tr><th>Ingresso</th><th>Status</th><th>Observação</th></tr>
-        <tr><td><b>Disney 2 dias</b></td><td>Vinculado no app</td><td>Válido para quaisquer 2 dias entre <b>12/8 e 15/8</b>. Usar em <b>Magic Kingdom 12/8</b> e <b>Hollywood Studios 14/8</b>.</td></tr>
-        <tr><td><b>Epic Universe 1 dia</b></td><td>Vinculado no app</td><td>Válido somente em <b>segunda 17/8</b>. Manter também print/PDF offline.</td></tr>
-        <tr><td><b>Park Hopper / 4-Day Disney</b></td><td>Não comprar</td><td>Não entra no roteiro atual e só aumentaria custo/pressão.</td></tr>
-      </table>
-      <div class="note warn">Próximo cuidado: confira se os ingressos aparecem nos apps oficiais e tire prints offline. Ticket do Epic tem data fixa; não tratar como flexível.</div>
-    </div>
-
-    <div class="card">
       <h2>⚡ Fura-filas recomendados</h2>
       <p class="sub">Plano racional para gastar onde reduz atrito de verdade. A família tem criança pequena, gestante e dias curtos; então o objetivo não é “zerar o parque”, é tirar filas críticas do caminho.</p>
       <div class="note ok"><b>Compra Disney:</b> como o hotel é Home2/Flamingo Crossings, planejar janela de <b>3 dias antes</b>, às <b>7h ET / 8h BRT</b>. Para o ticket Disney válido 12/8-15/8, tentar comprar os dois dias no app em <b>09/08</b> antes de sair para o aeroporto.</div>
@@ -3139,7 +3127,7 @@ Phone: +1 407-993-3999</code>
       <div class="park-rule-grid">
         <div class="park-rule"><b>📏 Luiza</b><span>Altura provável: 97-101 cm. Medição oficial manda; se a régua negar, não negocie: troca para show, personagem ou brinquedo sem altura.</span></div>
         <div class="park-rule"><b>🤰 Nathalie</b><span>Se tiver aviso para gestantes, a atração sai do plano dela. Evitar queda, tranco, giro, coaster, simulador agressivo e embarque escorregadio.</span></div>
-        <div class="park-rule"><b>👁️ Visão monocular</b><span>Não é uma proibição automática. É alerta para 3D/AR, escuro, baixa percepção de profundidade, esteira rolante, degraus e veículos em movimento.</span></div>
+        <div class="park-rule"><b>👁️ Vitor</b><span>Visão monocular não é uma proibição automática. É alerta para 3D/AR, escuro, baixa percepção de profundidade, esteira rolante, degraus e veículos em movimento.</span></div>
       </div>
       <div class="note warn">Fontes oficiais podem mudar até a viagem. Antes de entrar, conferir app, placa da fila e aviso de saúde na entrada. Para radicais, pedir <b>Rider Switch</b> na Disney ou <b>Child Swap</b> na Universal com o grupo todo na entrada.</div>
       <div class="source-links">
@@ -3159,70 +3147,36 @@ Phone: +1 407-993-3999</code>
           <h3>🏰 Magic Kingdom · 12/8</h3>
           <p>Dia emocional da Luiza: princesas, castelo, Fantasyland, Mickey e fogos se a energia permitir.</p>
           <div class="park-deep-meta"><span>Chegada planejada 10h</span><span>Almoço 14h15</span><span>Mais leve</span></div>
-          <ol>
-            <li><b>Entrada:</b> estacionar no TTC, foto rápida no castelo e ir direto para princesa/Fantasyland antes do calor forte.</li>
-            <li><b>Prioridade 1:</b> Princess Fairytale Hall, Peter Pan, small world, Pooh e Under the Sea. São o coração do dia para 3 anos.</li>
-            <li><b>Show-respiro:</b> Jessie’s Roundup no Diamond Horseshoe, Mickey's PhilharMagic, Country Bear, Laugh Floor ou Tiki Room quando Nathalie/Luiza precisarem de ar-condicionado.</li>
-            <li><b>Vitor solo:</b> Seven Dwarfs se a Luiza medir 97 cm e quiser; TRON/Tiana/Space só com Rider Switch/Lightning Lane e zero impacto no plano familiar.</li>
-            <li><b>Noite:</b> Mickey em Town Square, PeopleMover/Buzz e Happily Ever After. Se tiver Disney Starlight no app, escolher desfile ou fogos; não tentar abraçar tudo.</li>
-          </ol>
+          <ul class="park-deep-bullets">
+            <li><b>10h00 · Entrada:</b> estacionar no TTC, foto rápida no castelo e ir direto para princesa/Fantasyland antes do calor forte.</li>
+            <li><b>10h15 · Prioridade 1:</b> Princess Fairytale Hall, Peter Pan, small world, Pooh e Under the Sea. São o coração do dia para 3 anos.</li>
+            <li><b>12h15 · Show-respiro:</b> Jessie’s Roundup no Diamond Horseshoe, Mickey's PhilharMagic, Country Bear, Laugh Floor ou Tiki Room quando Nathalie/Luiza precisarem de ar-condicionado.</li>
+            <li><b>14h15 · Vitor solo:</b> Seven Dwarfs se a Luiza medir 97 cm e quiser; TRON/Tiana/Space só com Rider Switch/Lightning Lane e zero impacto no plano familiar.</li>
+            <li><b>17h30 · Noite:</b> Mickey em Town Square, PeopleMover/Buzz e Happily Ever After. Se tiver Disney Starlight no app, escolher desfile ou fogos; não tentar abraçar tudo.</li>
+          </ul>
         </div>
         <div class="park-deep-card">
           <h3>🎬 Hollywood Studios · 14/8</h3>
           <p>Dia de manhã forte e tarde protegida: Toy Story, Frozen, Mickey/Minnie e shows para não assar no sol.</p>
           <div class="park-deep-meta"><span>Chegar 8h15</span><span>Sair 15h30-16h30</span><span>Shows no calor</span></div>
-          <ol>
-            <li><b>Entrada:</b> ir para Toy Story Land sem zigue-zague. Se Slinky estiver impossível, cortar sem drama e começar em Toy Story Mania.</li>
-            <li><b>Prioridade 1:</b> Toy Story Mania, Runaway Railway e Frozen Sing-Along. Isso já faz o parque valer para Luiza.</li>
-            <li><b>Personagens:</b> Olaf, Mickey/Minnie em Red Carpet Dreams e encontros Disney Jr se aparecerem no app com fila curta.</li>
-            <li><b>Vitor solo:</b> Rise of the Resistance é o melhor bônus; Tower/Rock só se Nathalie e Luiza estiverem confortáveis em show sentado.</li>
-            <li><b>Saída:</b> Fantasmic está no plano — chegar com antecedência pra lugar bom. Jantar depois no Pieology Pizzeria ou Pita Mediterranean, perto do hotel.</li>
-          </ol>
+          <ul class="park-deep-bullets">
+            <li><b>08h15 · Entrada:</b> ir para Toy Story Land sem zigue-zague. Se Slinky estiver impossível, cortar sem drama e começar em Toy Story Mania.</li>
+            <li><b>09h05 · Prioridade 1:</b> Toy Story Mania, Runaway Railway e Frozen Sing-Along. Isso já faz o parque valer para Luiza.</li>
+            <li><b>13h15 · Personagens:</b> Olaf, Mickey/Minnie em Red Carpet Dreams e encontros Disney Jr se aparecerem no app com fila curta.</li>
+            <li><b>14h15 · Vitor solo:</b> Rise of the Resistance é o melhor bônus; Tower/Rock só se Nathalie e Luiza estiverem confortáveis em show sentado.</li>
+            <li><b>20h15 · Fantasmic:</b> fica até o show — chegar com antecedência pra lugar bom. Jantar depois no Pieology Pizzeria ou Pita Mediterranean, perto do hotel.</li>
+          </ul>
         </div>
         <div class="park-deep-card">
           <h3>🌌 Epic Universe · 17/8</h3>
           <p>Dia novo e intenso: Nintendo cedo, Berk como bloco família, show no meio da tarde e aniversário sem heroísmo.</p>
           <div class="park-deep-meta"><span>Sair cedo do hotel</span><span>Ingresso data fixa</span><span>Child Swap</span></div>
-          <ol>
-            <li><b>Entrada:</b> confirmar Early Park Admission/horário no app Universal. Primeira decisão do dia é acesso/lotação de Super Nintendo World.</li>
-            <li><b>Prioridade 1:</b> Yoshi's Adventure, personagens Nintendo e Power-Up Band. Mario Kart é bônus do Vitor se a logística ajudar.</li>
-            <li><b>Bloco família:</b> Isle of Berk com The Untrainable Dragon, Viking Training Camp, Fyre Drill e encontro com Banguela/Soluço.</li>
-            <li><b>Show-respiro:</b> Le Cirque Arcanus no Ministry e Celestial Park no fim da tarde. Bons momentos para Nathalie sentar e a Luiza baixar estímulo.</li>
-            <li><b>Cortes prováveis:</b> Stardust Racers, Monsters Unchained, Dragon Racer's Rally e Mine-Cart ficam para Vitor solo ou saem do dia.</li>
-          </ol>
-        </div>
-      </div>
-
-      <h3 style="margin:18px 0 8px">Shows, personagens e pausas que seguram o dia</h3>
-      <div class="show-agenda-grid">
-        <div class="show-agenda-card">
-          <h3>Magic Kingdom</h3>
-          <p>Use shows para descansar sem sair da história da Luiza.</p>
-          <ul>
-            <li><b>Imperdíveis:</b> Princess Fairytale Hall, Jessie’s Roundup com Woody/Jessie/Bullseye, Mickey no Town Square e Happily Ever After.</li>
-            <li><b>Se estiver calor:</b> Diamond Horseshoe, PhilharMagic, Laugh Floor, Country Bear, Carousel of Progress ou Tiki Room.</li>
-            <li><b>Se a fila estiver baixa:</b> Enchanted Tales with Belle, Dumbo à noite, Jungle Cruise e PeopleMover.</li>
-            <li><b>Checar no app:</b> Disney Festival of Fantasy, Mickey's Magical Friendship Faire e Disney Starlight.</li>
-          </ul>
-        </div>
-        <div class="show-agenda-card">
-          <h3>Hollywood Studios</h3>
-          <p>O parque fica muito melhor quando os shows viram âncoras do roteiro.</p>
-          <ul>
-            <li><b>Imperdíveis:</b> Frozen Sing-Along, Toy Story Mania, Mickey & Minnie's Runaway Railway.</li>
-            <li><b>Para Luiza:</b> Meet Olaf, Disney Jr, The Little Mermaid e Mickey/Minnie se a fila couber.</li>
-            <li><b>Para pausa:</b> Beauty and the Beast, Indiana Jones e lojas em Sunset/Toy Story.</li>
-            <li><b>Fechamento:</b> Fantasmic está no plano da noite; chegar com antecedência pra lugar bom. Jantar (pizza ou Pita) fica pra depois, perto do hotel.</li>
-          </ul>
-        </div>
-        <div class="show-agenda-card">
-          <h3>Epic Universe</h3>
-          <p>Priorize mundos que entregam cenário, personagem e show sem depender de coaster.</p>
-          <ul>
-            <li><b>Imperdíveis:</b> Super Nintendo World, Yoshi's Adventure, The Untrainable Dragon e Constellation Carousel.</li>
-            <li><b>Para Luiza:</b> Mario/Luigi/Peach/Toad, Viking Training Camp, Fyre Drill e lojas temáticas.</li>
-            <li><b>Para pausa:</b> Le Cirque Arcanus, Mead Hall, Atlantic/Blue Dragon se houver reserva e Celestial Park.</li>
-            <li><b>Fechamento:</b> Celestial Goodnight se estiver ativo e se não atrapalhar o jantar/aniversário.</li>
+          <ul class="park-deep-bullets">
+            <li><b>08h00 · Entrada:</b> confirmar Early Park Admission/horário no app Universal. Primeira decisão do dia é acesso/lotação de Super Nintendo World.</li>
+            <li><b>08h25 · Prioridade 1:</b> Yoshi's Adventure, personagens Nintendo e Power-Up Band. Mario Kart é bônus do Vitor se a logística ajudar.</li>
+            <li><b>12h15 · Bloco família:</b> Isle of Berk com The Untrainable Dragon, Viking Training Camp, Fyre Drill e encontro com Banguela/Soluço.</li>
+            <li><b>15h00 · Show-respiro:</b> Le Cirque Arcanus no Ministry e Celestial Park no fim da tarde. Bons momentos para Nathalie sentar e a Luiza baixar estímulo.</li>
+            <li><b>17h30 · Cortes prováveis:</b> Stardust Racers, Monsters Unchained, Dragon Racer's Rally e Mine-Cart ficam para Vitor solo ou saem do dia.</li>
           </ul>
         </div>
       </div>
@@ -3235,49 +3189,49 @@ Phone: +1 407-993-3999</code>
               <div class="attraction-head"><div><h3>Princess Fairytale Hall + fotos no castelo</h3><p>O coração emocional do dia: princesas cedo, Memory Maker e castelo sem almoço caro.</p></div><span class="attraction-type type-character">Personagem</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Indoor</span><span>Prioridade da Luiza</span></div>
               <p class="why">Fazer antes do calor e antes da criança cansar. Levar vestido, presilha, autógrafo ou caneta grossa; se a Luiza travar, foto de longe também vale.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Melhor aposta do dia.</div><div class="safety-chip ok"><b>Nathalie</b>Pausa sentada/indoor.</div><div class="safety-chip ok"><b>Monocular</b>Sem movimento; atenção só a fila cheia.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Melhor aposta do dia.</div><div class="safety-chip ok"><b>Nathalie</b>Pausa sentada/indoor.</div><div class="safety-chip ok"><b>Vitor</b>Sem movimento; atenção só a fila cheia.</div></div>
             </div>
 
             <div class="attraction-panel featured">
               <div class="attraction-head"><div><h3>Jessie’s Roundup: A Rip-Roarin’ Revue</h3><p>Festa country de Toy Story no Diamond Horseshoe, em Frontierland.</p></div><span class="attraction-type type-show">Show</span></div>
               <div class="attraction-meta"><span>Cool KIDS' SUMMER</span><span>Jessie, Woody e Bullseye</span><span>Indoor</span></div>
               <p class="why">Fonte oficial Disney lista a experiência até 8/9/2026, então cai dentro do dia 12/8. É ótimo encaixe pré-almoço: brincadeira, dança, personagens e ar-condicionado sem depender de altura mínima.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Perfeito para Toy Story e dança.</div><div class="safety-chip ok"><b>Nathalie</b>Bom respiro indoor.</div><div class="safety-chip ok"><b>Monocular</b>Sem veículo; só cuidar de multidão.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Perfeito para Toy Story e dança.</div><div class="safety-chip ok"><b>Nathalie</b>Bom respiro indoor.</div><div class="safety-chip ok"><b>Vitor</b>Sem veículo; só cuidar de multidão.</div></div>
             </div>
 
             <div class="attraction-panel featured">
               <div class="attraction-head"><div><h3>Peter Pan, small world, Pooh e Under the Sea</h3><p>Brinquedos clássicos, lentos e com história visual.</p></div><span class="attraction-type type-ride">Brinquedo leve</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Bom com Lightning Lane</span><span>Ritmo família</span></div>
               <p class="why">Esse é o pacote que faz o Magic funcionar para 3 anos: reconhecível, curto, colorido e sem pressão. Peter Pan merece fila menor ou Lightning Lane.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Bom para 3 anos.</div><div class="safety-chip ok"><b>Nathalie</b>Suave; confirmar placa.</div><div class="safety-chip warn"><b>Monocular</b>Peter Pan tem embarque/esteira e baixa luz.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Bom para 3 anos.</div><div class="safety-chip ok"><b>Nathalie</b>Suave; confirmar placa.</div><div class="safety-chip warn"><b>Vitor</b>Peter Pan tem embarque/esteira e baixa luz.</div></div>
             </div>
 
             <div class="attraction-panel">
               <div class="attraction-head"><div><h3>Mickey's PhilharMagic, Laugh Floor e Country Bear</h3><p>Shows para recuperar energia sem sair da magia.</p></div><span class="attraction-type type-show">Show</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Ar-condicionado</span><span>Plano anti-calor</span></div>
               <p class="why">Use como respiro entre brinquedos. PhilharMagic é lindo, mas 3D pode incomodar; se ficar estranho, tirar os óculos e curtir como show normal.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Bom com protetor auricular.</div><div class="safety-chip ok"><b>Nathalie</b>Excelente pausa.</div><div class="safety-chip warn"><b>Monocular</b>3D pode cansar; sentar no corredor.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Bom com protetor auricular.</div><div class="safety-chip ok"><b>Nathalie</b>Excelente pausa.</div><div class="safety-chip warn"><b>Vitor</b>3D pode cansar; sentar no corredor.</div></div>
             </div>
 
             <div class="attraction-panel">
               <div class="attraction-head"><div><h3>PeopleMover, Jungle Cruise e Pirates</h3><p>Brinquedos de passeio para ver o parque sem gastar tanta perna.</p></div><span class="attraction-type type-ride">Brinquedo passeio</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Barco/transporte</span><span>Bom no fim do dia</span></div>
               <p class="why">PeopleMover é descanso inteligente. Jungle Cruise diverte adultos; Pirates é escuro e tem uma queda pequena, então só entrar se a Luiza estiver bem.</p>
-              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Pirates pode assustar no escuro.</div><div class="safety-chip ok"><b>Nathalie</b>Suave; confirmar placa.</div><div class="safety-chip warn"><b>Monocular</b>Cuidado em embarque, escuro e degraus.</div></div>
+              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Pirates pode assustar no escuro.</div><div class="safety-chip ok"><b>Nathalie</b>Suave; confirmar placa.</div><div class="safety-chip warn"><b>Vitor</b>Cuidado em embarque, escuro e degraus.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Seven Dwarfs Mine Train</h3><p>Coaster familiar, mas ainda é montanha-russa.</p></div><span class="attraction-type type-ride">Brinquedo com altura</span></div>
               <div class="attraction-meta"><span>38 in / 97 cm</span><span>Luiza no limite</span><span>Não é para gestante</span></div>
               <p class="why">Só vale se a régua liberar e a Luiza estiver querendo. Se ela passar, Vitor vai com ela; Nathalie espera no ar-condicionado ou loja.</p>
-              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Medir antes; respeitar medo.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Monocular</b>Curvas, velocidade e baixa luz.</div></div>
+              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Medir antes; respeitar medo.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Vitor</b>Curvas, velocidade e baixa luz.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Space, Big Thunder, Tiana's e TRON</h3><p>Radicais para encaixar sem comprometer o dia de família.</p></div><span class="attraction-type type-solo">Vitor solo</span></div>
               <div class="attraction-meta"><span>40-48 in / 102-122 cm</span><span>Rider Switch</span><span>Janela de show</span></div>
               <p class="why">Entram só se a logística estiver fácil: fila virtual, single/rider switch ou Lightning Lane. O roteiro da Luiza não deve girar em torno dessas atrações.</p>
-              <div class="safety-grid"><div class="safety-chip no"><b>Luiza</b>Fora por altura/idade.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Monocular</b>Escuro, queda, lançamento e velocidade.</div></div>
+              <div class="safety-grid"><div class="safety-chip no"><b>Luiza</b>Fora por altura/idade.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Vitor</b>Escuro, queda, lançamento e velocidade.</div></div>
             </div>
           </div>
         </div>
@@ -3289,49 +3243,49 @@ Phone: +1 407-993-3999</code>
               <div class="attraction-head"><div><h3>Frozen Sing-Along + Disney Jr</h3><p>Shows sentados que protegem o dia do calor e da exaustão.</p></div><span class="attraction-type type-show">Show</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Indoor</span><span>Chegar 20 min antes</span></div>
               <p class="why">Frozen é quase obrigatório para a Luiza e ótimo para Nathalie. Disney Jr funciona como respiro infantil, especialmente se a manhã em Toy Story cansar.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Altíssima chance de amar.</div><div class="safety-chip ok"><b>Nathalie</b>Sentada e fresca.</div><div class="safety-chip ok"><b>Monocular</b>Seguro; escolher corredor.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Altíssima chance de amar.</div><div class="safety-chip ok"><b>Nathalie</b>Sentada e fresca.</div><div class="safety-chip ok"><b>Vitor</b>Seguro; escolher corredor.</div></div>
             </div>
 
             <div class="attraction-panel featured">
               <div class="attraction-head"><div><h3>Toy Story Mania</h3><p>Brinquedo competitivo, indoor, colorido e sem altura mínima.</p></div><span class="attraction-type type-ride">Brinquedo 3D</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Gira levemente</span><span>Todos juntos</span></div>
               <p class="why">É a melhor ponte entre criança e adulto no Hollywood. A Luiza pode jogar do jeito dela; o Vitor se diverte tentando pontuar.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Bom, mas pode cansar o braço.</div><div class="safety-chip warn"><b>Nathalie</b>Confirmar placa; giro leve.</div><div class="safety-chip warn"><b>Monocular</b>3D e movimento lateral podem cansar.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Bom, mas pode cansar o braço.</div><div class="safety-chip warn"><b>Nathalie</b>Confirmar placa; giro leve.</div><div class="safety-chip warn"><b>Vitor</b>3D e movimento lateral podem cansar.</div></div>
             </div>
 
             <div class="attraction-panel">
               <div class="attraction-head"><div><h3>Mickey & Minnie's Runaway Railway</h3><p>Atração trackless com música, projeções e movimentos suaves.</p></div><span class="attraction-type type-immersive">Atração imersiva</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Família</span><span>Boa antes do almoço</span></div>
               <p class="why">É mais envolvente que radical. Pode ter cenas escuras, barulho e mudanças de direção, então observar humor da Luiza antes.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Boa se não estiver assustada.</div><div class="safety-chip ok"><b>Nathalie</b>Suave; confirmar placa.</div><div class="safety-chip warn"><b>Monocular</b>Telas, baixa luz e movimento trackless.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Boa se não estiver assustada.</div><div class="safety-chip ok"><b>Nathalie</b>Suave; confirmar placa.</div><div class="safety-chip warn"><b>Vitor</b>Telas, baixa luz e movimento trackless.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Alien Swirling Saucers + Slinky Dog Dash</h3><p>Toy Story com altura mínima e mais movimento.</p></div><span class="attraction-type type-ride">Brinquedo com altura</span></div>
               <div class="attraction-meta"><span>Alien 32 in / 81 cm</span><span>Slinky 38 in / 97 cm</span><span>Luiza + Vitor</span></div>
               <p class="why">Alien é giro com puxões laterais; Slinky é coaster familiar. Escolher só se fila estiver boa e Luiza estiver no modo aventura.</p>
-              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Slinky depende da régua e coragem.</div><div class="safety-chip no"><b>Nathalie</b>Evitar giro/coaster.</div><div class="safety-chip warn"><b>Monocular</b>Giro, tranco lateral e velocidade.</div></div>
+              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Slinky depende da régua e coragem.</div><div class="safety-chip no"><b>Nathalie</b>Evitar giro/coaster.</div><div class="safety-chip warn"><b>Vitor</b>Giro, tranco lateral e velocidade.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Rise, Millennium Falcon e Star Tours</h3><p>Star Wars é incrível, mas pesado para gestante e sensível para 3D/motion.</p></div><span class="attraction-type type-immersive">Simulador</span></div>
               <div class="attraction-meta"><span>38-40 in / 97-102 cm</span><span>Vitor solo</span><span>Rider Switch</span></div>
               <p class="why">Rise é a prioridade do Vitor se encaixar. Millennium Falcon só considerar com Luiza se altura, fila e temperamento estiverem muito favoráveis.</p>
-              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Escuro, alto e intenso.</div><div class="safety-chip no"><b>Nathalie</b>Evitar simulador/tranco.</div><div class="safety-chip warn"><b>Monocular</b>Motion, tela, 3D e baixa luz.</div></div>
+              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Escuro, alto e intenso.</div><div class="safety-chip no"><b>Nathalie</b>Evitar simulador/tranco.</div><div class="safety-chip warn"><b>Vitor</b>Motion, tela, 3D e baixa luz.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Tower of Terror + Rock 'n' Roller Coaster</h3><p>Radicais clássicos do parque.</p></div><span class="attraction-type type-solo">Vitor solo</span></div>
               <div class="attraction-meta"><span>Tower 40 in / 102 cm</span><span>Rock 48 in / 122 cm</span><span>Janela de shows</span></div>
               <p class="why">Só entram se Frozen/Beauty/Indiana abrirem janela confortável para Nathalie e Luiza. Zero culpa de cortar.</p>
-              <div class="safety-grid"><div class="safety-chip no"><b>Luiza</b>Não é perfil da idade.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Monocular</b>Queda, escuro, inversões e arrancada.</div></div>
+              <div class="safety-grid"><div class="safety-chip no"><b>Luiza</b>Não é perfil da idade.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Vitor</b>Queda, escuro, inversões e arrancada.</div></div>
             </div>
 
             <div class="attraction-panel">
               <div class="attraction-head"><div><h3>Beauty and the Beast, Indiana Jones e Fantasmic</h3><p>Shows grandes para fechar lacunas sem fila de brinquedo.</p></div><span class="attraction-type type-show">Show</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Som alto</span><span>Fantasmic só se sobrar energia</span></div>
               <p class="why">Beauty tende a ser mais doce para Luiza; Indiana tem explosão e barulho. Fantasmic entrou no plano fixo da noite — chegar com antecedência pra lugar bom.</p>
-              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Protetor auricular ajuda.</div><div class="safety-chip ok"><b>Nathalie</b>Sentada; evitar aperto na saída.</div><div class="safety-chip warn"><b>Monocular</b>Chegar cedo e evitar escada no escuro.</div></div>
+              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Protetor auricular ajuda.</div><div class="safety-chip ok"><b>Nathalie</b>Sentada; evitar aperto na saída.</div><div class="safety-chip warn"><b>Vitor</b>Chegar cedo e evitar escada no escuro.</div></div>
             </div>
           </div>
         </div>
@@ -3343,115 +3297,60 @@ Phone: +1 407-993-3999</code>
               <div class="attraction-head"><div><h3>Super Nintendo World + personagens</h3><p>Área imersiva para Mario, Luigi, Peach, fotos e mini-games.</p></div><span class="attraction-type type-character">Personagem</span></div>
               <div class="attraction-meta"><span>Land imersiva</span><span>Power-Up Band</span><span>Prioridade cedo</span></div>
               <p class="why">Chegar cedo porque a área é concorrida e visualmente intensa. Para a Luiza, o valor está nos personagens, blocos, sons, cores e pequenas missões.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Ótimo, com pausas.</div><div class="safety-chip ok"><b>Nathalie</b>Caminhar no ritmo dela.</div><div class="safety-chip warn"><b>Monocular</b>Ambiente cheio; atenção a degraus e multidão.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Ótimo, com pausas.</div><div class="safety-chip ok"><b>Nathalie</b>Caminhar no ritmo dela.</div><div class="safety-chip warn"><b>Vitor</b>Ambiente cheio; atenção a degraus e multidão.</div></div>
             </div>
 
             <div class="attraction-panel featured">
               <div class="attraction-head"><div><h3>Yoshi's Adventure</h3><p>Brinquedo familiar, alto-astral e perfeito para criança pequena.</p></div><span class="attraction-type type-ride">Brinquedo familiar</span></div>
               <div class="attraction-meta"><span>34 in / 87 cm</span><span>Acompanhante até 48 in</span><span>Leve</span></div>
               <p class="why">Deve ser uma das melhores atrações com a Luiza no Epic: visual fofo, ritmo baixo e boa recompensa para quem não vai nos radicais.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Provável sim.</div><div class="safety-chip ok"><b>Nathalie</b>Confirmar placa; tende a ser leve.</div><div class="safety-chip ok"><b>Monocular</b>Baixa intensidade; cuidado no embarque.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Provável sim.</div><div class="safety-chip ok"><b>Nathalie</b>Confirmar placa; tende a ser leve.</div><div class="safety-chip ok"><b>Vitor</b>Baixa intensidade; cuidado no embarque.</div></div>
             </div>
 
             <div class="attraction-panel">
               <div class="attraction-head"><div><h3>Constellation Carousel</h3><p>Carrossel grande em Celestial Park, bonito e bom para aniversário.</p></div><span class="attraction-type type-ride">Brinquedo leve</span></div>
               <div class="attraction-meta"><span>Acompanhante abaixo de 48 in</span><span>Sem criança de colo</span><span>Foto bonita</span></div>
               <p class="why">Bom para o fim da tarde, quando o parque começa a acender. Se Nathalie estiver cansada, ela pode só assistir e virar foto do momento.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Ir com adulto.</div><div class="safety-chip warn"><b>Nathalie</b>Subir/descer com calma.</div><div class="safety-chip warn"><b>Monocular</b>Checar degrau, giro e equilíbrio.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Ir com adulto.</div><div class="safety-chip warn"><b>Nathalie</b>Subir/descer com calma.</div><div class="safety-chip warn"><b>Vitor</b>Checar degrau, giro e equilíbrio.</div></div>
             </div>
 
             <div class="attraction-panel">
               <div class="attraction-head"><div><h3>The Untrainable Dragon + Le Cirque Arcanus</h3><p>Shows com produção alta para descansar sem perder o mundo de fantasia.</p></div><span class="attraction-type type-show">Show</span></div>
               <div class="attraction-meta"><span>Sem altura mínima</span><span>Indoor/teatro</span><span>Ótimo no calor</span></div>
               <p class="why">Berk pode ser o melhor bloco emocional do Epic para a Luiza. Shows dão previsibilidade para Nathalie e evitam fila de brinquedo no pico do calor.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Levar protetor auricular.</div><div class="safety-chip ok"><b>Nathalie</b>Excelente pausa sentada.</div><div class="safety-chip ok"><b>Monocular</b>Escolher corredor e saída fácil.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Levar protetor auricular.</div><div class="safety-chip ok"><b>Nathalie</b>Excelente pausa sentada.</div><div class="safety-chip ok"><b>Vitor</b>Escolher corredor e saída fácil.</div></div>
             </div>
 
             <div class="attraction-panel">
               <div class="attraction-head"><div><h3>Viking Training Camp + Fyre Drill</h3><p>Brincar, gastar energia e molhar no Isle of Berk.</p></div><span class="attraction-type type-play">Área interativa</span></div>
               <div class="attraction-meta"><span>Fyre: acompanhante abaixo de 48 in</span><span>Sem criança de colo</span><span>Levar troca de roupa</span></div>
               <p class="why">Esse é o bloco “criança feliz” do Epic. Em Fyre Drill, considerar piso molhado, embarque em barco e chance real de sair encharcado.</p>
-              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Ótimo com supervisão.</div><div class="safety-chip warn"><b>Nathalie</b>Melhor observar em área seca.</div><div class="safety-chip warn"><b>Monocular</b>Piso molhado, escadas e crianças correndo.</div></div>
+              <div class="safety-grid"><div class="safety-chip ok"><b>Luiza</b>Ótimo com supervisão.</div><div class="safety-chip warn"><b>Nathalie</b>Melhor observar em área seca.</div><div class="safety-chip warn"><b>Vitor</b>Piso molhado, escadas e crianças correndo.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Mario Kart: Bowser's Challenge</h3><p>Brinquedo com AR, óculos/tela e bastante estímulo visual.</p></div><span class="attraction-type type-immersive">Atração AR</span></div>
               <div class="attraction-meta"><span>40 in / 102 cm</span><span>Luiza provavelmente fora</span><span>Single Rider se existir</span></div>
               <p class="why">Para o Vitor, é prioridade pelo ineditismo. Para a Luiza, só considerar se a régua liberar e ela estiver tranquila com escuro, barulho e capacete/visor.</p>
-              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Altura no limite alto.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Monocular</b>AR/3D pode confundir profundidade.</div></div>
+              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Altura no limite alto.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Vitor</b>AR/3D pode confundir profundidade.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Battle at the Ministry, Mine-Cart, Hiccup e Curse</h3><p>Grandes atrações de 40 in / 102 cm com movimento e cenas intensas.</p></div><span class="attraction-type type-ride">Brinquedo intenso</span></div>
               <div class="attraction-meta"><span>40 in / 102 cm</span><span>Vitor solo</span><span>Child Swap</span></div>
               <p class="why">Tratar como bônus do Vitor. Mesmo se a Luiza encostar na altura, a combinação escuro + movimento + barulho pode não valer no aniversário.</p>
-              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Provável corte por altura/medo.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Monocular</b>Baixa luz, motion e profundidade.</div></div>
+              <div class="safety-grid"><div class="safety-chip warn"><b>Luiza</b>Provável corte por altura/medo.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Vitor</b>Baixa luz, motion e profundidade.</div></div>
             </div>
 
             <div class="attraction-panel caution">
               <div class="attraction-head"><div><h3>Stardust Racers, Monsters Unchained e Dragon Racer's Rally</h3><p>Radicais de 48 in / 122 cm para adulto.</p></div><span class="attraction-type type-solo">Vitor solo</span></div>
               <div class="attraction-meta"><span>48 in / 122 cm</span><span>Não é dia da Luiza</span><span>Cortar sem dó</span></div>
               <p class="why">Só entram se o parque estiver fluindo muito bem. No roteiro familiar, esses radicais não podem roubar energia de Nintendo, Berk, show e jantar de aniversário.</p>
-              <div class="safety-grid"><div class="safety-chip no"><b>Luiza</b>Fora por altura.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Monocular</b>Alta velocidade, escuridão e movimentos fortes.</div></div>
+              <div class="safety-grid"><div class="safety-chip no"><b>Luiza</b>Fora por altura.</div><div class="safety-chip no"><b>Nathalie</b>Evitar por gestação.</div><div class="safety-chip warn"><b>Vitor</b>Alta velocidade, escuridão e movimentos fortes.</div></div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <h2>🔎 Fontes confiáveis usadas no plano</h2>
-      <p class="sub">Links oficiais para revisar antes de cada parque. Use esses links como fonte de verdade para horários, altura mínima, acessibilidade, saúde e mudanças operacionais.</p>
-      <div class="park-source-grid">
-        <div class="park-source-card">
-          <h3>Fura-filas oficiais</h3>
-          <ul>
-            <li><a href="https://disneyworld.disney.go.com/lightning-lane-passes/" target="_blank" rel="noopener">Disney Lightning Lane Passes</a></li>
-            <li><a href="https://disneyworld.disney.go.com/faq/lightning-lane-passes/" target="_blank" rel="noopener">FAQ Disney Lightning Lane</a></li>
-            <li><a href="https://www.universalorlando.com/web/en/us/tickets-packages/park-tickets/epic-products" target="_blank" rel="noopener">Epic Universe · extras oficiais</a></li>
-            <li><a href="https://ukstore.universalorlando.com/express-pass" target="_blank" rel="noopener">Universal Express Pass</a></li>
-          </ul>
-        </div>
-        <div class="park-source-card">
-          <h3>Disney · Magic e Hollywood</h3>
-          <ul>
-            <li><a href="https://disneyworld.disney.go.com/attractions/magic-kingdom/" target="_blank" rel="noopener">Magic Kingdom · atrações oficiais</a></li>
-            <li><a href="https://disneyworld.disney.go.com/entertainment/magic-kingdom/" target="_blank" rel="noopener">Magic Kingdom · entretenimento oficial</a></li>
-            <li><a href="https://disneyworld.disney.go.com/events-tours/summer/" target="_blank" rel="noopener">Cool KIDS' SUMMER · Jessie’s Roundup</a></li>
-            <li><a href="https://disneyworld.disney.go.com/entertainment/magic-kingdom/character-meet-woody-jessie-frontierland/" target="_blank" rel="noopener">Toy Story Friends em Frontierland</a></li>
-            <li><a href="https://disneyworld.disney.go.com/destinations/hollywood-studios/" target="_blank" rel="noopener">Hollywood Studios · parque oficial</a></li>
-            <li><a href="https://disneyworld.disney.go.com/entertainment/hollywood-studios/" target="_blank" rel="noopener">Hollywood Studios · shows oficiais</a></li>
-          </ul>
-        </div>
-        <div class="park-source-card">
-          <h3>Disney · segurança</h3>
-          <ul>
-            <li><a href="https://disneyworld.disney.go.com/faq/parks/height-requirements/" target="_blank" rel="noopener">Alturas mínimas Disney</a></li>
-            <li><a href="https://disneyworld.disney.go.com/faq/parks/rides-for-pregnant-women/" target="_blank" rel="noopener">Avisos para gestantes Disney</a></li>
-            <li><a href="https://disneyworld.disney.go.com/faq/parks/ride-restrictions/" target="_blank" rel="noopener">Restrições e avisos Disney</a></li>
-            <li><a href="https://disneyworld.disney.go.com/guest-services/rider-switch/" target="_blank" rel="noopener">Rider Switch Disney</a></li>
-          </ul>
-        </div>
-        <div class="park-source-card">
-          <h3>Universal · Epic Universe</h3>
-          <ul>
-            <li><a href="https://www.universalorlando.com/web/en/us/theme-parks/epic-universe" target="_blank" rel="noopener">Epic Universe · parque oficial</a></li>
-            <li><a href="https://www.universalorlando.com/web/en/us/epic-universe/worlds/super-nintendo-world" target="_blank" rel="noopener">Super Nintendo World</a></li>
-            <li><a href="https://www.universalorlando.com/web/en/us/epic-universe/worlds/how-to-train-your-dragon-isle-of-berk" target="_blank" rel="noopener">How to Train Your Dragon · Isle of Berk</a></li>
-            <li><a href="https://www.universalorlando.com/web/en/us/epic-universe/worlds/the-wizarding-world-of-harry-potter-ministry-of-magic" target="_blank" rel="noopener">Ministry of Magic</a></li>
-          </ul>
-        </div>
-        <div class="park-source-card">
-          <h3>Universal · segurança</h3>
-          <ul>
-            <li><a href="https://www.universalorlando.com/web/en/us/plan-your-visit/hours-information/ride-height-requirements" target="_blank" rel="noopener">Alturas mínimas Universal</a></li>
-            <li><a href="https://www.universalorlando.com/web/en/gb/plan-your-visit/hours-information/rider-safety" target="_blank" rel="noopener">Guias de segurança Universal</a></li>
-            <li><a href="https://www.universalorlando.com/contentdata/uor/en/us/files/Documents/epic-universe-guide-for-safety-and-accessibility.pdf" target="_blank" rel="noopener">PDF segurança/acessibilidade Epic</a></li>
-            <li><a href="https://www.universalorlando.com/web/en/us/plan-your-visit/hours-information/childcare-services" target="_blank" rel="noopener">Child Swap Universal</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="source-note"><b>Regra de confiabilidade:</b> blogs e guias podem ajudar a entender fluxo, mas o app usa oficiais para nome, altura, saúde, acessibilidade e shows. Para filas ao vivo, usar o painel "Agora em Orlando" e os apps oficiais no dia.</div>
     </div>
 
     <div class="card">
@@ -5363,8 +5262,11 @@ var parkTimelines={
     ["12:25","Almoço simples","Woody's Lunch Box, ABC Commissary, Docking Bay 7 ou quick service perto da rota atual."],
     ["13:15","Personagens ou Disney Jr","Olaf, Red Carpet Dreams, Disney Jr ou The Little Mermaid conforme horários no app."],
     ["14:15","Janela do Vitor","Rise of the Resistance com Rider Switch/Single Rider se a família estiver confortável em show/loja."],
-    ["15:15","Beauty/Indiana ou saída","Beauty tende a ser mais doce para Luiza; Indiana tem barulho/explosão. Se bateu cansaço, sair."],
-    ["16:00","Decidir a saída","Pita Mediterranean em Flamingo Crossings ou hotel + banho + cama cedo. Fantasmic só se todos estiverem muito bem."]
+    ["15:15","Beauty and the Beast ou Indiana Jones","Beauty tende a ser mais doce para Luiza; Indiana tem barulho/explosão. Escolher um dos dois, não emendar."],
+    ["16:15","Pausa longa","Sombra, loja, carrinho/soneca e snack. Sem compromisso de fila até a hora de guardar lugar para o Fantasmic."],
+    ["19:30","Guardar lugar no Fantasmic","Chegar com antecedência no Hollywood Hills Amphitheater; banheiro antes de sentar."],
+    ["20:15","Fantasmic!","Fica no plano fixo da noite — ficar até o fim do show com a Luiza."],
+    ["21:00","Jantar e saída","Pieology Pizzeria ou Pita Mediterranean perto do hotel, depois do show."]
   ],
   "2026-08-17":[
     ["07:00","Sair do hotel","Epic fica mais longe. Confirmar horário/estacionamento no app Universal e levar roupa extra para Fyre Drill/fontes."],
