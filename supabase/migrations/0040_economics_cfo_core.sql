@@ -1,4 +1,4 @@
--- Economics: CFO familiar, patrimonio, metas e configuracao de protecao.
+-- Economics: CFO familiar, patrimônio, metas e configuração de proteção.
 create table if not exists public.economics_assets (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.economics_households(id) on delete cascade,
@@ -127,9 +127,9 @@ insert into public.economics_assets (household_id, name, owner, type, current_va
 select household.id, seed.name, seed.owner, seed.type, seed.value, seed.as_of_date, seed.liquidity, seed.risk, seed.employer, 'user_spec', 0.900, seed.notes
 from household cross join (values
   ('Carteira EQI', 'Vitor', 'investment', 151805.01::numeric, '2026-07-11'::date, 'unknown', 'medium', false, 'Liquidez deve ser detalhada antes de contar como reserva.'),
-  ('Previdencia Bradesco', 'Vitor', 'pension', 23921.31::numeric, '2026-07-12'::date, 'over_1_year', 'medium', false, 'Longo prazo.'),
-  ('Acoes e PLR Porto', 'Vitor', 'stock_compensation', 43092.00::numeric, '2026-07-12'::date, 'unknown', 'high', true, 'Concentracao no empregador.'),
-  ('PortoPrev', 'Vitor', 'pension', 0::numeric, '2026-07-12'::date, 'over_1_year', 'medium', true, 'Saldo pendente de extrato; nao recomendar resgate automaticamente.')
+  ('Previdência Bradesco', 'Vitor', 'pension', 23921.31::numeric, '2026-07-12'::date, 'over_1_year', 'medium', false, 'Longo prazo.'),
+  ('Ações e PLR Porto', 'Vitor', 'stock_compensation', 43092.00::numeric, '2026-07-12'::date, 'unknown', 'high', true, 'Concentração no empregador.'),
+  ('PortoPrev', 'Vitor', 'pension', 0::numeric, '2026-07-12'::date, 'over_1_year', 'medium', true, 'Saldo pendente de extrato; não recomendar resgate automaticamente.')
 ) as seed(name, owner, type, value, as_of_date, liquidity, risk, employer, notes)
 on conflict (household_id, name, owner) do update set
   current_value = excluded.current_value, as_of_date = excluded.as_of_date, liquidity_bucket = excluded.liquidity_bucket,
@@ -137,8 +137,8 @@ on conflict (household_id, name, owner) do update set
 
 with household as (select id from public.economics_households where slug = 'familia-estevao-bonomi')
 insert into public.economics_liabilities (household_id, name, owner, type, outstanding_balance, monthly_payment, maturity_date, source_type, confidence, notes)
-select household.id, 'Consorcio imobiliario', 'Familia', 'consortium_commitment', 543560.61, 1393.50, '2042-04-30', 'user_spec', 0.900,
-  'Credito contratado de R$ 500 mil; nao somar ao patrimonio. Parcela sujeita a reajuste.'
+select household.id, 'Consórcio imobiliário', 'Familia', 'consortium_commitment', 543560.61, 1393.50, '2042-04-30', 'user_spec', 0.900,
+  'Crédito contratado de R$ 500 mil; não somar ao patrimônio. Parcela sujeita a reajuste.'
 from household
 on conflict (household_id, name, owner) do update set monthly_payment = excluded.monthly_payment, maturity_date = excluded.maturity_date, notes = excluded.notes;
 
@@ -151,46 +151,46 @@ with household as (select id from public.economics_households where slug = 'fami
 insert into public.economics_goals (household_id, name, goal_type, target_value_today, current_value, priority, notes)
 select household.id, seed.name, seed.type, seed.target, 0, seed.priority, seed.notes
 from household cross join (values
-  ('Reserva de emergencia', 'emergency', 0::numeric, 10, 'Meta depende da despesa essencial mensal.'),
-  ('Reserva de saude', 'health', 0::numeric, 20, 'Separada da reserva de emergencia.'),
-  ('Liberdade aos 55', 'retirement', 6857143::numeric, 30, 'Capital de referencia usando retirada real de 3,5% ao ano.'),
-  ('Educacao dos filhos', 'education', 0::numeric, 40, 'Definir idade final e custos por filho.'),
-  ('Experiencias em familia', 'experience', 0::numeric, 50, 'Viver bem faz parte do plano.')
+  ('Reserva de emergência', 'emergency', 0::numeric, 10, 'Meta depende da despesa essencial mensal.'),
+  ('Reserva de saúde', 'health', 0::numeric, 20, 'Separada da reserva de emergência.'),
+  ('Liberdade aos 55', 'retirement', 6857143::numeric, 30, 'Capital de referência usando retirada real de 3,5% ao ano.'),
+  ('Educação dos filhos', 'education', 0::numeric, 40, 'Definir idade final e custos por filho.'),
+  ('Experiências em família', 'experience', 0::numeric, 50, 'Viver bem faz parte do plano.')
 ) as seed(name, type, target, priority, notes)
 on conflict (household_id, name) do nothing;
 
--- Contas conhecidas. Valores desconhecidos ficam para confirmacao do casal.
+-- Contas conhecidas. Valores desconhecidos ficam para confirmação do casal.
 with household as (select id from public.economics_households where slug = 'familia-estevao-bonomi'),
-category as (select id from public.economics_categories where name = 'Dividas e financiamentos' limit 1)
+category as (select id from public.economics_categories where name = 'Dívidas e financiamentos' limit 1)
 insert into public.economics_bill_definitions (household_id, category_id, title, amount, owner, due_day, frequency, notes)
-select household.id, category.id, 'Consorcio imobiliario', 1393.50, 'Familia', 15, 'monthly', 'Valor sujeito a reajuste em 29/08/2026.' from household, category
-where not exists (select 1 from public.economics_bill_definitions b where b.household_id = household.id and b.title = 'Consorcio imobiliario');
+select household.id, category.id, 'Consórcio imobiliário', 1393.50, 'Familia', 15, 'monthly', 'Valor sujeito a reajuste em 29/08/2026.' from household, category
+where not exists (select 1 from public.economics_bill_definitions b where b.household_id = household.id and b.title = 'Consórcio imobiliário');
 
 with household as (select id from public.economics_households where slug = 'familia-estevao-bonomi')
 insert into public.economics_accounts (household_id, name, institution, type, owner, current_balance, due_day, active, notes)
 select household.id, seed.name, seed.institution, seed.type, seed.owner, 0, seed.due_day, true, seed.notes
 from household cross join (values
-  ('Cartao Itau', 'Itau', 'credit_card', 'Vitor', 9, 'Fatura em debito automatico.'),
-  ('Cartao Santander', 'Santander', 'credit_card', 'Vitor', 16, 'Possui anuidade.'),
-  ('Cartao Porto', 'PortoBank', 'credit_card', 'Familia', 25, 'Cartao compartilhado com Nathalie.'),
+  ('Cartão Itaú', 'Itaú', 'credit_card', 'Vitor', 9, 'Fatura em débito automático.'),
+  ('Cartão Santander', 'Santander', 'credit_card', 'Vitor', 16, 'Possui anuidade.'),
+  ('Cartão Porto', 'PortoBank', 'credit_card', 'Familia', 25, 'Cartão compartilhado com Nathalie.'),
   ('Investimentos EQI', 'EQI', 'investment', 'Vitor', null::integer, 'Saldo conhecido em 11/07/2026.'),
-  ('Previdencia Bradesco', 'Bradesco', 'pension', 'Vitor', null::integer, null)
+  ('Previdência Bradesco', 'Bradesco', 'pension', 'Vitor', null::integer, null)
 ) as seed(name, institution, type, owner, due_day, notes)
 where not exists (select 1 from public.economics_accounts a where a.household_id = household.id and a.name = seed.name);
 
--- Snapshots de faturas informadas para julho/2026. Nao sao usados como media mensal.
+-- Snapshots de faturas informadas para julho/2026. Não são usados como média mensal.
 with household as (select id from public.economics_households where slug = 'familia-estevao-bonomi')
 insert into public.economics_bill_instances (household_id, title, amount, due_on, status)
 select household.id, seed.title, seed.amount, seed.due_on, 'open'
 from household cross join (values
-  ('Fatura Itau - jul/2026', 8547.72::numeric, '2026-07-09'::date),
+  ('Fatura Itaú - jul/2026', 8547.72::numeric, '2026-07-09'::date),
   ('Fatura Santander - jul/2026', 1025.33::numeric, '2026-07-16'::date),
   ('Fatura Porto - jul/2026', 7167.95::numeric, '2026-07-25'::date)
 ) as seed(title, amount, due_on)
 where not exists (select 1 from public.economics_bill_instances i where i.household_id = household.id and i.title = seed.title);
 
 with definition as (
-  select id, household_id, title, amount from public.economics_bill_definitions where title = 'Consorcio imobiliario'
+  select id, household_id, title, amount from public.economics_bill_definitions where title = 'Consórcio imobiliário'
 ), months as (
   select generate_series(date_trunc('month', current_date), date_trunc('month', current_date) + interval '3 months', interval '1 month')::date as month_start
 )

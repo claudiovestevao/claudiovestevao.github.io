@@ -181,19 +181,19 @@ with household as (
   values
     ('Renda', 'income', '#13834b', 'wallet', 10),
     ('Moradia', 'expense', '#0f5bd7', 'home', 20),
-    ('Escola e criancas', 'expense', '#8b5cf6', 'baby', 30),
+    ('Escola e crianças', 'expense', '#8b5cf6', 'baby', 30),
     ('Mercado', 'expense', '#f59e0b', 'cart', 40),
     ('Restaurantes', 'expense', '#ef4444', 'utensils', 50),
     ('Transporte', 'expense', '#06b6d4', 'car', 60),
-    ('Saude', 'expense', '#10b981', 'heart', 70),
+    ('Saúde', 'expense', '#10b981', 'heart', 70),
     ('Casa', 'expense', '#64748b', 'house-plus', 80),
     ('Viagem', 'expense', '#2563eb', 'plane', 90),
     ('Assinaturas', 'expense', '#9333ea', 'receipt', 100),
     ('Compras', 'expense', '#ec4899', 'bag', 110),
     ('Impostos e taxas', 'expense', '#a15c07', 'file', 120),
     ('Investimentos', 'asset', '#166534', 'chart', 130),
-    ('Previdencia', 'asset', '#0f766e', 'shield', 140),
-    ('Dividas e financiamentos', 'liability', '#991b1b', 'alert', 150),
+    ('Previdência', 'asset', '#0f766e', 'shield', 140),
+    ('Dívidas e financiamentos', 'liability', '#991b1b', 'alert', 150),
     ('Outros', 'expense', '#475569', 'tag', 999)
 )
 insert into public.economics_categories (household_id, name, kind, color, icon, sort_order, is_system)

@@ -148,7 +148,7 @@ on public.economics_audit_events for select
 using (household_id is not null and public.is_economics_member(household_id));
 
 insert into public.economics_households (slug, name, label)
-values ('familia-estevao-bonomi', 'Familia Estevao Bonomi', 'Privado')
+values ('familia-estevao-bonomi', 'Família Estevão Bonomi', 'Privado')
 on conflict (slug) do update
 set name = excluded.name,
     label = excluded.label;
