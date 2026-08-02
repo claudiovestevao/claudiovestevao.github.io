@@ -490,6 +490,20 @@ a{color:var(--brand)}
 .attraction-panel{border:1px solid var(--line);border-radius:14px;background:#fff;padding:13px;box-shadow:0 8px 22px rgba(15,23,42,.045);display:grid;gap:9px}
 .attraction-panel.featured{border-color:rgba(31,111,139,.35);background:linear-gradient(135deg,#fff 0%,#eef8f9 100%)}
 .attraction-panel.caution{border-color:rgba(245,158,11,.38);background:linear-gradient(135deg,#fff 0%,#fffbeb 100%)}
+.attraction-filter-btn{border:1px solid var(--line);background:#f8fafc;color:var(--ink);border-radius:999px;padding:10px 14px;font-size:13px;font-weight:900;cursor:pointer;transition:all .2s}
+.attraction-filter-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.attraction-filter-btn:hover{background:#f0f4f8}
+.attraction-filter-btn.active:hover{background:#1a4fb8}
+.attraction-day{border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px}
+.attraction-day-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+.attraction-day-title h3{margin:0;font-size:16px}
+.attraction-day-title span{font-size:13px;color:var(--muted);font-weight:750}
+.attraction-sequence{display:grid;gap:10px}
+.attraction-seq-item{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;align-items:center}
+.attraction-seq-time{font-size:14px;font-weight:950;color:var(--brand);text-align:center}
+.attraction-seq-info{display:grid;gap:3px}
+.attraction-seq-name{font-size:13px;font-weight:900;color:var(--ink)}
+.attraction-seq-note{font-size:12px;color:var(--muted);line-height:1.3}
 .attraction-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .attraction-head h3{margin:0;font-size:17px;line-height:1.18}
 .attraction-head p{margin:4px 0 0;color:var(--muted);font-size:12.5px;font-weight:750;line-height:1.35}
@@ -2482,6 +2496,7 @@ Phone: +1 407-993-3999</code>
         <button class="action-card" type="button" data-open-tab="decisoes"><strong>Decisões abertas</strong><span>Próximos cliques e pendências.</span></button>
         <button class="action-card" type="button" data-open-tab="mapa"><strong>Mapa do dia</strong><span>Endereços e rotas rápidas.</span></button>
         <button class="action-card" type="button" data-open-tab="shows"><strong>Shows e horários</strong><span>Desfiles, fogos e shows ao vivo.</span></button>
+        <button class="action-card" type="button" data-open-tab="atratoes"><strong>🎢 Atrações imperdíveis</strong><span>Filtro por família, sequência sem correria.</span></button>
       </div>
     </div>
     <div class="card">
@@ -3590,6 +3605,24 @@ Phone: +1 407-993-3999</code>
     </div>
   </section>
 
+  <!-- ============ ATRAÇÕES IMPERDÍVEIS ============ -->
+  <section class="panel" id="atratoes">
+    <div class="card">
+      <h2>🎢 Atrações imperdíveis — sem correria</h2>
+      <p class="sub">Lembrete: viagem com grávida (Nathalie) no 3º trimestre e criança de 3 anos (Luiza). Prioridade = pausas, ar-condicionado, shows, segurança. Sequências específicas pra cada dia, com muito espaço pra respirar.</p>
+
+      <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px">
+        <button class="attraction-filter-btn active" data-filter="all">👨‍👩‍👧‍👦 Família toda (Nath+Vitor+Luiza)</button>
+        <button class="attraction-filter-btn" data-filter="kids">👧🧑 Só Luiza+Vitor (sem Nath)</button>
+        <button class="attraction-filter-btn" data-filter="solo">🎢 Só Vitor (coasters, trama alta)</button>
+      </div>
+
+      <div id="attractionsByDay" style="margin-top:18px;display:grid;gap:18px"></div>
+
+      <div class="note warn">⚠️ <b>Importante:</b> Nathalie no 3º trimestre — EVITAR coasters, simuladores com tranco, Splash Mountain, Indiana Jones, qualquer atração com giros fortes ou aceleração repentina. Conversar com o OB/GYN antes de qualquer coisa. Luiza tem 3 anos (~97-102cm) — sem altura mínima permite Dumbo, Small World, Jungle Cruise, Pirates (com cuidado em escuro), Carousel, shows.</div>
+    </div>
+  </section>
+
   <!-- ============ VOOS ============ -->
   <section class="panel" id="voos">
     <div class="card">
@@ -3812,7 +3845,7 @@ function celebrateSuccess(message){
 /* ---------- Tabs ---------- */
 var sectionPrimaryTab={
   hoje:"hoje",visao:"hoje",decisoes:"hoje",antes:"hoje",
-  roteiro:"roteiro",interativo:"roteiro",disney:"roteiro",aovivo:"roteiro",shows:"roteiro",
+  roteiro:"roteiro",interativo:"roteiro",disney:"roteiro",aovivo:"roteiro",shows:"roteiro",atratoes:"roteiro",
   lojas:"lojas",enxoval:"lojas","compras-arthur":"lojas","compras-nathalie":"lojas","compras-luiza":"lojas","compras-vitor":"lojas","price-watch-card":"lojas",conversor:"lojas",shopCalcCard:"lojas",
   reservas:"reservas",cofre:"reservas",adrList:"reservas",comer:"reservas",voos:"reservas",hospedagem:"reservas",
   mais:"mais",orcamento:"mais",mapa:"mais",mustdo:"mais",missoes:"mais",emergencia:"mais",frases:"mais",taticas:"mais",utilidades:"mais",mala:"mais",diario:"mais"
@@ -7007,6 +7040,8 @@ function initBackup(){
   };
 }
 
+var attractionsData={mk:[{time:"09:00",name:"Toy Story Mania",filter:["all","kids"],duration:"15 min com fila",note:"Rope drop; todos podem; sem altura mínima"},{time:"09:45",name:"Pausa / Enchanted Tales with Belle",filter:["all"],duration:"25 min",note:"Princesa, storytelling; fresco"},{time:"10:30",name:"Dumbo ou Small World",filter:["all","kids"],duration:"20 min",note:"Suave, sem altura; ar-condicionado"},{time:"11:15",name:"Snack + sombra",filter:["all"],duration:"20 min",note:"Água, bathroom"},{time:"11:45",name:"PhilharMagic ou Laugh Floor",filter:["all"],duration:"20 min",note:"Show respiro; ar-condicionado"},{time:"12:30",name:"Almoço quick service",filter:["all"],duration:"45 min",note:"Mobile order, não preso a reserva cara"},{time:"13:30",name:"Jungle Cruise ou Pirates",filter:["all"],duration:"20 min",note:"Passeio; Nath suave; Luiza cuidado escuro"},{time:"14:30",name:"Pausa longa / ar-condicionado (loja/show)",filter:["all"],duration:"45 min",note:"Calor de pico; repousar"},{time:"15:30",name:"PeopleMover + Buzz",filter:["all"],duration:"25 min",note:"Descanso inteligente; vista do parque"},{time:"16:30",name:"Mickey em Town Square",filter:["all","kids"],duration:"15 min com fila",note:"Encontro; fotos; fim da tarde"},{time:"17:30",name:"Repouso no hotel / preparar noite",filter:["all"],duration:"90 min",note:"Nathalie senta; Luiza descansa se cansada"},{time:"19:30",name:"Voltar pro parque / Happily Ever After",filter:["all"],duration:"30 min + show",note:"Se todos tiverem energia; não obrigação"}],hs:[{time:"08:45",name:"Toy Story Mania",filter:["all","kids"],duration:"15 min com fila",note:"Rope drop (arrive 8:15); todos; sem altura"},{time:"09:30",name:"Frozen Sing-Along",filter:["all"],duration:"30 min",note:"Chegar 20 min antes; Luiza adora; Nath ar-condicionado"},{time:"10:30",name:"Disney Jr. Play & Dance ou Beauty & Beast",filter:["all","kids"],duration:"25 min",note:"Show respiro; ambos seguros pra Nath/Luiza"},{time:"11:30",name:"Snack + bathroom",filter:["all"],duration:"20 min",note:"Água, descanso"},{time:"12:00",name:"Little Mermaid musical show",filter:["all","kids"],duration:"30 min",note:"Senta; divertido; ar-condicionado"},{time:"13:00",name:"Almoço quick service",filter:["all"],duration:"45 min",note:"No parque ou na frente (Trolley Car Cafe)"},{time:"14:00",name:"Pausa longa / clima (loja, show, descanso)",filter:["all"],duration:"60 min",note:"Calor 14-16h; proteger Nathalie do sol"},{time:"15:15",name:"Alien Swirling ou Runaway Railway",filter:["kids","solo"],duration:"15 min",note:"Vitor leva Luiza; Nath descansa / compras"},{time:"16:15",name:"Reunir grupo / lightning lane ou fila baixa",filter:["all"],duration:"20 min",note:"Algo rápido com todos se houver energia"},{time:"17:00",name:"Sair do parque ou pausa hotel",filter:["all"],duration:"Rest or dinner",note:"Dia curto; todos ganham; dinner em Flamingo Crossings"}],epic:[{time:"09:00",name:"Constellation Carousel",filter:["all","kids"],duration:"10 min",note:"Aquecimento; sem altura; suave"},{time:"09:30",name:"Viking Training Camp",filter:["all","kids"],duration:"30 min",note:"Playground; Luiza queima energia; sem show stress"},{time:"10:15",name:"The Untrainable Dragon show",filter:["all"],duration:"20 min",note:"Show ao vivo; todos; som alto = aviso pra Luiza"},{time:"11:15",name:"Hiccup's Wing Gliders",filter:["kids","solo"],duration:"20 min com fila",note:"Vitor voa; Luiza+Nath pausam ou Le Cirque"},{time:"11:45",name:"Le Cirque Arcanus",filter:["all"],duration:"25 min",note:"Circo; sem altura; espetáculo; ar-condicionado"},{time:"12:30",name:"Almoço quick service",filter:["all"],duration:"45 min",note:"Viking-themed options perto de Isle of Berk"},{time:"13:30",name:"Pausa longa / ar-condicionado",filter:["all"],duration:"60 min",note:"Calor de pico; hotel se cansado"},{time:"14:45",name:"Fyre Drill ou passeios leves",filter:["all","kids"],duration:"15 min",note:"Água (get wet); diversão; sem coaster"},{time:"16:00",name:"Harry Potter Ministry ou shopping",filter:["solo"],duration:"Opcional",note:"Vitor explore; outros descansam ou loja"},{time:"17:30",name:"Preparar noite / snack",filter:["all"],duration:"Rest",note:"Carregando baterias pro show de fogos"},{time:"20:30",name:"Celestial Goodnight fireworks",filter:["all"],duration:"15 min",note:"Fogos + fontes; melhor vista perto Cosmos Fountain; Luiza pode ficar perto de som"}]};function renderAttractions(){var mount=document.getElementById('attractionsByDay');if(!mount)return;var currentFilter=window.attractionCurrentFilter||'all';var html='';['mk','hs','epic'].forEach(function(park,i){var parkName=['Magic Kingdom 12/8','Hollywood Studios 14/8','Epic Universe 17/8'][i];var atts=(attractionsData[park]||[]).filter(function(a){return a.filter.includes(currentFilter);});var dayHtml='<div class="attraction-day"><div class="attraction-day-title"><h3>'+parkName+'</h3><span>Filtro: '+['Família (Nath+Vitor+Luiza)','Só Luiza+Vitor','Só Vitor (coasters)'][{all:0,kids:1,solo:2}[currentFilter]]+'</span></div><div class="attraction-sequence">';atts.forEach(function(a){dayHtml+='<div class="attraction-seq-item"><div class="attraction-seq-time">'+esc(a.time)+'</div><div class="attraction-seq-info"><div class="attraction-seq-name">'+esc(a.name)+'</div><div class="attraction-seq-note">'+esc(a.duration)+' · '+esc(a.note)+'</div></div></div>';});dayHtml+='</div></div>';html+=dayHtml;});mount.innerHTML=html;}function initAttractions(){window.attractionCurrentFilter='all';renderAttractions();document.querySelectorAll('.attraction-filter-btn').forEach(function(btn){btn.onclick=function(){document.querySelectorAll('.attraction-filter-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');window.attractionCurrentFilter=btn.getAttribute('data-filter');renderAttractions();};});}
+
 function initUtilityLayer(){
   renderToday();
   initVault();
@@ -7022,6 +7057,7 @@ function initUtilityLayer(){
   renderRainPlan();
   var rainCopy=document.getElementById('rainCopy'); if(rainCopy)rainCopy.onclick=function(){copyFromButton(rainCopy,rainPlanText());};
   initBackup();
+  initAttractions();
   setTimeout(pullSharedState,500);
 }
 initUtilityLayer();
