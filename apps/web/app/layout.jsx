@@ -34,7 +34,20 @@ export default function RootLayout({ children }) {
             __html: `
               if ("serviceWorker" in navigator) {
                 window.addEventListener("load", function () {
-                  navigator.serviceWorker.register("/sw.js").catch(function () {});
+                  navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                    registrations.forEach(function (registration) {
+                      if (registration.scope === window.location.origin + "/") {
+                        registration.unregister();
+                      }
+                    });
+                  }).catch(function () {});
+                  if ("caches" in window) {
+                    caches.keys().then(function (keys) {
+                      keys.forEach(function (key) {
+                        if (key.indexOf("orlando-trip-") === 0) caches.delete(key);
+                      });
+                    }).catch(function () {});
+                  }
                 });
               }
             `

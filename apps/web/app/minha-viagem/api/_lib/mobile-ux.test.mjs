@@ -99,7 +99,7 @@ test("authentication prevents invalid submission and avoids duplicate back UI", 
 });
 
 test("offline failure degrades to a usable recovery screen", () => {
-  assert.ok(serviceWorker.includes("orlando-trip-v5"));
+  assert.ok(serviceWorker.includes("orlando-trip-v6"));
   assert.ok(serviceWorker.includes("Minha Viagem offline"));
   assert.ok(serviceWorker.includes("Tentar novamente"));
   assert.ok(serviceWorker.includes('"Cache-Control": "no-store"'));

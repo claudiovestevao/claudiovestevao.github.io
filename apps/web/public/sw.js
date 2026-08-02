@@ -1,4 +1,4 @@
-const CACHE_NAME = "orlando-trip-v5";
+const CACHE_NAME = "orlando-trip-v6";
 const STATIC_ASSETS = [
   "/manifest.webmanifest",
   "/icons/orlando-icon.svg",
