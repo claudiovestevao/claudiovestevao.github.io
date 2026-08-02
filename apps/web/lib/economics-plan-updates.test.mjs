@@ -46,3 +46,18 @@ test("discounts eight percent for PortoPrev from Vitor available salary", () => 
   assert.equal(vitor.netBeforePension, 27281.91);
   assert.equal(vitor.netEstimate, 24241.91);
 });
+
+test("repairs known mojibake payment titles ('?' in place of accents)", () => {
+  const plan = applyKnownPlanUpdates({
+    ...basePlan,
+    payments: [
+      ...basePlan.payments,
+      { id: "baba", title: "Bab?", amount: 4000 },
+      { id: "condo", title: "Condom?nio, ?gua e g?s", amount: 2300 },
+      { id: "financ", title: "Financiamento imobili?rio Bradesco", amount: 7980 }
+    ]
+  });
+  assert.equal(plan.payments.find((item) => item.id === "baba").title, "Babá");
+  assert.equal(plan.payments.find((item) => item.id === "condo").title, "Condomínio, água e gás");
+  assert.equal(plan.payments.find((item) => item.id === "financ").title, "Financiamento imobiliário Bradesco");
+});

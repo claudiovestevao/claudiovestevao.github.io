@@ -1,9 +1,29 @@
-export const ECONOMICS_PLAN_VERSION = 4;
+export const ECONOMICS_PLAN_VERSION = 5;
+
+// Alguns títulos foram salvos em algum momento com os acentos virando "?"
+// (perda de encoding fora do app — não é bug do código de leitura/gravação,
+// que sempre trata UTF-8). Corrige pelo texto exato conhecido; se aparecer
+// mais algum título quebrado, adicionar aqui.
+const MOJIBAKE_TITLE_FIXES = {
+  "Bab?": "Babá",
+  "Condom?nio, ?gua e g?s": "Condomínio, água e gás",
+  "Fatura Ita? Personnalit?": "Fatura Itaú Personnalité",
+  "Financiamento imobili?rio Bradesco": "Financiamento imobiliário Bradesco"
+};
+
+function fixMojibakeText(value) {
+  if (typeof value !== "string") return value;
+  return Object.prototype.hasOwnProperty.call(MOJIBAKE_TITLE_FIXES, value)
+    ? MOJIBAKE_TITLE_FIXES[value]
+    : value;
+}
 
 export function applyKnownPlanUpdates(plan) {
-  const incomes = Array.isArray(plan?.incomes) ? plan.incomes.map(updateKnownIncome) : [];
-  let payments = Array.isArray(plan?.payments) ? plan.payments.map(updateKnownPayment) : [];
-  let bonuses = Array.isArray(plan?.bonuses) ? plan.bonuses.map((bonus) => updateThirteenthSalary(bonus, incomes)) : [];
+  const incomes = Array.isArray(plan?.incomes) ? plan.incomes.map(fixMojibakeFields).map(updateKnownIncome) : [];
+  let payments = Array.isArray(plan?.payments) ? plan.payments.map(fixMojibakeFields).map(updateKnownPayment) : [];
+  let bonuses = Array.isArray(plan?.bonuses)
+    ? plan.bonuses.map(fixMojibakeFields).map((bonus) => updateThirteenthSalary(bonus, incomes))
+    : [];
 
   payments = ensurePayment(payments, "chatgpt-portobank", "ChatGPT", {
     owner: "Vitor",
@@ -42,6 +62,15 @@ export function applyKnownPlanUpdates(plan) {
   bonuses = ensureThirteenthSalary(bonuses, incomes, "Nathalie", 23600, 16789.78);
 
   return { ...plan, version: ECONOMICS_PLAN_VERSION, incomes, payments, bonuses };
+}
+
+function fixMojibakeFields(item) {
+  if (!item || typeof item !== "object") return item;
+  const title = fixMojibakeText(item.title);
+  const notes = fixMojibakeText(item.notes);
+  const source = fixMojibakeText(item.source);
+  if (title === item.title && notes === item.notes && source === item.source) return item;
+  return { ...item, title, notes, source };
 }
 
 function updateKnownIncome(income) {
