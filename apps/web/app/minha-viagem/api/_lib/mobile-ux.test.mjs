@@ -103,6 +103,7 @@ test("offline failure degrades to a usable recovery screen", () => {
   assert.ok(serviceWorker.includes("Minha Viagem offline"));
   assert.ok(serviceWorker.includes("Tentar novamente"));
   assert.ok(serviceWorker.includes('"Cache-Control": "no-store"'));
+  assert.ok(serviceWorker.includes('url.pathname.startsWith("/minha-viagem/api/")'));
 });
 
 test("browser permissions allow the requested check-in location flow", () => {

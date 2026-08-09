@@ -33,6 +33,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  // PDFs protected by the trip login are opened as navigations. Let the
+  // browser request those files directly, instead of treating a document
+  // response as an offline page when the service worker cannot reach it.
+  if (url.pathname.startsWith("/minha-viagem/api/")) return;
+
   if (request.mode === "navigate") {
     event.respondWith(handleNavigation(request));
     return;
