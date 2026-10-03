@@ -103,6 +103,16 @@ const businessProjects = [
 
 const volunteerProjects = [
   {
+    title: "UmOlhar",
+    text: "Adaptação à visão monocular, um dia de cada vez: plano de 30 dias, situações da vida e direitos.",
+    href: "https://umolhar.vercel.app",
+    external: true,
+    icon: Eye,
+    status: STATUS.prototype,
+    support: supportLink("o UmOlhar"),
+    supportLabel: "Quero apoiar o UmOlhar"
+  },
+  {
     title: "Pessoas com deficiência visual",
     text: "Agentes a serviço da autonomia de quem enxerga pouco ou não enxerga.",
     icon: Eye,
