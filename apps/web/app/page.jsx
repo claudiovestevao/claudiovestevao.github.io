@@ -145,12 +145,17 @@ export default function HomePage() {
         </header>
 
         <section className={styles.bio} aria-label="Sobre mim">
-          <Image alt="Foto de Claudio Estevão" className={styles.photo} height={72} priority src="/claudio.jpg" width={72} />
-          <div className={styles.bioText}>
-            <span className={styles.bioName}>Claudio Estevão</span>
+          <div className={styles.bioHead}>
+            <Image alt="Foto de Claudio Estevão" className={styles.photo} height={80} priority src="/claudio.jpg" width={80} />
+            <div className={styles.bioIdentity}>
+              <span className={styles.bioName}>Claudio Estevão</span>
+              <span className={styles.bioRole}>Líder de AI &amp; Analytics no PortoBank</span>
+            </div>
+          </div>
+          <div className={styles.bioBody}>
             <p>
-              Líder de AI &amp; Analytics no PortoBank. Há 18 anos construindo soluções na interseção entre dados,
-              tecnologia e negócios, com passagens por EY e Raízen.
+              Há 18 anos construindo soluções na interseção entre dados, tecnologia e negócios, com passagens por EY e
+              Raízen.
             </p>
             <p>Gosto de transformar problemas reais em produtos digitais, de agentes de IA a projetos como o Festei.</p>
             <p>
