@@ -71,6 +71,7 @@ const professionalProjects = [
     text: "Protótipo de agente de riscos. Projeto com dados 100% públicos e sintéticos.",
     href: "https://agentecro.claudiocode.dev",
     external: true,
+    locked: true,
     icon: Activity,
     status: STATUS.prototype,
     support: supportLink("o Pulso de Riscos"),
@@ -288,6 +289,9 @@ function ProjectRow({ item }) {
   const name = (
     <span className={styles.rowName}>
       {item.title}
+      {item.locked ? (
+        <LockKeyhole aria-label="Acesso restrito" className={styles.lock} role="img" size={14} strokeWidth={2.2} />
+      ) : null}
       {item.href ? <ArrowUpRight aria-hidden="true" size={14} strokeWidth={2.2} /> : null}
       {item.status ? <StatusBadge status={item.status} /> : null}
     </span>

@@ -300,6 +300,10 @@ a.rowBody:hover .rowName {
   color: #7a8396;
 }
 
+.rowName .lock {
+  color: var(--ink);
+}
+
 .rowDesc {
   font-size: 14px;
   line-height: 1.45;
