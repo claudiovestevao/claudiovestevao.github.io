@@ -7,7 +7,10 @@
   --line: #e1e4ea;
   --line-soft: #eef0f4;
   --tint: #eef0f4;
+  --live: #1a9e5c;
+  --building: #d97706;
   --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  position: relative;
   min-height: 100vh;
   background: #f6f7f9;
   color: var(--ink);
@@ -15,7 +18,20 @@
   -webkit-font-smoothing: antialiased;
 }
 
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 620px;
+  background-image: radial-gradient(circle, #d6dbe4 1px, transparent 1.3px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+  pointer-events: none;
+}
+
 .wrap {
+  position: relative;
   max-width: 680px;
   margin: 0 auto;
   padding: 40px 16px 56px;
@@ -27,7 +43,71 @@
 .header {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.graph {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+.graphRing {
+  opacity: 0.22;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ping 2.6s ease-out infinite;
+}
+
+.caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  margin-left: 8px;
+  vertical-align: -0.08em;
+  border-radius: 1px;
+  background: var(--accent);
+  animation: blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 158, 92, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgba(26, 158, 92, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .graphRing,
+  .caret,
+  .statusLive .statusDot {
+    animation: none;
+  }
 }
 
 .brand {
@@ -226,7 +306,10 @@ a.rowBody:hover .rowName {
   color: var(--muted);
 }
 
-.badge {
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 500;
@@ -234,6 +317,22 @@ a.rowBody:hover .rowName {
   border-radius: 999px;
   background: var(--tint);
   color: var(--muted);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9aa4b6;
+}
+
+.statusLive .statusDot {
+  background: var(--live);
+  animation: pulse 2s ease-out infinite;
+}
+
+.statusBuilding .statusDot {
+  background: var(--building);
 }
 
 .support {
@@ -310,6 +409,10 @@ a.rowBody:hover .rowName {
 }
 
 .footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 16px;
   font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);

@@ -58,6 +58,13 @@ function supportLink(project) {
   return whatsappLink(`Oi Claudio, tenho interesse em apoiar ${project}`);
 }
 
+const STATUS = {
+  live: { label: "No ar", tone: "live" },
+  prototype: { label: "Protótipo no ar", tone: "live" },
+  building: { label: "Em construção", tone: "building" },
+  concept: { label: "Em concepção", tone: "concept" }
+};
+
 const professionalProjects = [
   {
     title: "Pulso de Riscos",
@@ -65,6 +72,7 @@ const professionalProjects = [
     href: "https://agentecro.claudiocode.dev",
     external: true,
     icon: Activity,
+    status: STATUS.prototype,
     support: supportLink("o Pulso de Riscos"),
     supportLabel: "Quero apoiar o Pulso de Riscos"
   }
@@ -77,6 +85,7 @@ const businessProjects = [
     href: "https://festei-site.pages.dev",
     external: true,
     icon: PartyPopper,
+    status: STATUS.building,
     support: supportLink("o Festei"),
     supportLabel: "Quero apoiar o Festei"
   },
@@ -85,6 +94,7 @@ const businessProjects = [
     text: "Destinos com mapa, hotéis e score",
     href: "/concierge-da-familia",
     icon: MapPin,
+    status: STATUS.live,
     support: supportLink("o Concierge da Família"),
     supportLabel: "Quero apoiar o Concierge da Família"
   }
@@ -93,17 +103,17 @@ const businessProjects = [
 const volunteerProjects = [
   {
     title: "Pessoas com deficiência visual",
-    badge: "Em concepção",
     text: "Agentes a serviço da autonomia de quem enxerga pouco ou não enxerga.",
     icon: Eye,
+    status: STATUS.concept,
     support: supportLink("o projeto para pessoas com deficiência visual"),
     supportLabel: "Quero apoiar o projeto para pessoas com deficiência visual"
   },
   {
     title: "Fiscalização de parques e praças",
-    badge: "Em concepção",
     text: "Parquinhos infantis e praças públicas monitorados pela comunidade.",
     icon: Trees,
+    status: STATUS.concept,
     support: supportLink("o projeto de fiscalização de parques e praças"),
     supportLabel: "Quero apoiar o projeto de fiscalização de parques e praças"
   }
@@ -135,13 +145,19 @@ export default function HomePage() {
     <main className={styles.page}>
       <div className={styles.wrap}>
         <header className={styles.header}>
-          <div className={styles.brand}>
-            <span className={styles.brandMark} aria-hidden="true">
-              C
-            </span>
-            <span>Claudio Code</span>
+          <div className={styles.brandRow}>
+            <div className={styles.brand}>
+              <span className={styles.brandMark} aria-hidden="true">
+                C
+              </span>
+              <span>Claudio Code</span>
+            </div>
+            <AgentGraph />
           </div>
-          <h1 className={styles.title}>Agentes para produtividade, negócios e bem-estar com a família e os amigos.</h1>
+          <h1 className={styles.title}>
+            Agentes para produtividade, negócios e bem-estar com a família e os amigos.
+            <span className={styles.caret} aria-hidden="true" />
+          </h1>
         </header>
 
         <section className={styles.bio} aria-label="Sobre mim">
@@ -211,9 +227,42 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className={styles.footer}>claudiocode.dev</footer>
+        <footer className={styles.footer}>
+          <span>claudiocode.dev</span>
+          <span>feito com agentes de IA</span>
+        </footer>
       </div>
     </main>
+  );
+}
+
+function AgentGraph() {
+  return (
+    <svg aria-hidden="true" className={styles.graph} fill="none" height="56" viewBox="0 0 132 56" width="132">
+      <g stroke="#c9d0dc" strokeWidth="1.2">
+        <path d="M66 28L22 12M66 28L26 46M66 28L108 10M66 28L112 44M22 12L26 46M108 10L112 44" />
+      </g>
+      <g fill="#ffffff" stroke="#9aa4b6" strokeWidth="1.5">
+        <circle cx="22" cy="12" r="4" />
+        <circle cx="26" cy="46" r="4" />
+        <circle cx="108" cy="10" r="4" />
+        <circle cx="112" cy="44" r="4" />
+      </g>
+      <circle className={styles.graphRing} cx="66" cy="28" fill="currentColor" r="9" />
+      <circle cx="66" cy="28" fill="currentColor" r="5.5" />
+    </svg>
+  );
+}
+
+function StatusBadge({ status }) {
+  const toneClass =
+    status.tone === "live" ? styles.statusLive : status.tone === "building" ? styles.statusBuilding : styles.statusConcept;
+
+  return (
+    <span className={`${styles.status} ${toneClass}`}>
+      <span className={styles.statusDot} aria-hidden="true" />
+      {status.label}
+    </span>
   );
 }
 
@@ -239,8 +288,8 @@ function ProjectRow({ item }) {
   const name = (
     <span className={styles.rowName}>
       {item.title}
-      {item.badge ? <span className={styles.badge}>{item.badge}</span> : null}
       {item.href ? <ArrowUpRight aria-hidden="true" size={14} strokeWidth={2.2} /> : null}
+      {item.status ? <StatusBadge status={item.status} /> : null}
     </span>
   );
   const body = (
