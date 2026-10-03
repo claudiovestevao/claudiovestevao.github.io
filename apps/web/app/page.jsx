@@ -1,140 +1,275 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight,
+  Activity,
+  ArrowUpRight,
+  Banknote,
+  ChevronRight,
   Columns3,
-  Gift,
+  Eye,
   LockKeyhole,
-  Map,
-  PiggyBank,
-  PlaneTakeoff
+  Luggage,
+  MapPin,
+  MessageCircle,
+  PartyPopper,
+  Trees
 } from "lucide-react";
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import styles from "./page.module.css";
 
-const privateAreas = [
-  {
-    href: "/minha-viagem",
-    title: "Minha Viagem",
-    text: "Roteiro, check-ins, diário, vouchers, ingressos, seguros e compras de Orlando.",
-    metric: "Diário + PDFs",
-    icon: PlaneTakeoff,
-    tone: "travel",
-    featured: true
+const SITE_URL = "https://claudiocode.dev";
+const WHATSAPP_NUMBER = "5511998802974";
+const LINKEDIN_URL = "https://www.linkedin.com/in/cvitorestevao";
+const GITHUB_URL = "https://github.com/claudiovestevao";
+
+const DESCRIPTION =
+  "Agentes para produtividade, negócios e bem-estar com a família e os amigos. Projetos de Claudio Estevão.";
+
+export const metadata = {
+  title: "Claudio Estevão | Claudio Code",
+  description: DESCRIPTION,
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: "Claudio Estevão — Claudio Code",
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Claudio Code",
+    locale: "pt_BR",
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Claudio Estevão — Claudio Code" }]
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Claudio Estevão — Claudio Code",
+    description: DESCRIPTION,
+    images: ["/og.png"]
+  }
+};
+
+function whatsappLink(text) {
+  return `https://wa.me/${WHATSAPP_NUMBER}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+}
+
+function supportLink(project) {
+  return whatsappLink(`Oi Claudio, tenho interesse em apoiar ${project}`);
+}
+
+const professionalProjects = [
   {
-    href: "/economics",
-    title: "Economics",
-    text: "Documentos, decisões e controles financeiros da família.",
-    metric: "Finanças",
-    icon: PiggyBank,
-    tone: "money"
-  },
-  {
-    href: "/kanban",
-    title: "Kanban",
-    text: "Tarefas de Vitor e Nathalie, com prioridades, responsáveis e calendário.",
-    metric: "Operação",
-    icon: Columns3,
-    tone: "work"
-  },
-  {
-    href: "/festa-luiza/",
-    title: "Site Luiza",
-    text: "Espaço reservado para os momentos e materiais da Luiza.",
-    metric: "Memória",
-    icon: Gift,
-    tone: "party"
+    title: "Pulso de Riscos",
+    text: "Protótipo de agente de riscos. Projeto com dados 100% públicos e sintéticos.",
+    href: "https://agentecro.claudiocode.dev",
+    external: true,
+    icon: Activity,
+    support: supportLink("o Pulso de Riscos"),
+    supportLabel: "Quero apoiar o Pulso de Riscos"
   }
 ];
 
-const guestAreas = [
+const businessProjects = [
   {
-    href: "/concierge-da-familia",
+    title: "Festei",
+    text: "Festas infantis organizadas por agente · em parceria com Douglas Siqueira",
+    href: "https://festei-site.pages.dev",
+    external: true,
+    icon: PartyPopper,
+    support: supportLink("o Festei"),
+    supportLabel: "Quero apoiar o Festei"
+  },
+  {
     title: "Concierge da Família",
-    text: "Destinos familiares com mapa, filtros, hotéis e score para decidir.",
-    metric: "Mapa + score",
-    icon: Map,
-    tone: "atlas"
+    text: "Destinos com mapa, hotéis e score",
+    href: "/concierge-da-familia",
+    icon: MapPin,
+    support: supportLink("o Concierge da Família"),
+    supportLabel: "Quero apoiar o Concierge da Família"
+  }
+];
+
+const volunteerProjects = [
+  {
+    title: "Pessoas com deficiência visual",
+    badge: "Em concepção",
+    text: "Agentes a serviço da autonomia de quem enxerga pouco ou não enxerga.",
+    icon: Eye,
+    support: supportLink("o projeto para pessoas com deficiência visual"),
+    supportLabel: "Quero apoiar o projeto para pessoas com deficiência visual"
+  },
+  {
+    title: "Fiscalização de parques e praças",
+    badge: "Em concepção",
+    text: "Parquinhos infantis e praças públicas monitorados pela comunidade.",
+    icon: Trees,
+    support: supportLink("o projeto de fiscalização de parques e praças"),
+    supportLabel: "Quero apoiar o projeto de fiscalização de parques e praças"
+  }
+];
+
+const personalAreas = [
+  {
+    title: "Viagem",
+    text: "Roteiro, vouchers e diário de Orlando",
+    href: "/minha-viagem",
+    icon: Luggage
+  },
+  {
+    title: "Kanban",
+    text: "Tarefas da casa, prioridades e calendário",
+    href: "/kanban",
+    icon: Columns3
+  },
+  {
+    title: "Economics",
+    text: "Finanças e decisões da família",
+    href: "/economics",
+    icon: Banknote
   }
 ];
 
 export default function HomePage() {
   return (
-    <main className="app-shell home-hub-page">
-      <Topbar />
-
-      <section className="container home-access-page" aria-labelledby="home-title">
-        <header className="home-access-header">
-          <span>Claudio Code</span>
-          <h1 id="home-title">Agentes para produtividade e bem estar</h1>
+    <main className={styles.page}>
+      <div className={styles.wrap}>
+        <header className={styles.header}>
+          <div className={styles.brand}>
+            <span className={styles.brandMark} aria-hidden="true">
+              C
+            </span>
+            <span>Claudio Code</span>
+          </div>
+          <h1 className={styles.title}>Agentes para produtividade, negócios e bem-estar com a família e os amigos.</h1>
         </header>
 
-        <AccessSection icon={LockKeyhole} title="Áreas pessoais" items={privateAreas} privateArea />
-        <AccessSection icon={Map} title="Área do convidado" items={guestAreas} />
-      </section>
+        <section className={styles.bio} aria-label="Sobre mim">
+          <Image alt="Foto de Claudio Estevão" className={styles.photo} height={72} priority src="/claudio.jpg" width={72} />
+          <div className={styles.bioText}>
+            <span className={styles.bioName}>Claudio Estevão</span>
+            <p>
+              Líder de AI &amp; Analytics no PortoBank. Há 18 anos construindo soluções na interseção entre dados,
+              tecnologia e negócios, com passagens por EY e Raízen.
+            </p>
+            <p>Gosto de transformar problemas reais em produtos digitais, de agentes de IA a projetos como o Festei.</p>
+            <p>
+              Pai da Luiza e do Arthur, paulistano, são-paulino e sempre procurando um próximo projeto que valha a pena
+              construir.
+            </p>
+          </div>
+        </section>
+
+        <ProjectSection items={professionalProjects} title="Profissional" />
+        <ProjectSection items={businessProjects} title="Novos negócios" />
+        <ProjectSection items={volunteerProjects} title="Voluntário" />
+
+        <section className={styles.section} aria-labelledby="pessoal-title">
+          <h2 className={styles.sectionTitle} id="pessoal-title">
+            Pessoal
+            <LockKeyhole aria-label="Acesso protegido" role="img" size={12} strokeWidth={2.2} />
+          </h2>
+          <div className={styles.card}>
+            {personalAreas.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link className={styles.row} href={item.href} key={item.title}>
+                  <span className={`${styles.iconBox} ${styles.iconBoxMuted}`} aria-hidden="true">
+                    <Icon size={20} />
+                  </span>
+                  <span className={styles.rowBody}>
+                    <span className={styles.rowName}>{item.title}</span>
+                    <span className={styles.rowDesc}>{item.text}</span>
+                  </span>
+                  <ChevronRight className={styles.chevron} size={18} />
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className={styles.section} aria-labelledby="contato-title">
+          <h2 className={styles.sectionTitle} id="contato-title">
+            Fale comigo
+          </h2>
+          <a className={styles.whatsapp} href={whatsappLink("")} rel="noopener noreferrer" target="_blank">
+            <MessageCircle size={20} />
+            Chamar no WhatsApp
+          </a>
+          <div className={styles.links}>
+            <a className={styles.linkButton} href={LINKEDIN_URL} rel="noopener noreferrer" target="_blank">
+              LinkedIn
+            </a>
+            <a className={styles.linkButton} href={GITHUB_URL} rel="noopener noreferrer" target="_blank">
+              GitHub
+            </a>
+          </div>
+        </section>
+
+        <footer className={styles.footer}>claudiocode.dev</footer>
+      </div>
     </main>
   );
 }
 
-function AccessSection({ icon: Icon, items, privateArea, title }) {
+function ProjectSection({ items, title }) {
+  const id = `${title.toLowerCase().replace(/[^a-z]+/g, "-")}-title`;
+
   return (
-    <section className="home-access-section" aria-label={title}>
-      <div className="home-access-section-head">
-        <span className={privateArea ? "is-private" : "is-guest"}>
-          <Icon size={16} />
-          {title}
-        </span>
-      </div>
-      <div className="home-hub-grid">
+    <section className={styles.section} aria-labelledby={id}>
+      <h2 className={styles.sectionTitle} id={id}>
+        {title}
+      </h2>
+      <div className={styles.card}>
         {items.map((item) => (
-          <HubCard item={item} key={item.title} privateArea={privateArea} />
+          <ProjectRow item={item} key={item.title} />
         ))}
       </div>
     </section>
   );
 }
 
-function HubCard({ item, privateArea }) {
+function ProjectRow({ item }) {
   const Icon = item.icon;
-
-  return (
-    <Link
-      className={`hub-card ${item.featured ? "is-featured" : ""}`}
-      data-tone={item.tone}
-      href={item.href}
-    >
-      <div className="hub-card-topline">
-        <div className={`hub-card-icon ${item.tone === "travel" ? "is-magic" : ""}`}>
-          {item.tone === "travel" ? <span className="hub-magic-ears"><span /></span> : <Icon size={22} />}
-        </div>
-        {privateArea ? (
-          <span className="hub-card-status is-private"><LockKeyhole size={13} /> Protegido</span>
-        ) : (
-          <span className="hub-card-status">Convidado</span>
-        )}
-      </div>
-      <div className="hub-card-title">
-        <h3>{item.title}</h3>
-      </div>
-      <p>{item.text}</p>
-      <div className="hub-card-footer">
-        <span>{item.metric}</span>
-        <b>Abrir <ArrowRight size={16} /></b>
-      </div>
-    </Link>
+  const name = (
+    <span className={styles.rowName}>
+      {item.title}
+      {item.badge ? <span className={styles.badge}>{item.badge}</span> : null}
+      {item.href ? <ArrowUpRight aria-hidden="true" size={14} strokeWidth={2.2} /> : null}
+    </span>
   );
-}
+  const body = (
+    <>
+      {name}
+      <span className={styles.rowDesc}>{item.text}</span>
+    </>
+  );
 
-function Topbar() {
   return (
-    <header className="topbar">
-      <div className="container py-2 d-flex align-items-center justify-content-between">
-        <Link className="brand-mark" href="/">
-          <span aria-hidden="true">C</span>
-          Claudio Code
+    <div className={styles.row}>
+      <span className={styles.iconBox} aria-hidden="true">
+        <Icon size={20} />
+      </span>
+      {item.href && item.external ? (
+        <a className={styles.rowBody} href={item.href} rel="noopener noreferrer" target="_blank">
+          {body}
+        </a>
+      ) : item.href ? (
+        <Link className={styles.rowBody} href={item.href}>
+          {body}
         </Link>
-        <Link className="ui-button ghost compact" href="/concierge-da-familia">
-          Área do convidado
-        </Link>
-      </div>
-    </header>
+      ) : (
+        <div className={styles.rowBody}>{body}</div>
+      )}
+      <a
+        aria-label={item.supportLabel}
+        className={styles.support}
+        href={item.support}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        Apoiar
+      </a>
+    </div>
   );
 }
