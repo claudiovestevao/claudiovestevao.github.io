@@ -67,15 +67,15 @@ const STATUS = {
 
 const professionalProjects = [
   {
-    title: "Pulso Intelligence",
+    title: "CRO Intelligence",
     text: "Protótipo de agente de riscos. Projeto com dados 100% públicos e sintéticos.",
     href: "https://agentecro.claudiocode.dev",
     external: true,
     locked: true,
     icon: Activity,
     status: STATUS.prototype,
-    support: supportLink("o Pulso Intelligence"),
-    supportLabel: "Quero apoiar o Pulso Intelligence"
+    support: supportLink("o CRO Intelligence"),
+    supportLabel: "Quero apoiar o CRO Intelligence"
   }
 ];
 
