@@ -69,7 +69,7 @@ const professionalProjects = [
   {
     title: "CRO Intelligence",
     text: "Protótipo de agente de riscos. Projeto com dados 100% públicos e sintéticos.",
-    href: "https://agentecro.claudiocode.dev",
+    href: "https://crointelligence.claudiocode.dev",
     external: true,
     locked: true,
     icon: Activity,
