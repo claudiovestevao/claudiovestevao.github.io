@@ -432,3 +432,66 @@ a.rowBody:hover .rowName {
     padding: 0 12px;
   }
 }
+
+.projectRow {
+  align-items: flex-start;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+  margin-top: 10px;
+}
+
+.access {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.access:hover {
+  background: var(--accent-strong);
+  color: #fff;
+}
+
+.access svg {
+  color: currentColor;
+}
+
+.accessSoon {
+  background: var(--tint);
+  color: var(--muted);
+  cursor: default;
+}
+
+.accessSoon:hover {
+  background: var(--tint);
+  color: var(--muted);
+}
+
+.supportLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-color: #c9d0dc;
+  text-underline-offset: 3px;
+}
+
+.supportLink:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}

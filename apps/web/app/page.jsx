@@ -67,15 +67,15 @@ const STATUS = {
 
 const professionalProjects = [
   {
-    title: "Pulso de Riscos",
+    title: "Pulso Intelligence",
     text: "Protótipo de agente de riscos. Projeto com dados 100% públicos e sintéticos.",
     href: "https://agentecro.claudiocode.dev",
     external: true,
     locked: true,
     icon: Activity,
     status: STATUS.prototype,
-    support: supportLink("o Pulso de Riscos"),
-    supportLabel: "Quero apoiar o Pulso de Riscos"
+    support: supportLink("o Pulso Intelligence"),
+    supportLabel: "Quero apoiar o Pulso Intelligence"
   }
 ];
 
@@ -296,48 +296,45 @@ function ProjectSection({ items, title }) {
 
 function ProjectRow({ item }) {
   const Icon = item.icon;
-  const name = (
-    <span className={styles.rowName}>
-      {item.title}
-      {item.locked ? (
-        <LockKeyhole aria-label="Acesso restrito" className={styles.lock} role="img" size={14} strokeWidth={2.2} />
-      ) : null}
-      {item.href ? <ArrowUpRight aria-hidden="true" size={14} strokeWidth={2.2} /> : null}
-      {item.status ? <StatusBadge status={item.status} /> : null}
-    </span>
-  );
-  const body = (
-    <>
-      {name}
-      <span className={styles.rowDesc}>{item.text}</span>
-    </>
-  );
+  const accessProps = item.external ? { rel: "noopener noreferrer", target: "_blank" } : {};
+  const AccessTag = item.external ? "a" : Link;
 
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${styles.projectRow}`}>
       <span className={styles.iconBox} aria-hidden="true">
         <Icon size={20} />
       </span>
-      {item.href && item.external ? (
-        <a className={styles.rowBody} href={item.href} rel="noopener noreferrer" target="_blank">
-          {body}
-        </a>
-      ) : item.href ? (
-        <Link className={styles.rowBody} href={item.href}>
-          {body}
-        </Link>
-      ) : (
-        <div className={styles.rowBody}>{body}</div>
-      )}
-      <a
-        aria-label={item.supportLabel}
-        className={styles.support}
-        href={item.support}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        Apoiar
-      </a>
+      <div className={styles.rowBody}>
+        <span className={styles.rowName}>
+          {item.title}
+          {item.locked ? (
+            <LockKeyhole aria-label="Acesso restrito" className={styles.lock} role="img" size={14} strokeWidth={2.2} />
+          ) : null}
+          {item.status ? <StatusBadge status={item.status} /> : null}
+        </span>
+        <span className={styles.rowDesc}>{item.text}</span>
+        <div className={styles.actions}>
+          {item.href ? (
+            <AccessTag className={styles.access} href={item.href} {...accessProps}>
+              Acessar
+              <ArrowUpRight aria-hidden="true" size={14} strokeWidth={2.4} />
+            </AccessTag>
+          ) : (
+            <span className={`${styles.access} ${styles.accessSoon}`} aria-disabled="true">
+              Em breve
+            </span>
+          )}
+          <a
+            aria-label={item.supportLabel}
+            className={styles.supportLink}
+            href={item.support}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Quero apoiar
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
