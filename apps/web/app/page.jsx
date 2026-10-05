@@ -83,7 +83,7 @@ const businessProjects = [
   {
     title: "Festei",
     text: "Festas infantis organizadas por agente · em parceria com Douglas Siqueira",
-    href: "https://festei-site.pages.dev",
+    href: "https://festei.app",
     external: true,
     icon: PartyPopper,
     status: STATUS.building,
@@ -111,14 +111,6 @@ const volunteerProjects = [
     status: STATUS.prototype,
     support: supportLink("o UmOlhar"),
     supportLabel: "Quero apoiar o UmOlhar"
-  },
-  {
-    title: "Pessoas com deficiência visual",
-    text: "Agentes a serviço da autonomia de quem enxerga pouco ou não enxerga.",
-    icon: Eye,
-    status: STATUS.concept,
-    support: supportLink("o projeto para pessoas com deficiência visual"),
-    supportLabel: "Quero apoiar o projeto para pessoas com deficiência visual"
   },
   {
     title: "Fiscalização de parques e praças",
