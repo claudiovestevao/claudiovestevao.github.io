@@ -178,8 +178,7 @@ export default function HomePage() {
             </p>
             <p>Gosto de transformar problemas reais em produtos digitais, de agentes de IA a projetos como o Festei.</p>
             <p>
-              Pai da Luiza e do Arthur, paulistano, são-paulino e sempre procurando um próximo projeto que valha a pena
-              construir.
+              Filho de professores da rede pública, sou paulistano, tenho 7 irmãos e morei boa parte da vida em Guarulhos. Casei com a Nathalie e hoje sou pai da Luiza e do Arthur. Sou são-paulino, adoro conhecer lugares novos e estou sempre tirando algum projeto do papel.
             </p>
           </div>
         </section>
