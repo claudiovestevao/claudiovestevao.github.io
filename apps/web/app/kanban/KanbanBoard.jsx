@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarCheck, CalendarDays, CalendarPlus, Clock, Filter, Pencil, Plane, Plus, RefreshCw, Trash2, X } from "lucide-react";
+import { CalendarCheck, CalendarDays, CalendarPlus, Clock, Filter, Mic, Pencil, Plane, Plus, RefreshCw, Trash2, X } from "lucide-react";
 
 const COLUMNS = [
   { id: "todo", title: "To Do" },
@@ -78,6 +78,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
   const [composerText, setComposerText] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showVoice, setShowVoice] = useState(false);
   const [calendar, setCalendar] = useState({ connected: false, configured: true, calendars: [], selectedCalendarIds: [], syncCalendarId: "primary", events: [] });
   const [calendarStatus, setCalendarStatus] = useState({ type: "idle", text: "" });
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -788,7 +789,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
   return (
     <section className="tk-shell">
       {notice ? <div className={`kanban-toast tk-toast is-${notice.type}`} role="status">{notice.text}</div> : null}
-      {kanbanAgentId ? (
+      {kanbanAgentId && showVoice ? (
         <aside className="kanban-voice-agent" aria-label="Agente Kanban por voz">
           <elevenlabs-convai agent-id={kanbanAgentId}></elevenlabs-convai>
         </aside>
@@ -836,6 +837,18 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
             selected={filters.due === "next7"}
             tone="soon"
           />
+          {kanbanAgentId ? (
+            <button
+              aria-pressed={showVoice}
+              className={`tk-btn ${showVoice ? "is-active" : ""}`}
+              onClick={() => setShowVoice((value) => !value)}
+              title={showVoice ? "Esconder assistente de voz" : "Falar com o assistente de voz"}
+              type="button"
+            >
+              <Mic size={15} />
+              Voz
+            </button>
+          ) : null}
           <button
             aria-expanded={showCalendar}
             className={`tk-btn ${showCalendar ? "is-active" : ""}`}
