@@ -2,11 +2,13 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { ArrowLeft, Columns3, LockKeyhole } from "lucide-react";
 import KanbanBoard from "./KanbanBoard";
+import PasswordLogin from "../economics/PasswordLogin";
 import {
   ECONOMICS_ACCESS_COOKIE,
   ECONOMICS_CSRF_COOKIE,
   createEconomicsCsrfToken,
   hasEconomicsGoogleConfig,
+  hasEconomicsPasswordLogin,
   verifyEconomicsAccessToken
 } from "@/lib/economics-session";
 
@@ -81,7 +83,8 @@ function KanbanLogin({ error }) {
         >
           Entrar com Google
         </Link>
-        {error ? <small className="travel-auth-message" role="alert">Não consegui abrir o Kanban. Entre novamente.</small> : null}
+        {hasEconomicsPasswordLogin() ? <PasswordLogin next="/kanban" /> : null}
+        {error ? <small className="travel-auth-message" role="alert">{error === "senha-invalida" ? "Senha incorreta." : "Não consegui abrir o Kanban. Entre novamente."}</small> : null}
       </section>
     </main>
   );

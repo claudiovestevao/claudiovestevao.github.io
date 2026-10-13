@@ -3,11 +3,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ArrowLeft, LockKeyhole, PiggyBank } from "lucide-react";
 import EconomicsDashboard from "./EconomicsDashboard";
+import PasswordLogin from "./PasswordLogin";
 import {
   ECONOMICS_ACCESS_COOKIE,
   ECONOMICS_CSRF_COOKIE,
   createEconomicsCsrfToken,
   hasEconomicsGoogleConfig,
+  hasEconomicsPasswordLogin,
   verifyEconomicsAccessToken
 } from "@/lib/economics-session";
 
@@ -87,6 +89,7 @@ function EconomicsLogin({ error }) {
         >
           Entrar com Google
         </Link>
+        {hasEconomicsPasswordLogin() ? <PasswordLogin next="/economics" /> : null}
         {message ? <small className="travel-auth-message" role="alert">{message}</small> : null}
       </section>
     </main>
@@ -94,6 +97,8 @@ function EconomicsLogin({ error }) {
 }
 
 function authMessage(error, googleReady) {
+  if (error === "senha-invalida") return "Senha incorreta.";
+  if (error === "senha-desativada") return "Login por senha não está configurado.";
   if (error === "unauthorized") return "Este e-mail não está liberado no Economics.";
   if (error === "google") return "Não consegui concluir o login com Google. Tente de novo.";
   if (error === "session") return "Sessão do Google não validada. Tente entrar novamente.";

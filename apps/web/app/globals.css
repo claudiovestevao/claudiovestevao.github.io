@@ -5482,3 +5482,42 @@ select {
   }
 }
 
+
+.economics-password-form {
+  display: grid;
+  gap: .4rem;
+  text-align: left;
+}
+
+.economics-password-form label {
+  color: #4b5f78;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.economics-password-form div {
+  display: flex;
+  gap: .5rem;
+}
+
+.economics-password-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius);
+  padding: .65rem .8rem;
+  font: inherit;
+}
+
+.economics-password-form button {
+  min-height: 3rem;
+  border: 1px solid #102a43;
+  border-radius: var(--radius);
+  padding: .65rem 1rem;
+  color: #102a43;
+  background: #fff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}

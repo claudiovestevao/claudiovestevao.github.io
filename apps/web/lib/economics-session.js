@@ -20,10 +20,10 @@ export function createEconomicsCsrfToken() {
   return randomUUID();
 }
 
-export function createEconomicsAccessToken(user = {}) {
+export function createEconomicsAccessToken(user = {}, maxAgeSeconds = ECONOMICS_SESSION_MAX_AGE_SECONDS) {
   const profile = economicsProfileForEmail(user.email);
   const payload = {
-    exp: Math.floor(Date.now() / 1000) + ECONOMICS_SESSION_MAX_AGE_SECONDS,
+    exp: Math.floor(Date.now() / 1000) + maxAgeSeconds,
     email: clean(profile?.email || user.email).toLowerCase(),
     name: clean(user.name) || profile?.name || displayNameFromEmail(user.email),
     role: profile?.role || "owner",
@@ -154,4 +154,8 @@ function constantTimeEqual(a, b) {
 
 function clean(value) {
   return String(value ?? "").trim();
+}
+
+export function hasEconomicsPasswordLogin() {
+  return String(process.env.ECONOMICS_AGENT_PASSWORD || "").length >= 16;
 }
