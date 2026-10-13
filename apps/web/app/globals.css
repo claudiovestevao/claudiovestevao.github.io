@@ -5680,6 +5680,12 @@ select {
 .tk-btn.tone-danger b { background: #c9372c; }
 .tk-btn.tone-today b { color: #533f04; background: #f5cd47; }
 .tk-btn.tone-soon b { background: #1d7afc; }
+.tk-btn.tone-warn b { color: #533f04; background: #f5cd47; }
+
+.tk-calendar-panel {
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+}
 
 .tk-panel {
   display: flex;
@@ -6274,6 +6280,28 @@ select {
 
   .tk-panel label {
     flex: 1 1 40%;
+  }
+
+  .tk-calendar-panel .kanban-calendar-strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .45rem;
+  }
+
+  .tk-calendar-panel .kanban-calendar-events,
+  .tk-calendar-panel .kanban-calendar-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tk-calendar-panel .kanban-calendar-event {
+    flex: 0 0 auto;
+    max-width: 62vw;
+  }
+
+  .tk-calendar-panel .kanban-calendar-chips button {
+    flex: 0 0 auto;
   }
 
   .tk-overlay {

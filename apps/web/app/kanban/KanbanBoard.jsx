@@ -77,7 +77,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
   const [composerColumn, setComposerColumn] = useState("");
   const [composerText, setComposerText] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(true);
   const [showVoice, setShowVoice] = useState(false);
   const [calendar, setCalendar] = useState({ connected: false, configured: true, calendars: [], selectedCalendarIds: [], syncCalendarId: "primary", events: [] });
   const [calendarStatus, setCalendarStatus] = useState({ type: "idle", text: "" });
@@ -104,6 +104,21 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
   useEffect(() => {
     boardRef.current = board;
   }, [board]);
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("kanban:showCalendar") === "0") setShowCalendar(false);
+    } catch {}
+  }, []);
+
+  function toggleCalendar() {
+    setShowCalendar((value) => {
+      try {
+        window.localStorage.setItem("kanban:showCalendar", value ? "0" : "1");
+      } catch {}
+      return !value;
+    });
+  }
 
   useEffect(() => {
     calendarRef.current = calendar;
@@ -783,6 +798,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     return { column: columnId, position: columnCards.length };
   }
 
+  const calendarNeedsAttention = !calendar.configured || !calendar.connected || calendar.needsReconnect;
   const dropIsNoop = draggingId && dragOver ? isNoopDrop(draggingId, dragOver) : true;
   const placeholderHeight = ghost?.height || 44;
 
@@ -851,13 +867,14 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
           ) : null}
           <button
             aria-expanded={showCalendar}
-            className={`tk-btn ${showCalendar ? "is-active" : ""}`}
-            onClick={() => setShowCalendar((value) => !value)}
+            className={`tk-btn ${showCalendar ? "is-active" : ""} ${calendarNeedsAttention ? "tone-warn" : ""}`}
+            onClick={toggleCalendar}
+            title={calendarNeedsAttention ? "Google Agenda desconectada" : "Google Agenda"}
             type="button"
           >
             <CalendarDays size={15} />
             Agenda
-            {calendar.events?.length ? <b>{calendar.events.length}</b> : null}
+            {calendarNeedsAttention ? <b>!</b> : calendar.events?.length ? <b>{calendar.events.length}</b> : null}
           </button>
           <button
             aria-expanded={showFilters}
