@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarCheck, CalendarPlus, Check, GripVertical, Pencil, Plane, Plus, RefreshCw, SlidersHorizontal, Trash2, X } from "lucide-react";
+import { CalendarCheck, CalendarDays, CalendarPlus, Clock, Filter, Pencil, Plane, Plus, RefreshCw, Trash2, X } from "lucide-react";
 
 const COLUMNS = [
   { id: "todo", title: "To Do" },
@@ -11,10 +11,10 @@ const COLUMNS = [
 
 const OWNERS = ["Sem dono", "Vitor", "Nathalie", "Ambos"];
 const OWNER_TAGS = {
-  "Sem dono": "Sem dono",
+  "Sem dono": "?",
   Vitor: "VE",
   Nathalie: "NB",
-  Ambos: "Ambos"
+  Ambos: "VN"
 };
 const OWNER_CLASSES = {
   "Sem dono": "sem-dono",
@@ -56,6 +56,10 @@ const EMPTY_FORM = {
 };
 
 const AGENT_SYNC_INTERVAL_MS = 4000;
+const LONG_PRESS_MS = 320;
+const MOUSE_DRAG_THRESHOLD = 6;
+const TOUCH_CANCEL_THRESHOLD = 9;
+const AUTOSCROLL_EDGE = 56;
 const REMINDERS = [
   { id: "none", label: "Sem lembrete" },
   { id: "same_day", label: "No dia" },
@@ -66,15 +70,21 @@ const REMINDERS = [
 
 export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, user }) {
   const [board, setBoard] = useState({ imports: {}, cards: [] });
-  const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState("");
   const [editingForm, setEditingForm] = useState(EMPTY_FORM);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [focusTitle, setFocusTitle] = useState(true);
+  const [composerColumn, setComposerColumn] = useState("");
+  const [composerText, setComposerText] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [calendar, setCalendar] = useState({ connected: false, configured: true, calendars: [], selectedCalendarIds: [], syncCalendarId: "primary", events: [] });
   const [calendarStatus, setCalendarStatus] = useState({ type: "idle", text: "" });
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [syncingCardId, setSyncingCardId] = useState("");
   const [draggingId, setDraggingId] = useState("");
   const [dragOver, setDragOver] = useState(null);
+  const [ghost, setGhost] = useState(null);
   const [notice, setNotice] = useState(null);
   const [status, setStatus] = useState({ type: "idle", text: "" });
   const boardRef = useRef(board);
@@ -85,6 +95,10 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
   const statusRef = useRef(status);
   const autoSyncingRef = useRef(new Set());
   const initialCalendarSyncRef = useRef(false);
+  const boardScrollRef = useRef(null);
+  const ghostRef = useRef(null);
+  const autoScrollFrameRef = useRef(0);
+  const composerRef = useRef(null);
 
   useEffect(() => {
     boardRef.current = board;
@@ -100,7 +114,31 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
 
   useEffect(() => () => {
     if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
+    endDragSession();
   }, []);
+
+  // Enquanto um card esta sendo arrastado pelo toque, impede a pagina/lista de rolar.
+  useEffect(() => {
+    function blockScrollWhileDragging(event) {
+      if (dragSessionRef.current?.active) event.preventDefault();
+    }
+    document.addEventListener("touchmove", blockScrollWhileDragging, { passive: false });
+    return () => document.removeEventListener("touchmove", blockScrollWhileDragging);
+  }, []);
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key !== "Escape") return;
+      if (dragSessionRef.current) {
+        endDragSession();
+        return;
+      }
+      if (editingId) cancelEditing();
+      else if (composerColumn) closeComposer();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [composerColumn, editingId]);
 
   useEffect(() => {
     const message = calendarNoticeMessage(calendarNotice);
@@ -108,6 +146,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
 
     setCalendarStatus({ type: message.type, text: message.text });
     showNotice(message.toast || message.text, message.type);
+    setShowCalendar(true);
 
     const url = new URL(window.location.href);
     url.searchParams.delete("calendar");
@@ -157,7 +196,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     let active = true;
 
     async function syncBoard() {
-      if (editingId || draggingId || statusRef.current.type === "saving") return;
+      if (editingId || draggingId || composerColumn || statusRef.current.type === "saving") return;
 
       const payload = await fetchBoard();
       if (!active || !payload.ok) return;
@@ -186,7 +225,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
       active = false;
       window.clearInterval(interval);
     };
-  }, [draggingId, editingId]);
+  }, [composerColumn, draggingId, editingId]);
 
   async function loadCalendar() {
     const payload = await fetchCalendar();
@@ -215,10 +254,9 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
       ...BASE_GROUPS,
       TRAVEL_GROUP,
       ...board.cards.map((card) => card.group || "Geral"),
-      form.group,
       editingForm.group
     ]);
-  }, [board.cards, editingForm.group, form.group]);
+  }, [board.cards, editingForm.group]);
 
   const groupFilterOptions = useMemo(() => (
     groupOptions.map((group) => ({
@@ -243,6 +281,16 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     return groups;
   }, [filteredCards]);
 
+  const columnPositions = useMemo(() => {
+    const positions = new Map();
+    const counters = Object.fromEntries(COLUMNS.map((column) => [column.id, 0]));
+    for (const card of board.cards) {
+      positions.set(card.id, counters[card.column] ?? 0);
+      counters[card.column] = (counters[card.column] ?? 0) + 1;
+    }
+    return { positions, counts: counters };
+  }, [board.cards]);
+
   const activeFilterCount = useMemo(() => (
     Object.values(filters).filter((value) => value !== ALL_FILTER).length
   ), [filters]);
@@ -256,7 +304,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
       owner,
       tag: OWNER_TAGS[owner],
       className: OWNER_CLASSES[owner],
-      total: board.cards.filter((card) => card.owner === owner).length
+      total: board.cards.filter((card) => card.owner === owner && card.column !== "done").length
     }))
   ), [board.cards]);
 
@@ -279,8 +327,12 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     return { overdue, today: todayCards, soon };
   }, [baseFilteredCards]);
 
+  const editingCard = editingId ? board.cards.find((card) => card.id === editingId) || null : null;
+  const ghostCard = ghost ? board.cards.find((card) => card.id === ghost.cardId) || null : null;
+
   async function persist(nextBoard) {
     const normalized = normalizeBoard(nextBoard);
+    boardRef.current = normalized;
     setBoard(normalized);
     setStatus({ type: "saving", text: "Salvando..." });
 
@@ -291,10 +343,10 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
         "x-economics-csrf": csrfToken
       },
       body: JSON.stringify({ board: normalized })
-    });
-    const payload = await response.json().catch(() => ({}));
+    }).catch(() => null);
+    const payload = response ? await response.json().catch(() => ({})) : {};
 
-    if (!response.ok || !payload.ok) {
+    if (!response?.ok || !payload.ok) {
       setStatus({ type: "error", text: payload.message || "Não consegui salvar." });
       return;
     }
@@ -302,8 +354,10 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     const savedBoard = normalizeBoard(payload.board || normalized);
     boardRef.current = savedBoard;
     setBoard(savedBoard);
-    setStatus({ type: "success", text: "Salvo." });
-    window.setTimeout(() => setStatus({ type: "idle", text: "" }), 1400);
+    setStatus({ type: "success", text: "Salvo" });
+    window.setTimeout(() => {
+      if (statusRef.current.type === "success") setStatus({ type: "idle", text: "" });
+    }, 1400);
   }
 
   function showNotice(text, type = "success") {
@@ -312,30 +366,58 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     noticeTimerRef.current = window.setTimeout(() => setNotice(null), 3600);
   }
 
-  function addCard(event) {
-    event.preventDefault();
-    const title = form.title.trim();
-    if (!title) return;
+  function openComposer(column) {
+    setComposerColumn(column);
+    setComposerText("");
+    window.requestAnimationFrame(() => {
+      composerRef.current?.focus();
+      composerRef.current?.scrollIntoView({ block: "nearest" });
+    });
+  }
 
-    setForm(EMPTY_FORM);
-    persist({
-      ...board,
-      cards: [
-        {
-          id: crypto.randomUUID(),
-          title,
-          group: form.group,
-          owner: form.owner,
-          priority: form.priority,
-          dueDate: form.dueDate,
-          dueTime: form.dueTime,
-          reminder: form.reminder,
-          column: "todo",
-          createdBy: user?.name || "Família",
-          createdAt: new Date().toISOString()
-        },
-        ...board.cards
-      ]
+  function closeComposer() {
+    setComposerColumn("");
+    setComposerText("");
+  }
+
+  function addCardToColumn(event, column) {
+    event?.preventDefault?.();
+    const title = composerText.trim();
+    if (!title) {
+      composerRef.current?.focus();
+      return;
+    }
+
+    const group = filters.group !== ALL_FILTER
+      ? groupOptions.find((item) => groupKey(item) === filters.group) || "Geral"
+      : "Geral";
+    const newCard = {
+      id: crypto.randomUUID(),
+      title,
+      group,
+      owner: filters.owner !== ALL_FILTER ? filters.owner : "Sem dono",
+      priority: filters.priority !== ALL_FILTER ? filters.priority : "medium",
+      dueDate: "",
+      dueTime: "",
+      reminder: "none",
+      column,
+      createdBy: user?.name || "Família",
+      createdAt: new Date().toISOString()
+    };
+
+    const currentBoard = boardRef.current;
+    const cards = [...currentBoard.cards];
+    let lastIndex = -1;
+    cards.forEach((card, index) => {
+      if (card.column === column) lastIndex = index;
+    });
+    cards.splice(lastIndex >= 0 ? lastIndex + 1 : cards.length, 0, newCard);
+
+    setComposerText("");
+    persist({ ...currentBoard, cards });
+    window.requestAnimationFrame(() => {
+      composerRef.current?.focus();
+      composerRef.current?.scrollIntoView({ block: "nearest" });
     });
   }
 
@@ -354,7 +436,7 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     const sourceIndex = sourceCards.findIndex((card) => card.id === cardId);
     const isCrossColumn = currentCard.column !== column;
     const adjustedPosition = !isCrossColumn && sourceIndex >= 0 && sourceIndex < position ? position - 1 : position;
-    const nextIndex = isCrossColumn ? 0 : (Number.isInteger(adjustedPosition) ? Math.max(0, Math.min(adjustedPosition, targetCards.length)) : 0);
+    const nextIndex = Number.isInteger(adjustedPosition) ? Math.max(0, Math.min(adjustedPosition, targetCards.length)) : targetCards.length;
     targetCards.splice(nextIndex, 0, movedCard);
 
     const cards = COLUMNS.flatMap((item) => cardsByColumn[item.id]);
@@ -362,37 +444,66 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
   }
 
   function deleteCard(cardId) {
+    const currentBoard = boardRef.current;
+    const removed = currentBoard.cards.find((card) => card.id === cardId);
+    cancelEditing();
     persist({
-      ...board,
-      cards: board.cards.filter((card) => card.id !== cardId)
+      ...currentBoard,
+      cards: currentBoard.cards.filter((card) => card.id !== cardId)
     });
+    if (removed) showNotice(`Cartão excluído: ${removed.title}`);
   }
 
-  function startEditing(card) {
+  function startEditing(card, options = {}) {
+    setFocusTitle(!options.fromTouch);
+    setConfirmDelete(false);
     setEditingId(card.id);
-    setEditingForm({ title: card.title, group: canonicalGroupLabel(card.group, groupOptions), owner: card.owner, priority: card.priority, column: card.column, dueDate: card.dueDate || "", dueTime: card.dueTime || "", reminder: card.reminder || "none" });
+    setEditingForm({
+      title: card.title,
+      group: canonicalGroupLabel(card.group, groupOptions),
+      owner: card.owner,
+      priority: card.priority,
+      column: card.column,
+      dueDate: card.dueDate || "",
+      dueTime: card.dueTime || "",
+      reminder: card.reminder || "none"
+    });
   }
 
   function cancelEditing() {
     setEditingId("");
     setEditingForm(EMPTY_FORM);
+    setConfirmDelete(false);
   }
 
   function saveEditing(cardId) {
-    const title = editingForm.title.trim();
+    const title = editingForm.title.replace(/\s+/g, " ").trim();
     if (!title) return;
 
-    const currentCard = board.cards.find((card) => card.id === cardId);
-    const editedCard = currentCard
-      ? { ...currentCard, title, group: editingForm.group, owner: editingForm.owner, priority: editingForm.priority, column: editingForm.column, dueDate: editingForm.dueDate, dueTime: editingForm.dueTime, reminder: editingForm.reminder }
-      : null;
-    if (!editedCard) return;
+    const currentBoard = boardRef.current;
+    const currentCard = currentBoard.cards.find((card) => card.id === cardId);
+    if (!currentCard) {
+      cancelEditing();
+      return;
+    }
+
+    const editedCard = {
+      ...currentCard,
+      title,
+      group: cleanGroupLabel(editingForm.group) || "Geral",
+      owner: editingForm.owner,
+      priority: editingForm.priority,
+      column: editingForm.column,
+      dueDate: editingForm.dueDate,
+      dueTime: editingForm.dueDate ? editingForm.dueTime : "",
+      reminder: editingForm.dueDate ? editingForm.reminder : "none"
+    };
 
     persist({
-      ...board,
+      ...currentBoard,
       cards: editedCard.column !== currentCard.column
-        ? moveCardToColumnTop(board.cards, editedCard)
-        : board.cards.map((card) => (card.id === cardId ? editedCard : card))
+        ? moveCardToColumnTop(currentBoard.cards, editedCard)
+        : currentBoard.cards.map((card) => (card.id === cardId ? editedCard : card))
     });
     cancelEditing();
   }
@@ -493,6 +604,8 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     }
   }
 
+  // ---------- Arrastar e soltar (mouse: arrasta direto; toque: segurar ~0,3s) ----------
+
   function setDragTarget(next) {
     dragOverRef.current = next;
     setDragOver((current) => (
@@ -500,62 +613,153 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
     ));
   }
 
-  function startPointerDrag(event, cardId, isEditing) {
-    if (isEditing || isInteractiveTarget(event.target) || (event.pointerType === "mouse" && event.button !== 0)) return;
-    dragSessionRef.current = {
+  function startPointerDrag(event, cardId) {
+    if (dragSessionRef.current || isInteractiveTarget(event.target)) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const session = {
       active: false,
       cardId,
       pointerId: event.pointerId,
       pointerType: event.pointerType,
       startX: event.clientX,
-      startY: event.clientY
+      startY: event.clientY,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+      width: rect.width,
+      height: rect.height,
+      timer: 0,
+      onMove: null,
+      onUp: null,
+      onCancel: null
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    session.onMove = (moveEvent) => handlePointerMove(session, moveEvent);
+    session.onUp = (upEvent) => handlePointerUp(session, upEvent);
+    session.onCancel = (cancelEvent) => {
+      if (cancelEvent.pointerId === session.pointerId) endDragSession();
+    };
+
+    if (event.pointerType !== "mouse") {
+      session.timer = window.setTimeout(() => {
+        if (dragSessionRef.current === session && !session.active) activateDrag(session);
+      }, LONG_PRESS_MS);
+    }
+
+    dragSessionRef.current = session;
+    window.addEventListener("pointermove", session.onMove, { passive: false });
+    window.addEventListener("pointerup", session.onUp);
+    window.addEventListener("pointercancel", session.onCancel);
   }
 
-  function updatePointerDrag(event) {
-    const session = dragSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) return;
+  function activateDrag(session) {
+    session.active = true;
+    if (session.pointerType !== "mouse") navigator.vibrate?.(12);
+    setDraggingId(session.cardId);
+    setGhost({ cardId: session.cardId, width: session.width, height: session.height, x: session.lastX - session.offsetX, y: session.lastY - session.offsetY });
+    setDragTarget(getPointerDropTarget(session.lastX, session.lastY));
+    window.cancelAnimationFrame(autoScrollFrameRef.current);
+    autoScrollFrameRef.current = window.requestAnimationFrame(autoScrollTick);
+  }
 
+  function handlePointerMove(session, event) {
+    if (event.pointerId !== session.pointerId) return;
+    session.lastX = event.clientX;
+    session.lastY = event.clientY;
     const moved = Math.hypot(event.clientX - session.startX, event.clientY - session.startY);
-    if (!session.active && moved < 7) return;
 
     if (!session.active) {
-      session.active = true;
-      setDraggingId(session.cardId);
+      if (session.pointerType === "mouse") {
+        if (moved >= MOUSE_DRAG_THRESHOLD) activateDrag(session);
+      } else if (moved > TOUCH_CANCEL_THRESHOLD) {
+        // O dedo se mexeu antes do toque longo: e rolagem, nao arrasto.
+        endDragSession();
+      }
+      return;
     }
 
     event.preventDefault();
-    const target = getPointerDropTarget(event.clientX, event.clientY, session.cardId);
-    setDragTarget(target);
+    if (ghostRef.current) {
+      ghostRef.current.style.transform = `translate3d(${event.clientX - session.offsetX}px, ${event.clientY - session.offsetY}px, 0)`;
+    }
+    setDragTarget(getPointerDropTarget(event.clientX, event.clientY));
   }
 
-  function finishPointerDrag(event) {
-    const session = dragSessionRef.current;
-    if (!session || session.pointerId !== event.pointerId) return;
+  function handlePointerUp(session, event) {
+    if (event.pointerId !== session.pointerId) return;
 
-    if (session.active && dragOverRef.current) {
-      const currentCard = boardRef.current.cards.find((card) => card.id === session.cardId);
-      const movedAcrossColumns = currentCard?.column && currentCard.column !== dragOverRef.current.column;
-      const touchMoveToNewColumn = session.pointerType !== "mouse" && movedAcrossColumns;
-      moveCard(session.cardId, dragOverRef.current.column, touchMoveToNewColumn ? 0 : dragOverRef.current.position);
+    if (!session.active) {
+      const moved = Math.hypot(event.clientX - session.startX, event.clientY - session.startY);
+      endDragSession();
+      if (moved < MOUSE_DRAG_THRESHOLD && !isInteractiveTarget(event.target)) {
+        const card = boardRef.current.cards.find((item) => item.id === session.cardId);
+        if (card) {
+          if (session.pointerType !== "mouse") suppressGhostClick();
+          startEditing(card, { fromTouch: session.pointerType !== "mouse" });
+        }
+      }
+      return;
     }
 
+    const target = dragOverRef.current;
+    const cardId = session.cardId;
+    endDragSession();
+    if (target && !isNoopDrop(cardId, target)) moveCard(cardId, target.column, target.position);
+  }
+
+  function endDragSession() {
+    const session = dragSessionRef.current;
+    if (session) {
+      window.clearTimeout(session.timer);
+      window.removeEventListener("pointermove", session.onMove);
+      window.removeEventListener("pointerup", session.onUp);
+      window.removeEventListener("pointercancel", session.onCancel);
+    }
+    window.cancelAnimationFrame(autoScrollFrameRef.current);
     dragSessionRef.current = null;
     setDraggingId("");
+    setGhost(null);
     setDragTarget(null);
   }
 
-  function cancelPointerDrag() {
-    dragSessionRef.current = null;
-    setDraggingId("");
-    setDragTarget(null);
+  function autoScrollTick() {
+    const session = dragSessionRef.current;
+    if (!session?.active) return;
+
+    const boardElement = boardScrollRef.current;
+    if (boardElement) {
+      const rect = boardElement.getBoundingClientRect();
+      if (session.lastX < rect.left + AUTOSCROLL_EDGE) boardElement.scrollLeft -= scrollStep(rect.left + AUTOSCROLL_EDGE - session.lastX);
+      else if (session.lastX > rect.right - AUTOSCROLL_EDGE) boardElement.scrollLeft += scrollStep(session.lastX - (rect.right - AUTOSCROLL_EDGE));
+    }
+
+    const listElement = document.elementFromPoint(session.lastX, session.lastY)?.closest?.("[data-kanban-column]")?.querySelector?.("[data-kanban-scroll]");
+    if (listElement) {
+      const rect = listElement.getBoundingClientRect();
+      if (session.lastY < rect.top + AUTOSCROLL_EDGE) listElement.scrollTop -= scrollStep(rect.top + AUTOSCROLL_EDGE - session.lastY);
+      else if (session.lastY > rect.bottom - AUTOSCROLL_EDGE) listElement.scrollTop += scrollStep(session.lastY - (rect.bottom - AUTOSCROLL_EDGE));
+    }
+
+    setDragTarget(getPointerDropTarget(session.lastX, session.lastY));
+    autoScrollFrameRef.current = window.requestAnimationFrame(autoScrollTick);
   }
 
-  function getPointerDropTarget(clientX, clientY, cardId) {
+  function isNoopDrop(cardId, target) {
+    const card = boardRef.current.cards.find((item) => item.id === cardId);
+    if (!card || card.column !== target.column) return false;
+    const index = boardRef.current.cards.filter((item) => item.column === card.column).findIndex((item) => item.id === cardId);
+    return target.position === index || target.position === index + 1;
+  }
+
+  function getPointerDropTarget(clientX, clientY) {
     const element = document.elementFromPoint(clientX, clientY);
+    if (element?.closest?.("[data-kanban-placeholder]")) return dragOverRef.current;
+
     const columnElement = element?.closest?.("[data-kanban-column]");
-    if (!columnElement) return null;
+    if (!columnElement) return dragOverRef.current;
 
     const columnId = columnElement.dataset.kanbanColumn;
     const columnCards = boardRef.current.cards.filter((card) => card.column === columnId);
@@ -564,116 +768,102 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
       const targetCardId = cardElement.dataset.kanbanCardId;
       const targetIndex = columnCards.findIndex((card) => card.id === targetCardId);
       if (targetIndex >= 0) {
-        if (targetCardId === cardId) return { column: columnId, position: targetIndex };
         const rect = cardElement.getBoundingClientRect();
         return { column: columnId, position: targetIndex + (clientY > rect.top + rect.height / 2 ? 1 : 0) };
       }
     }
 
+    // Fora de um card: antes do primeiro (se acima dele) ou no fim da lista.
+    const firstCard = columnElement.querySelector("[data-kanban-card-id]");
+    if (firstCard && clientY < firstCard.getBoundingClientRect().top) {
+      const firstIndex = columnCards.findIndex((card) => card.id === firstCard.dataset.kanbanCardId);
+      return { column: columnId, position: Math.max(0, firstIndex) };
+    }
     return { column: columnId, position: columnCards.length };
   }
 
+  const dropIsNoop = draggingId && dragOver ? isNoopDrop(draggingId, dragOver) : true;
+  const placeholderHeight = ghost?.height || 44;
+
   return (
-    <section className="kanban-shell">
-      {notice ? <div className={`kanban-toast is-${notice.type}`} role="status">{notice.text}</div> : null}
+    <section className="tk-shell">
+      {notice ? <div className={`kanban-toast tk-toast is-${notice.type}`} role="status">{notice.text}</div> : null}
       {kanbanAgentId ? (
         <aside className="kanban-voice-agent" aria-label="Agente Kanban por voz">
           <elevenlabs-convai agent-id={kanbanAgentId}></elevenlabs-convai>
         </aside>
       ) : null}
-      <div className="kanban-hero">
-        <div>
-          <span className="ui-badge">Organização da família</span>
-          <h1>Kanban</h1>
-          <div className="kanban-owner-summary" aria-label="Total por responsável">
-            {ownerTotals.map((item) => (
-              <span className={`kanban-owner-total owner-${item.className}`} key={item.owner}>
-                <b>{item.tag}</b>
-                {item.total} cards
-              </span>
-            ))}
-          </div>
+
+      <header className="tk-boardbar">
+        <h1>Kanban da família</h1>
+        <div className="tk-members" aria-label="Tarefas abertas por responsável">
+          {ownerTotals.filter((item) => item.owner !== "Sem dono").map((item) => (
+            <button
+              aria-pressed={filters.owner === item.owner}
+              className={`tk-member ${filters.owner === item.owner ? "is-active" : ""}`}
+              key={item.owner}
+              onClick={() => setFilters((current) => ({ ...current, owner: current.owner === item.owner ? ALL_FILTER : item.owner }))}
+              title={`${item.owner}: ${item.total} abertas`}
+              type="button"
+            >
+              <span className={`tk-avatar owner-${item.className}`}>{item.tag}</span>
+              {item.total}
+            </button>
+          ))}
         </div>
-        <form className="kanban-compose" onSubmit={addCard}>
-          <label className="kanban-compose-title">
-            <span>Nova tarefa</span>
-            <input
-              onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-              placeholder="Ex.: pagar conta, ligar para escola..."
-              value={form.title}
-            />
-          </label>
-          <div className="kanban-compose-controls">
-            <label>
-              <span>Grupo</span>
-              <select onChange={(event) => setForm((current) => ({ ...current, group: event.target.value }))} value={form.group}>
-                {groupOptions.map((group) => (
-                  <option key={group} value={group}>{group}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Dono</span>
-              <select onChange={(event) => setForm((current) => ({ ...current, owner: event.target.value }))} value={form.owner}>
-                {OWNERS.map((owner) => (
-                  <option key={owner} value={owner}>{owner}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Prioridade</span>
-              <select onChange={(event) => setForm((current) => ({ ...current, priority: event.target.value }))} value={form.priority}>
-                {PRIORITIES.map((priority) => (
-                  <option key={priority.id} value={priority.id}>{priority.label}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Data limite</span>
-              <input
-                onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))}
-                type="date"
-                value={form.dueDate}
-              />
-            </label>
-            <label>
-              <span>Horário</span>
-              <input
-                onChange={(event) => setForm((current) => ({ ...current, dueTime: event.target.value }))}
-                type="time"
-                value={form.dueTime}
-              />
-            </label>
-            <label>
-              <span>Lembrete</span>
-              <select onChange={(event) => setForm((current) => ({ ...current, reminder: event.target.value }))} value={form.reminder}>
-                {REMINDERS.map((reminder) => (
-                  <option key={reminder.id} value={reminder.id}>{reminder.label}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <button type="submit">
-            <Plus size={17} />
-            Adicionar
+        <span className={`tk-status is-${status.type}`} aria-live="polite">
+          {status.text || (activeFilterCount ? `${filteredCards.length} de ${board.cards.length} cartões` : "")}
+        </span>
+        <div className="tk-actions">
+          <DeadlineButton
+            cards={deadlineSummary.overdue}
+            label="Atrasados"
+            onClick={() => setFilters((current) => ({ ...current, due: current.due === "overdue" ? ALL_FILTER : "overdue" }))}
+            selected={filters.due === "overdue"}
+            tone="danger"
+          />
+          <DeadlineButton
+            cards={deadlineSummary.today}
+            label="Hoje"
+            onClick={() => setFilters((current) => ({ ...current, due: current.due === "today" ? ALL_FILTER : "today" }))}
+            selected={filters.due === "today"}
+            tone="today"
+          />
+          <DeadlineButton
+            cards={deadlineSummary.soon}
+            label="7 dias"
+            onClick={() => setFilters((current) => ({ ...current, due: current.due === "next7" ? ALL_FILTER : "next7" }))}
+            selected={filters.due === "next7"}
+            tone="soon"
+          />
+          <button
+            aria-expanded={showCalendar}
+            className={`tk-btn ${showCalendar ? "is-active" : ""}`}
+            onClick={() => setShowCalendar((value) => !value)}
+            type="button"
+          >
+            <CalendarDays size={15} />
+            Agenda
+            {calendar.events?.length ? <b>{calendar.events.length}</b> : null}
           </button>
-        </form>
-      </div>
+          <button
+            aria-expanded={showFilters}
+            className={`tk-btn ${showFilters || activeFilterCount ? "is-active" : ""}`}
+            onClick={() => setShowFilters((value) => !value)}
+            type="button"
+          >
+            <Filter size={15} />
+            Filtros
+            {activeFilterCount ? <b>{activeFilterCount}</b> : null}
+          </button>
+        </div>
+      </header>
 
-      <CalendarStrip
-        calendar={calendar}
-        calendarStatus={calendarStatus}
-        onRefresh={loadCalendar}
-        onSelectCalendar={selectCalendar}
-      />
-
-      <section className="kanban-filters" aria-label="Filtros do Kanban">
-        <div className="kanban-filters-title">
-          <SlidersHorizontal size={16} />
-          <span>Filtros</span>
+      {showFilters ? (
+        <section className="tk-panel" aria-label="Filtros do Kanban">
           <button
             aria-pressed={filters.group === groupKey(TRAVEL_GROUP)}
-            className={`kanban-travel-filter${filters.group === groupKey(TRAVEL_GROUP) ? " is-active" : ""}`}
+            className={`tk-chip ${filters.group === groupKey(TRAVEL_GROUP) ? "is-selected" : ""}`}
             onClick={() => setFilters((current) => ({
               ...current,
               group: current.group === groupKey(TRAVEL_GROUP) ? ALL_FILTER : groupKey(TRAVEL_GROUP)
@@ -681,268 +871,414 @@ export default function KanbanBoard({ csrfToken, calendarNotice, kanbanAgentId, 
             type="button"
           >
             <Plane size={14} />
-            Viagem
-            <span>{travelCardCount}</span>
+            Viagem ({travelCardCount})
           </button>
+          <label>
+            Responsável
+            <select onChange={(event) => setFilters((current) => ({ ...current, owner: event.target.value }))} value={filters.owner}>
+              <option value={ALL_FILTER}>Todos</option>
+              {OWNERS.map((owner) => (
+                <option key={owner} value={owner}>{owner}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Grupo
+            <select onChange={(event) => setFilters((current) => ({ ...current, group: event.target.value }))} value={filters.group}>
+              <option value={ALL_FILTER}>Todos</option>
+              {groupFilterOptions.map((group) => (
+                <option key={group.key} value={group.key}>{group.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Prioridade
+            <select onChange={(event) => setFilters((current) => ({ ...current, priority: event.target.value }))} value={filters.priority}>
+              <option value={ALL_FILTER}>Todas</option>
+              {PRIORITIES.map((priority) => (
+                <option key={priority.id} value={priority.id}>{priority.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Prazo
+            <select onChange={(event) => setFilters((current) => ({ ...current, due: event.target.value }))} value={filters.due}>
+              {DUE_FILTERS.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
+          </label>
+          <button className="tk-secondary" disabled={!activeFilterCount} onClick={() => setFilters(EMPTY_FILTERS)} type="button">
+            <X size={14} />
+            Limpar filtros
+          </button>
+        </section>
+      ) : null}
+
+      {showCalendar ? (
+        <div className="tk-panel tk-calendar-panel">
+          <CalendarStrip
+            calendar={calendar}
+            calendarStatus={calendarStatus}
+            onRefresh={loadCalendar}
+            onSelectCalendar={selectCalendar}
+          />
         </div>
-        <label>
-          <span>Responsável</span>
-          <select onChange={(event) => setFilters((current) => ({ ...current, owner: event.target.value }))} value={filters.owner}>
-            <option value={ALL_FILTER}>Todos</option>
-            {OWNERS.map((owner) => (
-              <option key={owner} value={owner}>{owner}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Grupo</span>
-          <select onChange={(event) => setFilters((current) => ({ ...current, group: event.target.value }))} value={filters.group}>
-            <option value={ALL_FILTER}>Todos</option>
-            {groupFilterOptions.map((group) => (
-              <option key={group.key} value={group.key}>{group.label}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Prioridade</span>
-          <select onChange={(event) => setFilters((current) => ({ ...current, priority: event.target.value }))} value={filters.priority}>
-            <option value={ALL_FILTER}>Todas</option>
-            {PRIORITIES.map((priority) => (
-              <option key={priority.id} value={priority.id}>{priority.label}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Prazo</span>
-          <select onChange={(event) => setFilters((current) => ({ ...current, due: event.target.value }))} value={filters.due}>
-            {DUE_FILTERS.map((item) => (
-              <option key={item.id} value={item.id}>{item.label}</option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="kanban-filter-reset"
-          disabled={!activeFilterCount}
-          onClick={() => setFilters(EMPTY_FILTERS)}
-          type="button"
-        >
-          <X size={15} />
-          Limpar
-        </button>
-      </section>
+      ) : null}
 
-      <div className="kanban-meta" aria-live="polite">
-        {status.text ? (
-          <span className={`is-${status.type}`}>{status.text}</span>
-        ) : (
-          <span>{activeFilterCount ? `${filteredCards.length} de ${board.cards.length} tarefas exibidas` : `${board.cards.length} tarefas no quadro`}</span>
-        )}
-      </div>
+      <div className={`tk-board ${draggingId ? "is-dragging" : ""}`} ref={boardScrollRef}>
+        {COLUMNS.map((column) => {
+          const cards = grouped[column.id];
+          const isTarget = Boolean(draggingId) && dragOver?.column === column.id;
+          const showPlaceholderAt = isTarget && !dropIsNoop ? dragOver.position : -1;
+          let placeholderRendered = false;
+          const placeholder = (
+            <div aria-hidden="true" className="tk-placeholder" data-kanban-placeholder="" key="placeholder" style={{ height: placeholderHeight }} />
+          );
 
-      <section className="kanban-deadlines" aria-label="Resumo de prazos">
-        <DeadlinePill
-          label="Atrasados"
-          cards={deadlineSummary.overdue}
-          onClick={() => setFilters((current) => ({ ...current, due: current.due === "overdue" ? ALL_FILTER : "overdue" }))}
-          selected={filters.due === "overdue"}
-          tone="danger"
-        />
-        <DeadlinePill
-          label="Hoje"
-          cards={deadlineSummary.today}
-          onClick={() => setFilters((current) => ({ ...current, due: current.due === "today" ? ALL_FILTER : "today" }))}
-          selected={filters.due === "today"}
-          tone="today"
-        />
-        <DeadlinePill
-          label="Próximos 7 dias"
-          cards={deadlineSummary.soon}
-          onClick={() => setFilters((current) => ({ ...current, due: current.due === "next7" ? ALL_FILTER : "next7" }))}
-          selected={filters.due === "next7"}
-          tone="soon"
-        />
-      </section>
-
-      <div className="kanban-board">
-        {COLUMNS.map((column) => (
-          <section
-            className={`kanban-column ${dragOver?.column === column.id ? "is-drop-target" : ""}`}
-            data-kanban-column={column.id}
-            key={column.id}
-          >
-            <header>
-              <div>
+          return (
+            <section
+              aria-label={column.title}
+              className={`tk-list ${isTarget ? "is-drop-target" : ""}`}
+              data-kanban-column={column.id}
+              key={column.id}
+            >
+              <header className="tk-list-header">
                 <h2>{column.title}</h2>
-                <small>{grouped[column.id].length} cards</small>
+                <span>{cards.length}</span>
+              </header>
+
+              <div className="tk-cards" data-kanban-scroll="">
+                {cards.map((card) => {
+                  const position = columnPositions.positions.get(card.id);
+                  const before = !placeholderRendered && showPlaceholderAt >= 0 && position >= showPlaceholderAt;
+                  if (before) placeholderRendered = true;
+
+                  return [
+                    before ? placeholder : null,
+                    <CardFace
+                      card={card}
+                      dragging={draggingId === card.id}
+                      groupLabel={canonicalGroupLabel(card.group, groupOptions)}
+                      key={card.id}
+                      onOpen={() => startEditing(card)}
+                      onPointerDown={(event) => startPointerDrag(event, card.id)}
+                    />
+                  ];
+                })}
+                {showPlaceholderAt >= 0 && !placeholderRendered ? placeholder : null}
+                {composerColumn === column.id ? (
+                  <form className="tk-composer" onSubmit={(event) => addCardToColumn(event, column.id)}>
+                    <textarea
+                      aria-label="Título do cartão"
+                      autoFocus
+                      onBlur={() => {
+                        if (!composerText.trim()) closeComposer();
+                      }}
+                      onChange={(event) => setComposerText(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) addCardToColumn(event, column.id);
+                      }}
+                      placeholder="Insira um título para este cartão..."
+                      ref={composerRef}
+                      rows={3}
+                      value={composerText}
+                    />
+                    <div className="tk-composer-row">
+                      <button className="tk-primary" onMouseDown={(event) => event.preventDefault()} type="submit">Adicionar cartão</button>
+                      <button aria-label="Cancelar" className="tk-icon-btn" onClick={closeComposer} onMouseDown={(event) => event.preventDefault()} type="button">
+                        <X size={18} />
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
               </div>
-              <span>{grouped[column.id].length}</span>
-            </header>
-            <div className="kanban-card-list">
-              {grouped[column.id].map((card) => {
-                const isEditing = editingId === card.id;
-                const ownerTag = OWNER_TAGS[card.owner] || "Sem dono";
-                const ownerClass = OWNER_CLASSES[card.owner] || "sem-dono";
-                const priorityMeta = PRIORITIES.find((item) => item.id === card.priority) || PRIORITIES[1];
-                const allColumnCards = board.cards.filter((item) => item.column === column.id);
-                const position = allColumnCards.findIndex((item) => item.id === card.id);
 
-                return (
-                  <div
-                    className={`kanban-card-stack ${dragOver?.column === column.id && dragOver?.position === position ? "is-drop-before" : ""} ${dragOver?.column === column.id && dragOver?.position === position + 1 ? "is-drop-after" : ""}`}
-                    key={card.id}
-                  >
-                    <article
-                      className={`kanban-card priority-${card.priority} ${draggingId === card.id ? "is-dragging" : ""} ${isEditing ? "is-editing" : ""}`}
-                      data-kanban-card-id={card.id}
-                      onPointerCancel={cancelPointerDrag}
-                      onPointerDown={(event) => startPointerDrag(event, card.id, isEditing)}
-                      onPointerMove={updatePointerDrag}
-                      onPointerUp={finishPointerDrag}
-                    >
-                      <div className="kanban-card-grip" aria-hidden="true">
-                        <GripVertical size={17} />
-                      </div>
-
-                      {isEditing ? (
-                        <div className="kanban-card-edit">
-                          <label>
-                            Tarefa
-                            <input
-                              autoFocus
-                              onChange={(event) => setEditingForm((current) => ({ ...current, title: event.target.value }))}
-                              value={editingForm.title}
-                            />
-                          </label>
-                          <label>
-                            Grupo
-                            <select onChange={(event) => setEditingForm((current) => ({ ...current, group: event.target.value }))} value={editingForm.group}>
-                              {groupOptions.map((group) => (
-                                <option key={group} value={group}>{group}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label>
-                            Dono
-                            <select onChange={(event) => setEditingForm((current) => ({ ...current, owner: event.target.value }))} value={editingForm.owner}>
-                              {OWNERS.map((owner) => (
-                                <option key={owner} value={owner}>{owner}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label>
-                            Prioridade
-                            <select onChange={(event) => setEditingForm((current) => ({ ...current, priority: event.target.value }))} value={editingForm.priority}>
-                              {PRIORITIES.map((item) => (
-                                <option key={item.id} value={item.id}>{item.label}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label>
-                            Status
-                            <select onChange={(event) => setEditingForm((current) => ({ ...current, column: event.target.value }))} value={editingForm.column}>
-                              {COLUMNS.map((item) => (
-                                <option key={item.id} value={item.id}>{item.title}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label>
-                            Data limite
-                            <input
-                              onChange={(event) => setEditingForm((current) => ({ ...current, dueDate: event.target.value }))}
-                              type="date"
-                              value={editingForm.dueDate}
-                            />
-                          </label>
-                          <label>
-                            Horário
-                            <input
-                              onChange={(event) => setEditingForm((current) => ({ ...current, dueTime: event.target.value }))}
-                              type="time"
-                              value={editingForm.dueTime}
-                            />
-                          </label>
-                          <label>
-                            Lembrete
-                            <select onChange={(event) => setEditingForm((current) => ({ ...current, reminder: event.target.value }))} value={editingForm.reminder}>
-                              {REMINDERS.map((item) => (
-                                <option key={item.id} value={item.id}>{item.label}</option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="kanban-card-topline">
-                            <span className="kanban-card-group">{canonicalGroupLabel(card.group, groupOptions)}</span>
-                            <span className={`kanban-owner-tag owner-${ownerClass}`}>{ownerTag}</span>
-                          </div>
-                          <h3>{card.title}</h3>
-                          <div className="kanban-card-badges">
-                            <span className={`kanban-priority priority-${card.priority}`}>{priorityMeta.label}</span>
-                            {card.dueDate ? <span className={`kanban-due ${dueTone(card.dueDate, card.column)}`}>{formatDueDate(card.dueDate)}{card.dueTime ? ` ${card.dueTime}` : ""}</span> : null}
-                            {card.googleCalendar?.eventId ? <span className="kanban-google-synced">Google</span> : null}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="kanban-card-actions">
-                        {isEditing ? (
-                          <>
-                            <button aria-label="Salvar edicao" onClick={() => saveEditing(card.id)} type="button">
-                              <Check size={15} />
-                            </button>
-                            <button aria-label="Cancelar edicao" onClick={cancelEditing} type="button">
-                              <X size={15} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              aria-label={card.googleCalendar?.eventId ? "Atualizar evento no Google Calendar" : "Criar evento no Google Calendar"}
-                              className="kanban-sync-button"
-                              disabled={!calendar.connected || !card.dueDate || syncingCardId === card.id}
-                              onClick={() => syncCardToGoogle(card.id)}
-                              title={card.googleCalendar?.eventId ? "Atualizar Google" : "Sync Google"}
-                              type="button"
-                            >
-                              {syncingCardId === card.id ? <RefreshCw size={15} /> : card.googleCalendar?.eventId ? <CalendarCheck size={15} /> : <CalendarPlus size={15} />}
-                            </button>
-                            <button aria-label="Editar tarefa" onClick={() => startEditing(card)} type="button">
-                              <Pencil size={15} />
-                            </button>
-                            <button aria-label="Remover tarefa" onClick={() => deleteCard(card.id)} type="button">
-                              <Trash2 size={15} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </article>
-                  </div>
-                );
-              })}
-              {!grouped[column.id].length ? <div className="kanban-empty">Sem tarefas aqui.</div> : null}
-            </div>
-          </section>
-        ))}
+              {composerColumn !== column.id ? (
+                <button className="tk-composer-toggle" onClick={() => openComposer(column.id)} type="button">
+                  <Plus size={16} />
+                  Adicionar um cartão
+                </button>
+              ) : null}
+            </section>
+          );
+        })}
       </div>
+
+      {ghost && ghostCard ? (
+        <div
+          aria-hidden="true"
+          className="tk-ghost"
+          ref={ghostRef}
+          style={{ width: ghost.width, transform: `translate3d(${ghost.x}px, ${ghost.y}px, 0)` }}
+        >
+          <CardFace card={ghostCard} groupLabel={canonicalGroupLabel(ghostCard.group, groupOptions)} />
+        </div>
+      ) : null}
+
+      {editingCard ? (
+        <CardModal
+          calendar={calendar}
+          card={editingCard}
+          confirmDelete={confirmDelete}
+          focusTitle={focusTitle}
+          form={editingForm}
+          groupOptions={groupOptions}
+          onClose={cancelEditing}
+          onDelete={() => (confirmDelete ? deleteCard(editingCard.id) : setConfirmDelete(true))}
+          onSave={() => saveEditing(editingCard.id)}
+          onSync={() => syncCardToGoogle(editingCard.id)}
+          setForm={setEditingForm}
+          syncing={syncingCardId === editingCard.id}
+        />
+      ) : null}
     </section>
   );
 }
 
-function DeadlinePill({ cards, label, onClick, selected, tone }) {
+function CardFace({ card, dragging = false, groupLabel, onOpen, onPointerDown }) {
+  const ownerTag = OWNER_TAGS[card.owner] || "?";
+  const ownerClass = OWNER_CLASSES[card.owner] || "sem-dono";
+  const priorityMeta = PRIORITIES.find((item) => item.id === card.priority) || PRIORITIES[1];
+  const showPriority = card.priority === "high" || card.priority === "urgent";
+  const interactive = Boolean(onPointerDown);
+
+  return (
+    <article
+      aria-label={interactive ? `Abrir cartão: ${card.title}` : undefined}
+      className={`tk-card ${dragging ? "is-dragging" : ""} ${card.column === "done" ? "is-done" : ""}`}
+      data-kanban-card-id={interactive ? card.id : undefined}
+      onContextMenu={interactive ? (event) => event.preventDefault() : undefined}
+      onKeyDown={interactive ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen?.();
+        }
+      } : undefined}
+      onPointerDown={onPointerDown}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+    >
+      <div className="tk-card-labels">
+        {showPriority ? <span className={`tk-label priority-${card.priority}`}>{priorityMeta.label}</span> : null}
+        <span className="tk-label tk-label-group" style={{ "--label-hue": groupHue(groupLabel) }}>{groupLabel}</span>
+      </div>
+      <h3>{card.title}</h3>
+      <div className="tk-card-footer">
+        {card.dueDate ? (
+          <span className={`tk-badge tk-due ${dueTone(card.dueDate, card.column)}`} title="Data limite">
+            <Clock size={12} />
+            {formatCardDate(card.dueDate)}{card.dueTime ? ` ${card.dueTime}` : ""}
+          </span>
+        ) : null}
+        {card.googleCalendar?.eventId ? (
+          <span className="tk-badge" title="No Google Agenda">
+            <CalendarCheck size={12} />
+          </span>
+        ) : null}
+        {card.owner !== "Sem dono" ? <span className={`tk-avatar owner-${ownerClass}`} title={card.owner}>{ownerTag}</span> : null}
+      </div>
+      {interactive ? (
+        <button aria-label="Editar cartão" className="tk-card-edit" onClick={onOpen} tabIndex={-1} type="button">
+          <Pencil size={13} />
+        </button>
+      ) : null}
+    </article>
+  );
+}
+
+function CardModal({ calendar, card, confirmDelete, focusTitle, form, groupOptions, onClose, onDelete, onSave, onSync, setForm, syncing }) {
+  const column = COLUMNS.find((item) => item.id === form.column) || COLUMNS[0];
+  const update = (patch) => setForm((current) => ({ ...current, ...patch }));
+
+  return (
+    <div
+      className="tk-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div aria-labelledby="tk-modal-title" aria-modal="true" className="tk-modal" role="dialog">
+        <button aria-label="Fechar" className="tk-icon-btn tk-modal-close" onClick={onClose} type="button">
+          <X size={20} />
+        </button>
+
+        <div className="tk-modal-head">
+          <textarea
+            aria-label="Título"
+            autoFocus={focusTitle}
+            id="tk-modal-title"
+            onChange={(event) => update({ title: event.target.value })}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                onSave();
+              }
+            }}
+            rows={2}
+            value={form.title}
+          />
+          <label className="tk-modal-sub">
+            na lista
+            <select onChange={(event) => update({ column: event.target.value })} value={column.id}>
+              {COLUMNS.map((item) => (
+                <option key={item.id} value={item.id}>{item.title}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="tk-field">
+          <span>Responsável</span>
+          <div className="tk-chips">
+            {OWNERS.map((owner) => (
+              <button
+                aria-pressed={form.owner === owner}
+                className={`tk-chip ${form.owner === owner ? "is-selected" : ""}`}
+                key={owner}
+                onClick={() => update({ owner })}
+                type="button"
+              >
+                <span className={`tk-avatar owner-${OWNER_CLASSES[owner]}`}>{OWNER_TAGS[owner]}</span>
+                {owner}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="tk-field">
+          <span>Prioridade</span>
+          <div className="tk-chips">
+            {PRIORITIES.map((priority) => (
+              <button
+                aria-pressed={form.priority === priority.id}
+                className={`tk-chip tk-chip-priority priority-${priority.id} ${form.priority === priority.id ? "is-selected" : ""}`}
+                key={priority.id}
+                onClick={() => update({ priority: priority.id })}
+                type="button"
+              >
+                {priority.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="tk-fields">
+          <label className="tk-field">
+            <span>Grupo</span>
+            <input list="tk-group-options" onChange={(event) => update({ group: event.target.value })} placeholder="Geral" value={form.group} />
+            <datalist id="tk-group-options">
+              {groupOptions.map((group) => (
+                <option key={group} value={group} />
+              ))}
+            </datalist>
+          </label>
+          <label className="tk-field">
+            <span>Data limite</span>
+            <input onChange={(event) => update({ dueDate: event.target.value })} type="date" value={form.dueDate} />
+          </label>
+          <label className="tk-field">
+            <span>Horário</span>
+            <input disabled={!form.dueDate} onChange={(event) => update({ dueTime: event.target.value })} type="time" value={form.dueTime} />
+          </label>
+          <label className="tk-field">
+            <span>Lembrete</span>
+            <select disabled={!form.dueDate} onChange={(event) => update({ reminder: event.target.value })} value={form.reminder}>
+              {REMINDERS.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <p className="tk-modal-meta">
+          Criado por {card.createdBy || "Família"}{formatCreatedAt(card.createdAt)}
+        </p>
+
+        <div className="tk-modal-actions">
+          <div className="tk-modal-actions-left">
+            <button className="tk-primary" disabled={!form.title.trim()} onClick={onSave} type="button">Salvar</button>
+            <button className="tk-secondary" onClick={onClose} type="button">Cancelar</button>
+          </div>
+          <div className="tk-modal-actions-right">
+            <button
+              className="tk-secondary"
+              disabled={!calendar.connected || !card.dueDate || syncing}
+              onClick={onSync}
+              title={!card.dueDate ? "Salve uma data limite para enviar à agenda" : undefined}
+              type="button"
+            >
+              {syncing ? <RefreshCw size={15} /> : card.googleCalendar?.eventId ? <CalendarCheck size={15} /> : <CalendarPlus size={15} />}
+              {card.googleCalendar?.eventId ? "Atualizar agenda" : "Enviar à agenda"}
+            </button>
+            <button className={confirmDelete ? "tk-danger" : "tk-secondary"} onClick={onDelete} type="button">
+              <Trash2 size={15} />
+              {confirmDelete ? "Confirmar exclusão" : "Excluir"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeadlineButton({ cards, label, onClick, selected, tone }) {
   const preview = cards.slice(0, 3).map((card) => card.title).join(", ");
+  if (!cards.length && !selected) return null;
   return (
     <button
       aria-pressed={selected}
-      className={`kanban-deadline-pill tone-${tone} ${selected ? "is-selected" : ""}`}
+      className={`tk-btn tone-${tone} ${selected ? "is-active" : ""}`}
       onClick={onClick}
       title={preview || "Nada por aqui"}
       type="button"
     >
-      <span>{label}</span>
+      {label}
       <b>{cards.length}</b>
     </button>
   );
+}
+
+// No toque, o navegador dispara mousedown/click depois do toque; sem isso, eles
+// cairiam em um campo do modal recem-aberto (abrindo teclado ou seletor de data).
+function suppressGhostClick() {
+  const swallow = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+  const events = ["mousedown", "mouseup", "click"];
+  for (const name of events) window.addEventListener(name, swallow, true);
+  window.setTimeout(() => {
+    for (const name of events) window.removeEventListener(name, swallow, true);
+  }, 450);
+}
+
+function scrollStep(distance) {
+  return Math.ceil(Math.min(distance, AUTOSCROLL_EDGE) / AUTOSCROLL_EDGE * 16);
+}
+
+function groupHue(label) {
+  const key = groupKey(label);
+  let hash = 0;
+  for (const char of key) hash = (hash * 31 + char.codePointAt(0)) % 360;
+  return hash;
+}
+
+function formatCardDate(value) {
+  const due = parseLocalDate(value);
+  if (!due) return "";
+  const today = localDateStart(new Date());
+  if (sameDay(due, today)) return "Hoje";
+  if (sameDay(due, addDays(today, 1))) return "Amanhã";
+  const months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const label = `${due.getDate()} ${months[due.getMonth()]}`;
+  return due.getFullYear() === today.getFullYear() ? label : `${label} ${due.getFullYear()}`;
+}
+
+function formatCreatedAt(value) {
+  const date = new Date(value || "");
+  if (Number.isNaN(date.getTime())) return "";
+  return ` em ${date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}`;
 }
 
 function CalendarStrip({ calendar, calendarStatus, onRefresh, onSelectCalendar }) {
@@ -1016,7 +1352,9 @@ function CalendarStrip({ calendar, calendarStatus, onRefresh, onSelectCalendar }
 }
 
 function isInteractiveTarget(target) {
-  return Boolean(target?.closest?.("a, button, input, select, textarea, [role='button']"));
+  const interactive = target?.closest?.("a, button, input, select, textarea, [role='button']");
+  // O proprio cartao tem role="button"; so conta como interativo um controle dentro dele.
+  return Boolean(interactive && !interactive.hasAttribute("data-kanban-card-id"));
 }
 
 function calendarChipOptions(calendar) {
